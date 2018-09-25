@@ -16,11 +16,9 @@ ls("package:nwfscSurvey")
 #===============================================================================
 #=============          NWFSC Combo          ===================================
 #===============================================================================
-setwd("Set directory here")
-catch = PullCatch.fn(Name = "Pacific ocean perch", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd()) 
-
-bio   = PullBio.fn(Name = "Pacific ocean perch", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
-
+setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
+catch = PullCatch.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd()) 
+bio   = PullBio.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
 
 head(catch)
 head(bio)
@@ -53,6 +51,7 @@ PlotBio.fn(dir = getwd(), dat = biomass, main = "NWFSC shelf-slope bottom trawl 
 #Length Biological Data 
 #============================================================================================
 len = bio
+bio =len
 len.bins = 11:47
 
 # Calculate the effN

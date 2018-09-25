@@ -1,5 +1,4 @@
-require(dplyr); require(reshape)
-require(ggplot2)
+require(dplyr); require(reshape); require(RColorBrewer); require(ggplot2)
 
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 
@@ -67,10 +66,13 @@ len %>% group_by(st) %>% summarise(quantile(Length_cm, probs = 0.025),quantile(L
 ggplot(len, aes(x = Age, y = Length_cm, color = Sex)) +
   theme_minimal() +
   theme(panel.grid = element_blank(), legend.position = c(0.9,0.15))+
+  scale_y_continuous(limits = c(0,100)) +
+  scale_x_continuous(limits = c(0,50)) +
+  scale_color_brewer(palette = 'Dark2') +
   geom_point(alpha = 0.2) +
-  facet_wrap(~ st_f)
-
-ggsave(file = paste0(getwd(),"/plots/la_strata.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)
+  facet_wrap(~ st_f) +
+  labs(title = "Raw Data", y = 'Length (cm)', x= 'Age (yr)', subtitle = 'NWFSC Groundfish Survey')
+ggsave(file = paste0(getwd(),"/plots/raw_data.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)
 
 len.bins = 11:47
 

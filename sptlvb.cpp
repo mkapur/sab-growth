@@ -14,7 +14,7 @@ Type objective_function<Type>::operator() ()
   int n = 500; // for now, need to change this to ,size() or something
   
   // things to estimate (one for each strata)
-  PARAMETER(dummy);
+  // PARAMETER(dummy);
   PARAMETER_VECTOR(log_t0); 
   PARAMETER_VECTOR(log_k);
   PARAMETER_VECTOR(log_Linf);
@@ -30,20 +30,25 @@ Type objective_function<Type>::operator() ()
   vector<Type> Linf(nStrata);
   Linf = exp(log_Linf);
   
-  Type Sigma = exp(log_Sigma); // assuming universal sigma for now, later vectorze
-
-  matrix<Type> yfit(n,nStrata); 
+  Type Sigma = exp(log_Sigma); // assuming universal sigma for now, later vectorize
+  Type yfit = 0;
+  matrix<Type> ypreds(n,nStrata); // only used for plotting later
   
   Type obj_fun = 0.0;
   
-  for(int j = 0; j < nStrata-1; j++){     // iterate strata
-    for(int i = 0; i < n-1; i++){ // iterate rows
-      yfit(i,j) = Linf(j)*(1-exp(-k(j)*(Age(i,j) - t0(j))));
+  for(int j = 0; j < nStrata; j++){     // iterate strata columns
+    for(int i = 0; i < n; i++){ // iterate rows
+      yfit = Linf(j)*(1-exp(-k(j)*(Age(i,j) - t0(j)))); // return single value
+      ypreds(i,j) = yfit;
+      obj_fun -= dnorm(Length_cm(i,j), yfit, Sigma, true); // uniform selectivity
     }
-    obj_fun -= dnorm(Length_cm(j), yfit(j), Sigma, true); // calc LL per strata once populated
   }
   
-  REPORT(yfit);
- 
+  REPORT(ypreds);
+  // REPORT(Length_cm);
+  ADREPORT(Linf);
+  ADREPORT(k);
+  ADREPORT(t0);
+  
   return(obj_fun);
 }

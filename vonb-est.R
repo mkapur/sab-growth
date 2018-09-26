@@ -1,4 +1,4 @@
-require(TMB)
+require(TMB); require(dplyr); require(ggplot2); require(reshape)
 options(scipen=999)
 ## load data
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
@@ -11,62 +11,31 @@ minSel <- c(42, 37, 39, 27, 23, 21) ## cutoff values for selectivity
 maxSel <- c(74, 70, 77, 71, 71, 63)
 
 
-## a function to get 500 samples within selectivity bounds
-data.sub <- function(len, s){
-  ## reshape raw length and age data
-  agemat0 <-
-    len %>% select(Age, st) %>% mutate(ID = 1:nrow(.)) %>% melt(., id = c('st', 'ID'),'Age') %>% 
-    reshape::cast(., ID + value ~ st, fill = NA, drop= T) %>% select(-ID, -value) 
-  lenmat0 <- 
-    len %>% select(Length_cm, st) %>% mutate(ID = 1:nrow(.)) %>% melt(., id = c('st', 'ID'),'Length_cm') %>% 
-    reshape::cast(., ID + value ~ st, fill = NA, drop= T) %>% select(-ID, -value) 
-  
-  agemat <- lenmat <-  matrix(NA, nrow = 500, ncol = length(unique(len$st)))
-  
-  for(i in 1:nStrata){
-    temp0 <- matrix(na.omit(lenmat0[,i]),ncol = 1) ##if there is a value in one, should be in the other as well 
-    if(s == 1) unif <- temp <- temp0 ## used in all sims
-    if(s == 2) { temp <- temp0[temp0 >= minSel[i]]}
-    # if(s == 3) { temp <- temp[temp <= maxSel[i]]}  ## sample size issues
-    # if(s == 4) { temp <- temp[temp >= minSel[i] & temp <= maxSel[i]]} ## sample size issues
-    idx <- sample(1:length(temp),500) ## pick 500 rows and store index
-    lenmat[,i] <- temp[idx] %>% as.matrix()
-    agemat[,i] <- data.frame(na.omit(agemat0[,i]))[idx,] %>% as.matrix() ## select same rows
-    
-    lenmat[,i] <- unif[idx] %>% as.matrix()
-    agemat[,i] <- data.frame(na.omit(agemat0[,i]))[idx,] %>% as.matrix() ## select same rows
-    
-    rm(temp0)
-  }
-  return(list(lenmat,agemat))
-}
 
+parameters <-
+  list(
+    dummy = 0,
+    log_Linf = rep(log(70), nStrata),
+    log_k = rep(0, nStrata),
+    t0 = rep(0, nStrata),
+    log_Sigma = 0.1
+  )
 
+compile("sptlvb.cpp")
+dyn.load(dynlib("sptlvb"))
 
-for(s in 1:2){ ## ultimately loop over 4 selectivities
-  matrices <- data.sub(len, s)
-  
+# for(s in 1:2){ ## ultimately loop over 4 selectivities
   data <-
     list(
-      Length_cm = matrices[[1]], 
-      Age = matrices[[2]],
+      Length_cm = lenmat,
+      Age = agemat,
       st = len[, 'st_f'],
       nStrata = nStrata,
       minSel = minSel,
       maxSel = maxSel,
       selType = s
     )
-  parameters <-
-    list(
-      dummy = 0,
-      log_Linf = rep(log(70), nStrata),
-      log_k = rep(0, nStrata),
-      t0 = rep(0, nStrata),
-      log_Sigma = 0.1
-    )
-  
-  compile("sptlvb.cpp")
-  dyn.load(dynlib("sptlvb"))
+
   # Now estimate everything
   map <- NULL
   model <- MakeADFun(data, parameters,  DLL="sptlvb",silent=T,map=map)
@@ -84,9 +53,10 @@ for(s in 1:2){ ## ultimately loop over 4 selectivities
   best <- model$env$last.par.best
   print(c(best[1:6],exp(best[7:length(best)])))
   rep <- sdreport(model)
-}
-## plotting
-require(ggplot2);require(dplyr);require(reshape)
+# }
+
+## plotting ----
+
 dat0 <- model$report()$ypreds %>% data.frame() 
 names(dat0) <- paste0(unique(len$st_f))
 dat0 <- dat0 %>% reshape::melt() %>% plyr::rename(c('value' = 'Predicted', 'variable' = 'st'))

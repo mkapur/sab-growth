@@ -74,7 +74,7 @@ ggplot(len, aes(x = Age, y = Length_cm, color = Sex)) +
   labs(title = "Raw Data", y = 'Length (cm)', x= 'Age (yr)', subtitle = 'NWFSC Groundfish Survey')
 ggsave(file = paste0(getwd(),"/plots/raw_data.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)
 
-len.bins = 11:47
+len.bins = 22:90 ## from Kelli's assesssment
 
 # Calculate the effN
 n = GetN.fn(dir=getwd(), dat = len, type = "length", species = "shelfrock", printfolder = "forSS")

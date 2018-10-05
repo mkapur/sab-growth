@@ -2,3 +2,8 @@
 *.o
 *.Rhistory
 
+.Rhistory
+sptlvb.dll
+sptlvb.o
+sptlvb.dll
+sptlvb.o

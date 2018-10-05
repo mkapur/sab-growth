@@ -11,8 +11,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(maxSel);
   DATA_INTEGER(nStrata);
   DATA_INTEGER(selType);
-
-  int n = 500; // for now
+  DATA_VECTOR(nmat);
   
   // things to estimate (per stratum)
   PARAMETER_VECTOR(t0); // t0 can be negative 
@@ -33,18 +32,19 @@ Type objective_function<Type>::operator() ()
   vector<Type> log_maxSel(nStrata);
   log_maxSel = exp(maxSel);
   
+  // vector<Type> n(nStrata);
   Type Sigma = exp(log_Sigma); // assuming universal sigma for now, later vectorize
-  
   Type yfit = 0;
 
-  matrix<Type> ypreds(n,nStrata); // used for plotting later
+  matrix<Type> ypreds(8481,nStrata); // used for plotting later
   
   Type obj_fun = 0.0;
   Type unif_obj_fun = 0.0; // used as numerator in all simulations
   Type trunc_fun = 0.0; // denominator
   
   for(int j = 0; j < nStrata; j++){     // iterate strata columns
-    for(int i = 0; i < n; i++){ // iterate rows
+    // n = nmat(j); // unique sample size per strata
+    for(int i = 0; i < nmat(j); i++){ // iterate rows
       yfit = Linf(j)*(1-exp(-k(j)*(Age(i,j) - t0(j)))); 
       unif_obj_fun = dnorm(Length_cm(i,j), yfit, Sigma);
       switch( selType ){

@@ -30,8 +30,8 @@ for(i in 1:nrow(len1)){
        }
 }
 len <- len1; rm(len1)
-len$st_f = factor(len$st, levels=c('deep_n','mid_n','shallow_n','deep_s', "mid_s","shallow_s"))
-
+len$st_f <- factor(len$st, levels=c('deep_n','mid_n','shallow_n','deep_s', "mid_s","shallow_s"))
+nStrata <- length(unique(len$st_f))
 # save(len, file = paste0(getwd(),"/filtered_SAB_WC.rda")) ## raw
 ## some reshaping of the data, see https://stackoverflow.com/questions/28036294/collapsing-rows-where-some-are-all-na-others-are-disjoint-with-some-nas
 ## don't forget this is a ragged array, looks like TMB can't deal with NAs -- currently subsampling 500 data points from each strata :/
@@ -46,16 +46,23 @@ lenmat0 <-
   reshape::cast(., ID + value ~ st, fill = NA, drop= T) %>% select(-ID, -value) 
 
 ## omit NAs and select 500 from each strata
-agemat <- lenmat <-  matrix(NA, nrow = 500, ncol = length(unique(len$st)))
+agemat <- lenmat <-  matrix(NA, nrow = 8481, ncol = length(unique(len$st)))
+nmat <- NULL
 for(i in 1:nStrata){
-  temp <- data.frame(na.omit(agemat0[,i])) ##if there is a value in one, should be in the other as well 
-  idx <- sample(1:nrow(temp),500) ## pick 500 rows and store index
-  agemat[,i] <- temp[idx,] %>% as.matrix()
-  lenmat[,i] <- data.frame(na.omit(lenmat0[,i]))[idx,] %>% as.matrix()
+  nr <- length(na.omit(agemat0[,i]))
+  # agemat[1:nr,i] <- data.frame(na.omit(agemat0[,i])) ##if there is a value in one, should be in the other as well
+  # agemat[,i] <- bind_cols(data.frame(agemat), data.frame(na.omit(agemat0[,i])))
+  agemat[1:nr,i] <- matrix(na.omit(agemat0[,i]),ncol = 1)
+  lenmat[1:nr,i] <- matrix(na.omit(lenmat0[,i]),ncol = 1)
+  nmat[i] <- nr ## store lengths of each
+  # idx <- sample(1:nrow(temp),500) ## pick 500 rows and store index
+  # agemat[,i] <- temp[idx,] %>% as.matrix()
+  # lenmat[,i] <- data.frame(na.omit(lenmat0[,i]))[idx,] %>% as.matrix()
 }
 
 save(agemat, file = paste0(getwd(),"/agemat_WC.rda")); rm(agemat0)
 save(lenmat, file = paste0(getwd(),"/lenmat_WC.rda")); rm(lenmat0)
+save(nmat, file = paste0(getwd(),"/nmat_WC.rda")); rm(lenmat0)
 
 len %>% group_by(st) %>% summarise(minL = min(Length_cm), maxL = max(Length_cm))
 len %>% group_by(st) %>% summarise(quantile(Length_cm, probs = 0.025),quantile(Length_cm, probs = 0.5),quantile(Length_cm, probs = 0.975))

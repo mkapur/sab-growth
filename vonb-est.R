@@ -2,7 +2,7 @@ require(TMB); require(dplyr); require(ggplot2); require(reshape)
 options(scipen=999)
 ## load data
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
-load( paste0(getwd(),"/filtered_SAB_WC.rda")); load(paste0(getwd(),"/lenmat_WC.rda")); load(paste0(getwd(),"/agemat_WC.rda")) ## made in dataprep
+load( paste0(getwd(),"/filtered_SAB_WC.rda"));load( paste0(getwd(),"/nmat_WC.rda")); load(paste0(getwd(),"/lenmat_WC.rda")); load(paste0(getwd(),"/agemat_WC.rda")) ## made in dataprep
 nStrata <- length(unique(len$st_f))
 
 ## Estimation
@@ -31,7 +31,8 @@ for(s in c(1,4)){ ## ultimately loop over 4 selectivities
       nStrata = nStrata,
       minSel = minSel,
       maxSel = maxSel,
-      selType = s
+      selType = s,
+      nmat = nmat
     )
 
   # Now estimate everything
@@ -56,6 +57,7 @@ names(dat0) <- paste0(c(rep('uniform_',6),rep('dome_',6)),paste0(unique(len$st_f
 agedf <- agemat  %>% data.frame() %>% reshape::melt()  %>% plyr::rename(c("value" = "Age")) %>% select(-variable) 
 
 lendf <- lenmat %>% data.frame() 
+names(lendf) <-  paste0(rep('Length_',6),paste0(unique(len$st_f)))
 
 mdf<-bind_cols(dat0,  lendf) %>% reshape::melt()  %>% plyr::rename(c( 'variable' = 'ID', 'value' = 'Length')) %>% 
   mutate(model = sub('_.*$','', ID), st = sub(".*_ *(.*?)", "\\1", ID), age = rep(agedf$Age,3))  %>% select(-ID)
@@ -65,8 +67,8 @@ mdf$st_f = factor(mdf$st, levels=c('deep_n','mid_n','shallow_n','deep_s', "mid_s
 ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length)) +
   theme_minimal() +
   theme(panel.grid = element_blank(), legend.position = c(0.9,0.15))+
-  scale_y_continuous(limits = c(0,100)) +
-  scale_x_continuous(limits = c(0,50)) +
+  # scale_y_continuous(limits = c(0,100)) +
+  # scale_x_continuous(limits = c(0,50)) +
   geom_point(alpha = 0.2) +
   geom_line(data = subset(mdf, model != 'Length'), aes(x = age, y = Length, color = model), lwd = 1.1)+
   facet_wrap(~ st_f) +
@@ -86,7 +88,7 @@ ggplot(len, aes(x = Age, y = Length_cm)) +
   scale_x_continuous(limits = c(0,50)) +
   # scale_color_brewer(palette = 'Dark2') +
   geom_point(alpha = 0.2) +
-  geom_line(data = subset(mdf, model != 'Length'), aes(x = age, y = Length, color = model), lwd = 1.1)+
+  geom_line(data = subset(mdf, model != 'Length'), aes(x = age, y = Length, color = model), lwd = 1.1) +
   facet_wrap(~ st_f) +
   labs(title = "Predicted Model Fits and Raw Data", 
        y = 'Length (cm)', x= 'Age (yr)', 

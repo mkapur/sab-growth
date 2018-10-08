@@ -37,27 +37,33 @@ nStrata <- length(unique(len$st_f))
 ## don't forget this is a ragged array, looks like TMB can't deal with NAs -- currently subsampling 500 data points from each strata :/
 load( paste0(getwd(),"/filtered_SAB_WC.rda"))
 
-
 agemat0 <-
-  len %>% select(Age, st) %>% mutate(ID = 1:nrow(.)) %>% melt(., id = c('st', 'ID'),'Age') %>% 
-  reshape::cast(., ID + value ~ st, fill = NA, drop= T) %>% select(-ID, -value) 
+  len %>% filter(Sex != 'U') %>% select(Age, st, Sex) %>% mutate(ID = 1:nrow(.)) %>% melt(., id = c('st', 'ID',"Sex"),'Age') %>% 
+  reshape::cast(., ID + value ~ st + Sex, fill = NA, drop= T) %>% select(-ID, -value) 
 lenmat0 <- 
-  len %>% select(Length_cm, st) %>% mutate(ID = 1:nrow(.)) %>% melt(., id = c('st', 'ID'),'Length_cm') %>% 
-  reshape::cast(., ID + value ~ st, fill = NA, drop= T) %>% select(-ID, -value) 
+  len %>% filter(Sex != 'U') %>% select(Length_cm, Sex, st) %>% mutate(ID = 1:nrow(.)) %>% melt(., id = c('st', 'ID',"Sex"),'Length_cm') %>% 
+  reshape::cast(., ID + value ~ st + Sex, fill = NA, drop= T) %>% select(-ID, -value) 
 
 ## omit NAs and select 500 from each strata
-agemat <- lenmat <-  matrix(NA, nrow = 8481, ncol = length(unique(len$st)))
+agemat <- lenmat <-  array(NA, dim = c(8481, length(unique(len$st)), 2))
+  
+# matrix(NA, nrow = 8481, ncol = length(unique(len$st)))
 nmat <- NULL
-for(i in 1:nStrata){
-  nr <- length(na.omit(agemat0[,i]))
-  # agemat[1:nr,i] <- data.frame(na.omit(agemat0[,i])) ##if there is a value in one, should be in the other as well
-  # agemat[,i] <- bind_cols(data.frame(agemat), data.frame(na.omit(agemat0[,i])))
-  agemat[1:nr,i] <- matrix(na.omit(agemat0[,i]),ncol = 1)
-  lenmat[1:nr,i] <- matrix(na.omit(lenmat0[,i]),ncol = 1)
-  nmat[i] <- nr ## store lengths of each
-  # idx <- sample(1:nrow(temp),500) ## pick 500 rows and store index
-  # agemat[,i] <- temp[idx,] %>% as.matrix()
-  # lenmat[,i] <- data.frame(na.omit(lenmat0[,i]))[idx,] %>% as.matrix()
+for(s in 1:2){
+  Atemp <- agemat0[,grep(c("M","F")[s],names(agemat0))]
+  Ltemp <- lenmat0[,grep(c("M","F")[s],names(lenmat0))]
+  for(i in 1:nStrata){
+    # idx <- (s-1)*6+i  
+    nr <- length(na.omit(Atemp[,i]))
+    # agemat[1:nr,i] <- data.frame(na.omit(agemat0[,i])) ##if there is a value in one, should be in the other as well
+    # agemat[,i] <- bind_cols(data.frame(agemat), data.frame(na.omit(agemat0[,i])))
+    agemat[1:nr,i,s] <- matrix(na.omit(Atemp[,i]),ncol = 1)
+    lenmat[1:nr,i,s] <- matrix(na.omit(Ltemp[,i]),ncol = 1)
+    nmat[i] <- nr ## store lengths of each
+    # idx <- sample(1:nrow(temp),500) ## pick 500 rows and store index
+    # agemat[,i] <- temp[idx,] %>% as.matrix()
+    # lenmat[,i] <- data.frame(na.omit(lenmat0[,i]))[idx,] %>% as.matrix()
+  }
 }
 
 save(agemat, file = paste0(getwd(),"/agemat_WC.rda")); rm(agemat0)

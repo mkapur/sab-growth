@@ -5,8 +5,11 @@ template<class Type>
 Type objective_function<Type>::operator() ()
 {
   // load data; each column is a strata
-  DATA_MATRIX(Length_cm); 
-  DATA_MATRIX(Age);
+  
+  // DATA_MATRIX(Length_cm); 
+  // DATA_MATRIX(Age);
+  DATA_ARRAY(Length_cm);
+  DATA_ARRAY(Age);
   DATA_VECTOR(minSel); // obtained via 95%CI from raw data
   DATA_VECTOR(maxSel);
   DATA_INTEGER(nStrata);
@@ -26,6 +29,9 @@ Type objective_function<Type>::operator() ()
   vector<Type> Linf(nStrata);
   Linf = exp(log_Linf);
   
+
+  
+  
   vector<Type> log_minSel(nStrata);
   log_minSel = exp(minSel);
   
@@ -42,11 +48,11 @@ Type objective_function<Type>::operator() ()
   Type unif_obj_fun = 0.0; // used as numerator in all simulations
   Type trunc_fun = 0.0; // denominator
   
+  for(int s = 1; s < 2; s++) // iterate sexes
   for(int j = 0; j < nStrata; j++){     // iterate strata columns
-    // n = nmat(j); // unique sample size per strata
-    for(int i = 0; i < nmat(j); i++){ // iterate rows
-      yfit = Linf(j)*(1-exp(-k(j)*(Age(i,j) - t0(j)))); 
-      unif_obj_fun = dnorm(Length_cm(i,j), yfit, Sigma);
+    for(int i = 0; i < nmat(j); i++){ // iterate rows, unique to strata
+      yfit = Linf(j)*(1-exp(-k(j)*(Age(i,j,s) - t0(j)))); 
+      unif_obj_fun = dnorm(Length_cm(i,j,s), yfit, Sigma);
       switch( selType ){
       case 1 : // uniform selectivity(no correction)
         obj_fun -= log(unif_obj_fun);

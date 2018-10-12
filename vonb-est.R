@@ -1,17 +1,22 @@
 require(TMB); require(dplyr); require(ggplot2); require(reshape)
 options(scipen=999)
 rm(list = ls())
-## load data
+
+
+
+
+## load objects made in dataprep
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
-load( paste0(getwd(),"/nmat.rda")); load(paste0(getwd(),"/lenarray.rda")); load(paste0(getwd(),"/agearray.rda")) ## made in dataprep
+load( paste0(getwd(),"/nmat.rda")) ## number of samples in each
+load(paste0(getwd(),"/lenarray.rda")) ## length data
+load(paste0(getwd(),"/agearray.rda")) ## age data
+load( paste0(getwd(),"/selarray.rda")) ## selectivity values
 nStrata <- nrow(nmat)
 stnames <- c('deep_n','mid_n','shallow_n','deep_s', "mid_s","shallow_s",
              "AK 0","AK 1","AK 2","AK 3","AK 4","AK 5","AK 6","AK 7","AK 8")
 
 ## Estimation
-s <- c(1:4)[1] ## choose between uniform, min, maax, or dome selectivity
-minSel <- c(42, 37, 39, 27, 23, 21) ## cutoff values for selectivity
-maxSel <- c(74, 70, 77, 71, 71, 63)
+# s <- c(1:4)[1] ## choose between uniform, min, maax, or dome selectivity
 
 parameters <-
   list(
@@ -24,15 +29,15 @@ parameters <-
 
 compile("sptlvb.cpp")
 dyn.load(dynlib("sptlvb"))
+
 dat0 <- NULL ## later storage for predicts
-for(s in c(1)){ ## ultimately loop over 4 selectivities
+for(s in c(1,2)){ ## ultimately loop over 4 selectivities
   data <-
     list(
       Length_cm = lenmat,
       Age = agemat,
       nStrata = nStrata,
-      minSel = minSel,
-      maxSel = maxSel,
+      Sel = Sel,
       selType = s,
       nmat = nmat
     )
@@ -50,12 +55,13 @@ for(s in c(1)){ ## ultimately loop over 4 selectivities
   dat0 <- bind_cols(dat0, model$report()$ypreds %>% data.frame()) ## each 6 cols is new sim
   
 }
-AAA
+# AAA
 ## plotting ----
 # names(dat0) <- paste0(unique(len$st_f))
 # names(dat0) <- paste0(c(rep('uniform_',6),rep('min_',6),rep('max_',6)),paste0(unique(len$st_f)))
-names(dat0) <- paste0(c(rep('uniform_',length(stnames)),rep('dome_',length(stnames))),
+names(dat0) <- paste0(c(rep('uniform_',length(stnames)*2),rep('dome_',length(stnames)*2)),
                       stnames,c(rep("_M",length(stnames)),rep("_F",length(stnames))))
+
 
 ## fill precise 0 with NAs (these are autofilled)
 dat0[dat0==0] <- NA
@@ -75,7 +81,7 @@ mdf <-
     model = sub('_.*$', '', ID),
     st = sub("_[^_]+$", "",  sub("^(?:[^_]+_){1}", "\\1",ID)),
     Sex = sub(".*_ *(._?)", "\\1", ID),
-    age = rep(agedf$Age, 2)
+    age = rep(agedf$Age, 3)
   )  %>%
   select(-ID) %>%
   filter(!is.na(age) & !is.na(Length))
@@ -87,7 +93,7 @@ mdf$st_f = factor(mdf$st, levels=stnames)
 ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length, col = Sex, group = model)) +
   theme_minimal() +
   theme(panel.grid = element_blank(), legend.position = c(0.9,0.1))+
-  scale_y_continuous(limits = c(0,100)) +
+  # scale_y_continuous(limits = c(0,100)) +
   scale_x_continuous(limits = c(0,50)) +
   scale_color_brewer(palette = 'Dark2') +
   scale_alpha(guide = 'none') +
@@ -100,20 +106,3 @@ ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length, col = Sex, group
        color = 'selectivity model & sex')
 
 # ggsave(file = paste0(getwd(),"/plots/dome_uni_fits2.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)
-
-# ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length)) +
-#   theme_minimal() +
-#   theme(panel.grid = element_blank(), legend.position = c(0.9,0.15))+
-#   # scale_y_continuous(limits = c(0,100)) +
-#   # scale_x_continuous(limits = c(0,50)) +
-#   geom_point(alpha = 0.2) +
-#   geom_line(data = subset(mdf, model != 'Length'), aes(x = age, y = Length, color = model), lwd = 1.1)+
-#   facet_wrap(~ st_f) +
-#   labs(
-#     title = "Predicted Model Fits and Subsampled Data",
-#     y = 'Length (cm)',
-#     x = 'Age (yr)',
-#     subtitle = 'Points are actual subsampled data used in parameter fitting',
-#     color = 'selectivity model'
-#   )
-# ggsave(file = paste0(getwd(),"/plots/dome_uni_fits1.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)

@@ -11,6 +11,7 @@ aksurv <- read.csv(paste0(getwd(),"/AK_age_view_2018.csv")) %>%
   select(AGE, LENGTH, SEX, st) %>% 
   plyr::rename(c('SEX' = 'Sex','AGE' = 'Age', 'LENGTH' = 'Length_cm'))
 # akage2 <- read.csv(paste0(getwd(),"/norpac_ages_2018.csv")) ## from fishery
+aksurv$st <- factor(aksurv$st, levels = c("AK 0","AK 1","AK 2","AK 3","AK 4","AK 5","AK 6","AK 7","AK 8","AK 9"))
 save(aksurv, file = paste0(getwd(),"/filtered_SAB_AK.rda")) ## raw
 load( paste0(getwd(),"/filtered_SAB_AK.rda")) ## aksurv
 
@@ -59,21 +60,21 @@ len1 <- len0 %>% filter(!is.na(Age) & !is.na(Length_cm) & Depth_m < 549 & Depth_
 len1$st <- NULL
 for(i in 1:nrow(len1)){
        if(len1$Depth_m[i] > 55 & len1$Depth_m[i] < 200 & len1$Latitude_dd[i] > 32 & len1$Latitude_dd[i] < 42){
-         len1[i,'st'] <- 'WCshallow_s'
+         len1[i,'st'] <- 'shallow_s'
        } else if(len1$Depth_m[i] >= 200 & len1$Depth_m[i] < 300 & len1$Latitude_dd[i] > 32 & len1$Latitude_dd[i] < 42){
-         len1[i,'st']<- 'WCmid_s'
+         len1[i,'st']<- 'mid_s'
 
        } else if(len1$Depth_m[i] >= 300 & len1$Depth_m[i] < 549 & len1$Latitude_dd[i] > 32 & len1$Latitude_dd[i] < 42){
-         len1[i,'st'] <- 'WCdeep_s'
+         len1[i,'st'] <- 'deep_s'
 
        } else if(len1$Depth_m[i] > 55 & len1$Depth_m[i] < 200 & len1$Latitude_dd[i] >= 42 & len1$Latitude_dd[i] < 49){
-         len1[i,'st'] <- 'WCshallow_n'
+         len1[i,'st'] <- 'shallow_n'
          
        } else if(len1$Depth_m[i] >= 200 & len1$Depth_m[i] < 300 & len1$Latitude_dd[i] >= 42 & len1$Latitude_dd[i] < 49){
-         len1[i,'st'] <- 'WCmid_n'
+         len1[i,'st'] <- 'mid_n'
          
        } else if(len1$Depth_m[i] >= 300 & len1$Depth_m[i] < 549 & len1$Latitude_dd[i] >= 42 & len1$Latitude_dd[i] < 49){
-         len1[i,'st'] <- 'WCdeep_n'
+         len1[i,'st'] <- 'deep_n'
        }
 }
 len <- len1; rm(len1)

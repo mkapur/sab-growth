@@ -116,9 +116,14 @@ for(s in 1:2){
   }
 }
 
+
+
+
+
 save(wca, file = paste0(getwd(),"/agearray_WC.rda")); rm(wca0); rm(Atemp)
 save(wcl, file = paste0(getwd(),"/lenarray_WC.rda")); rm(wcl0); rm(Ltemp)
 save(wcnmat, file = paste0(getwd(),"/nmat_WC.rda"))
+
 
 
 ## combine ----
@@ -137,9 +142,19 @@ for(i in 1:2){
 }
 nmat <- rbind(wcnmat,aknmat)
 
+
+## create bin assignments (may vary by region)
+Bin <- lenmat
+
+
+## create selectivity matrix
+Sel <- array(1, dim = c(34069, ncol(wcl) +ncol(akl), 2))
+for(i in 1:length(Sel)) Sel[i] <- runif(1,0,1)
+
 save(agemat, file = paste0(getwd(),"/agearray.rda")); rm(wca0); rm(Atemp)
 save(lenmat, file = paste0(getwd(),"/lenarray.rda")); rm(wcl0); rm(Ltemp)
 save(nmat, file = paste0(getwd(),"/nmat.rda"))
+save(Sel, file = paste0(getwd(),"/selarray.rda"))
 
 
 # len %>% group_by(st) %>% summarise(minL = min(Length_cm), maxL = max(Length_cm))

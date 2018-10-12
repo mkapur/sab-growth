@@ -1,6 +1,24 @@
 ## deprecated code
 
 
+# ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length)) +
+#   theme_minimal() +
+#   theme(panel.grid = element_blank(), legend.position = c(0.9,0.15))+
+#   # scale_y_continuous(limits = c(0,100)) +
+#   # scale_x_continuous(limits = c(0,50)) +
+#   geom_point(alpha = 0.2) +
+#   geom_line(data = subset(mdf, model != 'Length'), aes(x = age, y = Length, color = model), lwd = 1.1)+
+#   facet_wrap(~ st_f) +
+#   labs(
+#     title = "Predicted Model Fits and Subsampled Data",
+#     y = 'Length (cm)',
+#     x = 'Age (yr)',
+#     subtitle = 'Points are actual subsampled data used in parameter fitting',
+#     color = 'selectivity model'
+#   )
+# ggsave(file = paste0(getwd(),"/plots/dome_uni_fits1.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)
+
+
 ## a function to get 500 samples within selectivity bounds
 # data.sub <- function(len, s){
 #   ## reshape raw length and age data

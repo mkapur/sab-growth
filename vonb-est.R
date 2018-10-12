@@ -3,8 +3,10 @@ options(scipen=999)
 rm(list = ls())
 ## load data
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
-load( paste0(getwd(),"/filtered_SAB_WC.rda"));load( paste0(getwd(),"/nmat.rda")); load(paste0(getwd(),"/lenarray.rda")); load(paste0(getwd(),"/agearray.rda")) ## made in dataprep
-nStrata <- length(unique(len$st_f))
+load( paste0(getwd(),"/nmat.rda")); load(paste0(getwd(),"/lenarray.rda")); load(paste0(getwd(),"/agearray.rda")) ## made in dataprep
+nStrata <- nrow(nmat)
+stnames <- c('deep_n','mid_n','shallow_n','deep_s', "mid_s","shallow_s",
+             "AK 0","AK 1","AK 2","AK 3","AK 4","AK 5","AK 6","AK 7","AK 8")
 
 ## Estimation
 s <- c(1:4)[1] ## choose between uniform, min, maax, or dome selectivity
@@ -22,13 +24,12 @@ parameters <-
 
 compile("sptlvb.cpp")
 dyn.load(dynlib("sptlvb"))
-dat0 <- NULL ## later storage for preditcs
+dat0 <- NULL ## later storage for predicts
 for(s in c(1)){ ## ultimately loop over 4 selectivities
   data <-
     list(
       Length_cm = lenmat,
       Age = agemat,
-      st = len[, 'st_f'],
       nStrata = nStrata,
       minSel = minSel,
       maxSel = maxSel,
@@ -53,32 +54,50 @@ AAA
 ## plotting ----
 # names(dat0) <- paste0(unique(len$st_f))
 # names(dat0) <- paste0(c(rep('uniform_',6),rep('min_',6),rep('max_',6)),paste0(unique(len$st_f)))
-names(dat0) <- paste0(c(rep('uniform_',6),rep('dome_',6)),paste0(unique(len$st_f)))
-agedf <- agemat  %>% data.frame() %>% reshape::melt()  %>% plyr::rename(c("value" = "Age")) %>% select(-variable) 
-lendf <- lenmat %>% data.frame() 
-# names(lendf) <-  paste0(rep('Length_',6),paste0(unique(len$st_f)))
-names(lendf) <- paste0(rep('Length_',6),c('deep_n','mid_n','shallow_n','deep_s', "mid_s","shallow_s"))
+names(dat0) <- paste0(c(rep('uniform_',length(stnames)),rep('dome_',length(stnames))),
+                      stnames,c(rep("_M",length(stnames)),rep("_F",length(stnames))))
 
-mdf<- bind_cols(dat0,  lendf) %>% reshape::melt(id = c())  %>% plyr::rename(c( 'variable' = 'ID', 'value' = 'Length')) %>% 
-  mutate(model = sub('_.*$','', ID), st = sub(".*_ *(.*?)", "\\1", ID), age = rep(agedf$Age,3))  %>% select(-ID)
+## fill precise 0 with NAs (these are autofilled)
+dat0[dat0==0] <- NA
+
+agedf <- agemat  %>% data.frame() %>% reshape::melt()  %>% plyr::rename(c("value" = "Age")) %>% select(-variable) 
+lendf <- lenmat %>% data.frame() #%>% reshape::melt()  %>% plyr::rename(c("value" = "Length")) %>% select(-variable) 
+# names(lendf) <-  paste0(rep('Length_',6),paste0(unique(len$st_f)))
+names(lendf) <- paste0(rep('Length_',length(stnames)), stnames,c(rep("_M",length(stnames)),rep("_F",length(stnames))))
+
+
+
+mdf <-
+  bind_cols(dat0,  lendf) %>% 
+  reshape::melt(id = c())  %>% 
+  plyr::rename(c('variable' = 'ID', 'value' = 'Length')) %>%
+  mutate(
+    model = sub('_.*$', '', ID),
+    st = sub("_[^_]+$", "",  sub("^(?:[^_]+_){1}", "\\1",ID)),
+    Sex = sub(".*_ *(._?)", "\\1", ID),
+    age = rep(agedf$Age, 2)
+  )  %>%
+  select(-ID) %>%
+  filter(!is.na(age) & !is.na(Length))
 ## for plotting
-mdf$st_f = factor(mdf$st, levels=c('deep_n','mid_n','shallow_n','deep_s', "mid_s","shallow_s"))
+mdf$st_f = factor(mdf$st, levels=stnames)
 # save(mdf,file =  paste0(getwd(),"/uniform_predicts.rda"))
 
 
-ggplot(len, aes(x = Age, y = Length_cm)) +
+ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length, col = Sex, group = model)) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), legend.position = c(0.9,0.15))+
+  theme(panel.grid = element_blank(), legend.position = c(0.9,0.1))+
   scale_y_continuous(limits = c(0,100)) +
   scale_x_continuous(limits = c(0,50)) +
-  # scale_color_brewer(palette = 'Dark2') +
+  scale_color_brewer(palette = 'Dark2') +
+  scale_alpha(guide = 'none') +
   geom_point(alpha = 0.2) +
-  geom_line(data = subset(mdf, model != 'Length'), aes(x = age, y = Length, color = model), lwd = 1.1) +
+  geom_line(data = subset(mdf, model != 'Length'),
+            aes(x = age, y = Length, color = model, group = model), lwd = 1.1) +
   facet_wrap(~ st_f) +
   labs(title = "Predicted Model Fits and Raw Data", 
        y = 'Length (cm)', x= 'Age (yr)', 
-       subtitle = 'Parameters estimated using subset of each strata, not sex-specific',
-       color = 'selectivity model')
+       color = 'selectivity model & sex')
 
 # ggsave(file = paste0(getwd(),"/plots/dome_uni_fits2.png"), plot = last_plot(), height = 5, width = 7, unit = 'in', dpi = 520)
 

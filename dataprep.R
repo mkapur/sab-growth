@@ -46,7 +46,7 @@ rm(wcsurv1); rm(wcsurv0)
 
 ## British Columbia ----
 bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/BC_LWMSO_1970-present.csv")) %>% 
-  filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & SPECIMEN_SEX_CODE %in% c("1","2")) %>%
+  filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & SPECIMEN_SEX_CODE %in% c("1","2") & NS_AREA != "") %>%
   select(SPECIMEN_AGE, Fork_Length,SPECIMEN_SEX_CODE,SABLE_AREA_GROUP,NS_AREA) %>%
   mutate(H2 = 'BC', H3 = NS_AREA,  Sex = ifelse(SPECIMEN_SEX_CODE == "2", 'F', "M"))  %>%
   plyr::rename(c("SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm", "SABLE_AREA_GROUP" = "H4")) %>%
@@ -82,6 +82,7 @@ for(d in 2:4){
   KEY[,d] <- temp
 }
 save(DES, file = paste0(getwd(),"/data/DES.rda")) 
+save(KEY, file = paste0(getwd(),"/data/KEY.rda")) 
 
 
 

@@ -1,7 +1,7 @@
 *.dll
 *.o
 *.Rhistory
-
+*raw
 .Rhistory
 sptlvb.dll
 sptlvb.o

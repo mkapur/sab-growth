@@ -2,18 +2,32 @@ require(dplyr); require(reshape); require(RColorBrewer); require(ggplot2)
 
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 
-## ALASKA ----
 
-aksurv <- read.csv(paste0(getwd(),"/AK_age_view_2018.csv")) %>%
-  filter(SEX != 3 & !is.na(AGE) & !is.na(LENGTH) & STRATUM != 8) %>% 
-  ## drop startum 9 for very few records
-  mutate(st = paste("AK",STRATUM), SEX = ifelse(SEX == 2, 'F', "M")) %>%
-  select(AGE, LENGTH, SEX, st) %>% 
-  plyr::rename(c('SEX' = 'Sex','AGE' = 'Age', 'LENGTH' = 'Length_cm'))
-# akage2 <- read.csv(paste0(getwd(),"/norpac_ages_2018.csv")) ## from fishery
-aksurv$st <- factor(aksurv$st, levels = c("AK 0","AK 1","AK 2","AK 3","AK 4","AK 5","AK 6","AK 7","AK 8","AK 9"))
-save(aksurv, file = paste0(getwd(),"/filtered_SAB_AK.rda")) ## raw
-load( paste0(getwd(),"/filtered_SAB_AK.rda")) ## aksurv
+# ALASKA ----
+aksurv <- read.csv(paste0(getwd(),"/data/raw/ak/AK_age_view_2018.csv")) %>%
+  ## drop period before 1995 and filter for top 6 as in Echave
+  filter(., grepl(paste(c("Southeast",'Kodiak',"Chirikof","Shumagin","Bering","Aleutian"), collapse="|"), GEOGRAPHIC_AREA_NAME)) %>%
+  filter(SEX != 3 & !is.na(AGE) & !is.na(LENGTH) & YEAR > 1995) %>% 
+  mutate(st = ifelse(COUNCIL_SABLEFISH_MGMT_AREA == 'Bering Sea', 'Bering',
+                     
+                     ifelse(COUNCIL_SABLEFISH_MGMT_AREA == "Aleutians", "Aleutians",
+                            ifelse(COUNCIL_SABLEFISH_MGMT_AREA == "East Yakutat/Southeast", "Southeast",
+                                                                                   as.character(GEOGRAPHIC_AREA_NAME )))), 
+         SEX = ifelse(SEX == 2, 'F', "M")) %>%
+  select(AGE, LENGTH, SEX, st, GEOGRAPHIC_AREA_NAME) %>%
+  plyr::rename(c('SEX' = 'Sex','AGE' = 'Age', 'LENGTH' = 'Length_cm', "GEOGRAPHIC_AREA_NAME" = "st2"))
+
+
+
+# from fishery 
+aksurv$st <- factor(aksurv$st)
+aksurv$st2 <- factor(aksurv$st2)
+# aksurv$st <- factor(aksurv$st, levels = c("AK 0","AK 1","AK 2","AK 3","AK 4","AK 5","AK 6","AK 7","AK 8","AK 9"))
+save(aksurv[,c(1:4)], file = paste0(getwd(),"/filtered_SAB_AK_1.rda")) ## raw
+save(aksurv[,c(1:3,5)], file = paste0(getwd(),"/filtered_SAB_AK_2.rda")) ## raw
+
+
+load( paste0(getwd(),"/filtered_SAB_AK_1.rda")) ## aksurv
 
 nStrata <- length(unique(aksurv$st))
 aka0 <-
@@ -148,8 +162,22 @@ Bin <- lenmat
 
 
 ## create selectivity matrix
-Sel <- array(1, dim = c(34069, ncol(wcl) +ncol(akl), 2))
-for(i in 1:length(Sel)) Sel[i] <- runif(1,0,1)
+Sel <- array(NA, dim = c(34069, 15, 2))
+
+for(s in 1:2){
+  for(j in 1:nStrata){
+    L50 <- runif(1,30,55) ## random inflection point @ strata
+    for(i in 1:nmat[j,s]){ ## only do non NAs
+      Sel[i,j,s] <-  1/(1+exp(L50 - lenmat[i,j,s])) ## selectivity @ obs given l50; will be same for each strata
+    }
+  }
+}
+  
+  
+
+
+plot(Sel[,1,1] ~ lenmat[,1,1], pch = 19, main = 'simulated selectivity curves, n = 15')
+for(i in 1:ncol(Sel)) points(Sel[,i,1]~ lenmat[,i,1], col =rainbow(30)[i], pch = 19)
 
 save(agemat, file = paste0(getwd(),"/agearray.rda")); rm(wca0); rm(Atemp)
 save(lenmat, file = paste0(getwd(),"/lenarray.rda")); rm(wcl0); rm(Ltemp)
@@ -216,3 +244,24 @@ PlotSexRatio.fn(dir = getwd(), dat = age, data.type = "age", survey = "NWFSCBT",
 
 
 
+## dataprep for mapping
+load( paste0(getwd(),"/data/filtered_SAB_WC.rda")) ## len
+
+wcsurv <- len %>% select(Latitude_dd,Longitude_dd,st_f) %>%
+  plyr::rename(c("Latitude_dd" = "LAT", "Longitude_dd" = "LON", "st_f" = "STRATA")) %>%
+  mutate(REGION = 'WC')
+
+aksurv <- read.csv(paste0(getwd(),"/data/raw/AK/AK_age_view_2018.csv")) %>% 
+  select(STARTLAT,STARTLONG, STRATUM) %>% 
+  plyr::rename(c("STARTLAT" = "LAT", "STARTLONG" = "LON","STRATUM" = "STRATA")) %>%
+  mutate(REGION = 'AK', STRATA = as.character('STRATA'))
+
+## no lat and longs in BC data just area code -- maybe do runif within limits
+bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/BC_LWMSO_1970-present.csv")) %>% 
+  select(SABLE_AREA_GROUP) %>%
+  plyr::rename(c("SABLE_AREA_GROUP" = "STRATA")) %>%
+  mutate(LAT = runif(nrow(.),48,58), LON = runif(nrow(.),-135,-128), REGION = 'BC')  %>%
+  select(LAT,LON,STRATA,REGION)
+
+mapdf <- bind_rows(wcsurv,bcsurv,aksurv)
+# write.csv(mapdf, file = paste0(getwd(),'/data/mapdf.csv'),row.names = F)

@@ -1,5 +1,64 @@
 ## deprecated code
 
+Type unif_obj_fun = 0.0; // used as numerator in all simulations
+Type trunc_fun = 0.0; // denominator
+
+for(int s = 0; s < 2; s++) // iterate sexes
+for(int j = 0; j < nStrata; j++){     // iterate strata columns
+  for(int i = 0; i < nmat(j,s); i++){ // iterate rows, unique to strata
+    int idx = (s)*nStrata + j;
+    yfit = Linf(idx)*(1-exp(-k(idx)*(Age(i,j,s) - t0(idx))));
+    Sigma = sigma0*pow(yfit,sigma1) // Francis 1988
+    unif_obj_fun = dnorm(Length_cm(i,j,s), yfit, Sigma, false);
+    
+    switch( selType ){
+      case 1 : // uniform selectivity (Sel = 1)
+      trunc_fun = 1*pnorm(yfit, Length_cm(i,j,s), Sigma);
+      obj_fun -= log( (Sel(i,j,s)*unif_obj_fun)/trunc_fun );
+      ypreds(i,j,s) = yfit;
+      break;
+      case 2 : // selectivity correction
+      trunc_fun = Sel(i,j,s)*pnorm(yfit, Length_cm(i,j,s), Sigma);
+      obj_fun -= log( (Sel(i,j,s)*unif_obj_fun)/trunc_fun );
+      
+      ypreds(i,j,s) = yfit;
+      break;
+      // case 3 : // no correction
+      //   obj_fun -= log(unif_obj_fun);
+      //   ypreds(i,j,s) = yfit;
+      //   break;
+      // case 4 : // selectivity co
+      //   trunc_fun = pnorm(maxSel(j), yfit, Sigma) - pnorm(minSel(j), yfit, Sigma) ;
+      //   obj_fun = unif_obj_fun/log(trunc_fun);
+      //   ypreds(i,j,s) = yfit;
+      //   break;
+      
+    } // end selType
+  } // end rows
+}
+
+REPORT(ypreds);
+REPORT(yfit);
+REPORT(unif_obj_fun);
+REPORT(trunc_fun);
+ADREPORT(Linf);
+ADREPORT(k);
+ADREPORT(t0);
+
+
+## trunc fun switch
+# switch( selType ){
+#   case 1 : // uniform selectivity (Sel = 1)
+#   trunc_fun = 1*pnorm(yfit, Length_cm(i,j,s), Sigma);
+#   obj_fun -= log( (Sel(i,j,s)*unif_obj_fun)/trunc_fun );
+#   ypreds(i,j,s) = yfit;
+#   break;
+#   case 2 : // selectivity correction
+#   trunc_fun = Sel(i,j,s)*pnorm(yfit, Length_cm(i,j,s), Sigma);
+#   obj_fun -= log( (Sel(i,j,s)*unif_obj_fun)/trunc_fun );
+#   
+#   ypreds(i,j,s) = yfit;
+#   break;
 
 # ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length)) +
 #   theme_minimal() +

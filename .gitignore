@@ -2,6 +2,7 @@
 *.o
 *.Rhistory
 *raw
+*deprecated
 .Rhistory
 sptlvb.dll
 sptlvb.o

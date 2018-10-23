@@ -7,15 +7,17 @@ Type objective_function<Type>::operator() ()
 
   DATA_VECTOR(Length_cm);
   DATA_VECTOR(Age);
-  DATA_VECTOR(DES);
+  DATA_IVECTOR(DES); // make sure this knows it is an IVECTOR
   DATA_INTEGER(nStrata);
   
   // things to estimate (per stratum)
   PARAMETER_VECTOR(t0); // t0 can be negative
   PARAMETER_VECTOR(log_k);
   PARAMETER_VECTOR(log_Linf);
-  PARAMETER(sigma0);
-  PARAMETER(sigma1);
+  // PARAMETER(sigma0);
+  // PARAMETER(sigma1);
+  PARAMETER(Sigma);
+  // Type Sigma = 0.0;
   
   // exponentiate params
   vector<Type> k(nStrata);
@@ -24,21 +26,20 @@ Type objective_function<Type>::operator() ()
   vector<Type> Linf(nStrata);
   Linf = exp(log_Linf);
 
-  Type Sigma = 0;
-  Type yfit = 0;
+
   vector<Type> ypreds(Age.rows());
   Type obj_fun = 0.0;
-  Scalar idx;
+  Type yfit = 0.0;
   for(int i = 0; i < Age.rows(); i++){
-    idx = DES(i);
-    ypreds(i) = Linf(1)*(1-exp(-k(1)*(Age(i) - t0(1))));
-    // Sigma = sigma0*pow(ypreds(i),sigma1); // Francis 1988
-    // obj_fun -= log(dnorm(Length_cm(i),  ypreds(i), Sigma, true));
+    yfit = Linf(DES(i))*(1-exp(-k(DES(i))*(Age(i) - t0(DES(i)))));
+    // Sigma = sigma0*pow(yfit,sigma1); // Francis 1988
+    obj_fun -= dnorm(Length_cm(i),  yfit, Sigma, true);
+    ypreds(i) = yfit;
   }
   
         
   REPORT(ypreds);
-  REPORT(idx);
+  REPORT(Sigma);
   ADREPORT(Linf);
   ADREPORT(k);
   ADREPORT(t0);

@@ -9,7 +9,7 @@ setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 # some standard map packages.
 # https://eriqande.github.io/rep-res-eeb-2017/map-making-in-R.html
 # the ggmap package.  Might as well get the bleeding edge version from GitHub
-devtools::install_github("dkahle/ggmap")
+# devtools::install_github("dkahle/ggmap")
 # install.packages(c("maps", "mapdata"))
 require(dplyr);require(maps);require(mapdata);require(ggplot2)
 require(Rmisc)

@@ -3,8 +3,8 @@
 #===============================================================================
 
 # https://github.com/nwfsc-assess/nwfscSurvey
-devtools::install_github("nwfsc-assess/nwfscSurvey", ref = "development", build_vignettes = TRUE)
-
+# devtools::install_github("nwfsc-assess/nwfscSurvey", ref = "development", build_vignettes = TRUE)
+devtools::install_github("nwfsc-assess/nwfscSurvey", build_vignettes = TRUE)
 # Load the packaged
 library(nwfscSurvey)
 # Look at the vignette
@@ -16,8 +16,11 @@ ls("package:nwfscSurvey")
 #===============================================================================
 #=============          NWFSC Combo          ===================================
 #===============================================================================
-setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
+setwd("C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/WC")
 catch = PullCatch.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd()) 
+bio   = PullBio.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
+
+catch = PullCatch.fn(Name = "sablefish", SurveyName = "Triennial", SaveFile = TRUE, Dir = getwd()) 
 bio   = PullBio.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
 
 head(catch)

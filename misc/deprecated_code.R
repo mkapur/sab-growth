@@ -1,5 +1,37 @@
 ## deprecated code
 
+
+# mdf <-
+#   bind_cols(dat0,  lendf) %>% 
+#   reshape::melt(id = c())  %>% 
+#   plyr::rename(c('variable' = 'ID', 'value' = 'Length')) %>%
+#   mutate(
+#     model = sub('_.*$', '', ID),
+#     st = sub("_[^_]+$", "",  sub("^(?:[^_]+_){1}", "\\1",ID)),
+#     Sex = sub(".*_ *(._?)", "\\1", ID),
+#     age = rep(agedf$Age, 3)
+#   )  %>%
+#   select(-ID) %>%
+#   filter(!is.na(age) & !is.na(Length))
+# ## for plotting
+# mdf$st_f = factor(mdf$st, levels=stnames)
+# save(mdf,file =  paste0(getwd(),"/uniform_predicts.rda"))
+
+
+ggplot(subset(mdf, model == 'Length'), aes(x = age, y = Length, col = Sex, group = model)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(), legend.position = c(0.9,0.1))+
+  scale_y_continuous(limits = c(0,100)) +
+  scale_x_continuous(limits = c(0,50)) +
+  scale_color_brewer(palette = 'Dark2') +
+  scale_alpha(guide = 'none') +
+  geom_point(alpha = 0.2) +
+  geom_line(data = subset(mdf, model != 'Length'),
+            aes(x = age, y = Length, color = model, group = model), lwd = 1.1) +
+  facet_wrap(~ st_f + Sex) +
+  labs(title = "Predicted Model Fits and Raw Data", 
+       y = 'Length (cm)', x= 'Age (yr)', 
+       color = 'selectivity model')
 Type unif_obj_fun = 0.0; // used as numerator in all simulations
 Type trunc_fun = 0.0; // denominator
 

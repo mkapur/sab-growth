@@ -41,7 +41,7 @@ Type objective_function<Type>::operator() ()
     // Sigma = yfit*sigma0; // Francis 1988
     obj_fun -= dnorm(Length_cm(i),yfit,Sigma,true);
   }
-  aic = (2*nStrata*3+1) - 2*obj_fun;
+  aic = 2*(2*nStrata*3+1) - 2*obj_fun;
   
   REPORT(ypreds);
   ADREPORT(t0);

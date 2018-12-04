@@ -14,12 +14,16 @@ wcsurv <- wcsurv1 %>%
 rm(wcsurv0); rm(wcsurv1)
 
 ## British Columbia ----
-## still need lats and longs here
-bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/BC_LWMSO_1970-present.csv")) %>%
-  filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & SPECIMEN_SEX_CODE %in% c("1","2") & NS_AREA != "" & SABLE_AREA_GROUP != "") %>%
-  select(SPECIMEN_AGE, Fork_Length,SPECIMEN_SEX_CODE,YEAR) %>%
-  mutate(Latitude_dd = NA, Longitude_dd = NA,Sex = ifelse(SPECIMEN_SEX_CODE == "2", 'F', "M"), Fork_Length = Fork_Length/10) %>%
-  plyr::rename(c("SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
+bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/LWMSO.w_lat_long.csv")) %>%
+  filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & 
+           SPECIMEN_SEX_CODE %in% c("1","2") &
+           NS_AREA != "" & SABLE_AREA_GROUP != "" & slat != 0) %>%
+  select(SPECIMEN_AGE, Fork_Length,SPECIMEN_SEX_CODE,YEAR,slat,slon) %>%
+  mutate(Sex = ifelse(SPECIMEN_SEX_CODE == "2", 'F', "M"), 
+         Fork_Length = Fork_Length/10) %>%
+  plyr::rename(c("slat" = "Latitude_dd",
+                 "slon" = "Longitude_dd",
+                 "SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
   select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%
   mutate(REG = "BC")
 
@@ -63,17 +67,16 @@ ggplot(all_data, aes(x = Age, y = Length_cm, color = Sex)) +
   facet_wrap(~REG) +
   labs(y = 'Length (cm)', x = 'Age (years)')
 
-all_data0 <- subset(all_data, REG != 'BC')
-all_data0$Longitude_dd <- with(all_data0, ifelse(Longitude_dd> 0, -1*Longitude_dd,Longitude_dd))
+all_data$Longitude_dd <- with(all_data, ifelse(Longitude_dd> 0, -1*Longitude_dd,Longitude_dd))
 ## change point gam in par est
 
 ## first fit with year only and check ACF
-mod <- gam(Length_cm ~ s(Year, bs = "cc"), data = all_data0)
-# mod <- lm(Length_cm ~ Year, data = all_data0)
+mod <- gam(Length_cm ~ s(Year, bs = "cc"), data = all_data)
+# mod <- lm(Length_cm ~ Year, data = all_data)
 acf(resid(mod),  main = "ACF")
 
 mod <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") + s(Latitude_dd,Longitude_dd), 
-           data = all_data0)
+           data = all_data)
 summary(mod)
 
 ## plotting model
@@ -87,15 +90,15 @@ summary(mod)
 mod1 <- gam(Length_cm ~ Age + Sex +
               s(Longitude_dd,Latitude_dd), 
             correlation = corAR1(form = ~ 1|Year, p = 1),
-            data = all_data0)
+            data = all_data)
 mod2 <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") +
               s(Longitude_dd,Latitude_dd), 
             correlation = corAR1(form = ~ 1|Year, p = 2),
-            data = all_data0)
+            data = all_data)
 mod3 <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") + 
               s(Longitude_dd,Latitude_dd), 
             correlation = corAR1(form = ~ 1|Year, p = 3),
-           data = all_data0)
+           data = all_data)
 
 MuMIn::model.sel(mod,mod1,mod2,mod3)
 ## support for 2-year lag, not 3
@@ -121,5 +124,29 @@ dev.off()
 llsmooth <- mod2$smooth[2][[1]]
 llsmooth$knots
 ## calc first derivatives
+pdat <- sample_n(all_data,1000)
+pTerm <- predict(mod2, newdata = pdat, type = "terms", se.fit = TRUE)
+p2 <- predict(mod2, newdata = pdat) ## raw predicts
+pdat <- transform(pdat, predLen = p2, se2_spt = pTerm$se.fit[,4], se2_yr = pTerm$se.fit[,3])
+df.res <- df.residual(mod2)
+crit.t <- qt(0.025, df.res, lower.tail = FALSE)
+## variances are additive just FYI
+pdat <- transform(pdat,
+                  upper = predLen + (crit.t * (se2_spt+se2_yr)),
+                  lower = predLen - (crit.t * (se2_spt+se2_yr)))
+
+## source from gist
+source(paste0(getwd(),"/Deriv.R"))
+## newDF is data frame of points along X we want to evaluate the derivative, and eps is step
+## separate by sex
+sapply(subset(model.frame(mod2),Sex == 'M')[,c('Year')],
+       function(x) seq(min(x), max(x), length = n))
+
+newDF <- data.frame(Year=seq(1,33,0.5),Longitude_dd= seq(-180,-116,1),Latitude_dd = 0:64)
+
+X0 <- predict(mod2, newDF, type = "lpmatrix")
+newDF <- newDF + eps
+X1 <- predict(mod, newDF, type = "lpmatrix")
+Xp <- (X1 - X0) / eps
 ## ID breakpoints
 ## segregate data at breakpoints and fit VonB model using TMB or NLS

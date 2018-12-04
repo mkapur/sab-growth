@@ -57,9 +57,13 @@ for(s in c(1:ncol(DES))){ ## 4 hypotheses for spatial groupings
 }
 
 ## reformat outputs ----
+
+## AIC and Weights
 aic <- aic0 %>% data.frame()
 names(aic) <- c('Pooled','3 Zone', 'Lit', 'Survey Strata')
 aic[which.min(aic)]
+relLike <- -0.5 * aic-min(aic)
+aicweight <- relLike/sum(relLike)
 
 names(rep0) <- c('variable', 'value','sd', 'ID')
 rep0 <- rep0 %>% mutate(

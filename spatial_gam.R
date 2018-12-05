@@ -5,68 +5,11 @@ library(ggsidekick)
 ## load and cbind data
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 
-## WEST COAST ----
-load(paste0(getwd(), "/data/raw/WC/Bio__NWFSC.Combo_2018-09-25.rda"), verbose = T) ## loads as "Data"
-wcsurv0 <- Data; rm(Data)
-wcsurv1 <- wcsurv0 %>% filter(!is.na(Age) & !is.na(Length_cm) & Depth_m < 549 & Depth_m >= 55 & Sex != 'U')
-wcsurv <- wcsurv1 %>%
-  select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%   mutate(REG = "WC")
-rm(wcsurv0); rm(wcsurv1)
-
-## British Columbia ----
-bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/LWMSO.w_lat_long.csv")) %>%
-  filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & 
-           SPECIMEN_SEX_CODE %in% c("1","2") &
-           NS_AREA != "" & SABLE_AREA_GROUP != "" & slat != 0) %>%
-  select(SPECIMEN_AGE, Fork_Length,SPECIMEN_SEX_CODE,YEAR,slat,slon) %>%
-  mutate(Sex = ifelse(SPECIMEN_SEX_CODE == "2", 'F', "M"), 
-         Fork_Length = Fork_Length/10) %>%
-  plyr::rename(c("slat" = "Latitude_dd",
-                 "slon" = "Longitude_dd",
-                 "SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
-  select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%
-  mutate(REG = "BC")
-
-
-# ## ALASKA ----
-aksurv <- read.csv(paste0(getwd(),"/data/raw/ak/AK_age_view_2018.csv")) %>%
-  ## drop period before 1995 and filter for top 6 as in Echave
-  filter(., grepl(paste0(c("Southeast",'Kodiak',"Chirikof","Shumagin","Bering","Aleutian"), collapse="|"), GEOGRAPHIC_AREA_NAME)) %>%
-  filter(SEX != 3 & !is.na(AGE) & !is.na(LENGTH) ) %>%
-  mutate(SEX = ifelse(SEX == 2, 'F', "M")) %>%
-  select(YEAR, LENGTH, AGE, SEX, STARTLAT, STARTLONG) %>%
-  plyr::rename(c('YEAR' = 'Year', 'SEX' = 'Sex','AGE' = 'Age',
-                 'LENGTH' = 'Length_cm', "STARTLAT" = "Latitude_dd","STARTLONG" = "Longitude_dd")) %>%
-  mutate(REG = "AK")
-
-## combine ---
-all_data <- rbind(wcsurv,bcsurv,aksurv)
-# save(all_data, file = paste0(getwd(),"/data/gam_data.rda"))
 load( paste0(getwd(),"/data/gam_data.rda")) ## all_data
 
 # all_data$Year <- as.factor(all_data$Year)
 all_data$Year <- as.numeric(as.character(all_data$Year))
 all_data$Sex <- as.factor(all_data$Sex)
-
-## some exploratory plots ----
-ggplot(all_data, aes(x = Length_cm, fill = Sex)) +
-  theme_sleek() +
-  theme(legend.position = c(0.05,0.9))+
-  geom_histogram(stat = 'bin', position = 'stack', 
-                 binwidth = 1) +
-  scale_fill_manual(values = c("#d8b365","#5ab4ac"))+
-  facet_wrap(~REG) +
-  labs(x = 'Length (cm)')
-
-ggplot(all_data, aes(x = Age, y = Length_cm, color = Sex)) +
-  theme_sleek() +
-  theme(legend.position = c(0.05,0.9))+
-  geom_point( aes( alpha = 0.2) )+
-  scale_alpha(guide = 'none')+
-  scale_color_manual(values = c("#d8b365","#5ab4ac"))+
-  facet_wrap(~REG) +
-  labs(y = 'Length (cm)', x = 'Age (years)')
-
 all_data$Longitude_dd <- with(all_data, ifelse(Longitude_dd> 0, -1*Longitude_dd,Longitude_dd))
 ## change point gam in par est
 
@@ -87,20 +30,23 @@ summary(mod)
 # pacf(resid(mod$lme), lag.max = 36, main = "pACF")layout(matrix(1:2, ncol = 2))
 
 ## now try with some AR structures and check AIC
-mod1 <- gam(Length_cm ~ Age + Sex +
-              s(Longitude_dd,Latitude_dd), 
-            correlation = corAR1(form = ~ 1|Year, p = 1),
-            data = all_data)
-mod2 <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") +
-              s(Longitude_dd,Latitude_dd), 
-            correlation = corAR1(form = ~ 1|Year, p = 2),
-            data = all_data)
-mod3 <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") + 
-              s(Longitude_dd,Latitude_dd), 
-            correlation = corAR1(form = ~ 1|Year, p = 3),
-           data = all_data)
+# mod1 <- gam(Length_cm ~ Age + Sex +
+#               s(Longitude_dd,Latitude_dd), 
+#             correlation = corAR1(form = ~ 1|Year, p = 1),
+#             data = all_data)
+# mod2 <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") +
+#               s(Longitude_dd,Latitude_dd), 
+#             correlation = corAR1(form = ~ 1|Year, p = 2),
+#             data = all_data)
+# mod3 <- gam(Length_cm ~ Age + Sex + s(Year, bs = "cc") + 
+#               s(Longitude_dd,Latitude_dd), 
+#             correlation = corAR1(form = ~ 1|Year, p = 3),
+#            data = all_data)
 
-MuMIn::model.sel(mod,mod1,mod2,mod3)
+
+# MuMIn::model.sel(mod,mod1,mod2,mod3)
+# save(mod2, file = paste0(getwd(),'/spatial_gam.rda'))
+load(paste0(getwd(),'/spatial_gam.rda'))
 ## support for 2-year lag, not 3
 
 ## check that new model reduced error structure
@@ -113,13 +59,6 @@ png( file = paste0(getwd(),"/plots/gam_check.png"), height = 6, width = 8, units
 layout(matrix(1:4, ncol = 2))
 gam.check(mod2)
 dev.off()
-
-png( file = paste0(getwd(),"/plots/gam_smooths.png"), height = 6, width = 8, units = 'in', res = 500)
-layout(matrix(1:2, ncol = 2))
-plot(mod2,  select  =1,  scheme  =2,  lwd  =2)
-plot(mod2,  select  =2,  scheme  =2,  lwd  =2)
-dev.off()
-
 
 llsmooth <- mod2$smooth[2][[1]]
 llsmooth$knots
@@ -137,16 +76,59 @@ pdat <- transform(pdat,
 
 ## source from gist
 source(paste0(getwd(),"/Deriv.R"))
-## newDF is data frame of points along X we want to evaluate the derivative, and eps is step
-## separate by sex
-sapply(subset(model.frame(mod2),Sex == 'M')[,c('Year')],
-       function(x) seq(min(x), max(x), length = n))
 
-newDF <- data.frame(Year=seq(1,33,0.5),Longitude_dd= seq(-180,-116,1),Latitude_dd = 0:64)
+##iterate sex
+# breaksdf <- data.frame(Sex = NA, YrBreaks = NA, LatBreaks = NA)
+breaksdf <- list()
+idx <- 1
+for(s in 1:2){
+  # breaksdf[s,'Sex'] = c("M","F")[s]
+  for(t in 1:2){
 
-X0 <- predict(mod2, newDF, type = "lpmatrix")
-newDF <- newDF + eps
-X1 <- predict(mod, newDF, type = "lpmatrix")
-Xp <- (X1 - X0) / eps
-## ID breakpoints
-## segregate data at breakpoints and fit VonB model using TMB or NLS
+newD <- data.frame(Age = mean(seq(0,94,length = 100)), ## use mean age?
+                   Sex = c("M","F")[s], 
+                   Year = seq(1981,2017,length = 100),
+                   Longitude_dd = seq(-186,-116, length = 100),
+                   Latitude_dd = seq(0,64,length = 100))
+
+dr <- Deriv(mod2,newdata = newD)
+confint.Deriv(dr)
+
+Term <- c("Year","Latitude_dd")[t]
+
+m2.d <- Deriv(mod2, newdata = newD)
+m2.dci <- confint(m2.d, term = Term)
+
+# crit.eval = mean(m2.d[[Term]]$deriv) ## use mean
+crit.eval = quantile(probs = c(0.05, 0.95), x=  m2.d[[Term]]$deriv) ## use tails
+## identify where CI does NOT include some crit value (return NA where it does)
+m2.dsig <- signifD(m2.d$eval[[Term]], 
+                   d = m2.d[[Term]]$deriv,
+                   m2.dci[[Term]]$upper, 
+                   m2.dci[[Term]]$lower, eval = crit.eval)
+pix <- c(which(!is.na(m2.dsig$incr)), which(!is.na(m2.dsig$decr)))
+vals <- m2.d$eval[[Term]][pix]
+breaksdf[[idx]] <- sort(c(unique(round(vals))))
+# cat(idx)
+idx <- idx+1
+
+  }
+}
+
+png( file = paste0(getwd(),"/plots/gam_smooths.png"), height = 6, width = 8, units = 'in', res = 500)
+
+layout(matrix(1:4, ncol = 2))
+plot(mod2,  select  =1,  scheme  =2,  lwd  =2, main = 'Year Smoother', cex.axis = 2)
+plot(mod2,  select  =2,  scheme  =2,  lwd  =2, main = '2d Spatial Smoother', cex.axis = 2)
+plot.Deriv(m2.d, term = 'Year', cex.axis = 2, main = 'derivative of year')
+# abline(v = breaksdf[[1]], col = 'red')
+plot.Deriv(m2.d, term = 'Latitude_dd', cex.axis = 2, main = 'derivative of latitude')
+# abline(v = breaksdf[[2]], col = 'red')
+
+dev.off()
+
+## I think it co-evaluates the long lat derivs... check if geom_tile matches
+data.frame(lat = newD$Latitude_dd, lon = newD$Longitude_dd, val = m2.d$Latitude_dd$deriv) %>%
+  ggplot(., aes(x = lon, y = lat, fill = val)) +
+  geom_tile()
+}

@@ -64,6 +64,8 @@ names(aic) <- c('Pooled','3 Zone', 'Lit', 'Survey Strata')
 aic[which.min(aic)]
 relLike <- -0.5 * aic-min(aic)
 aicweight <- relLike/sum(relLike)
+aicweight[which.max(aicweight)]
+write.csv(aic, paste0(getwd(),"/results/aic_",Sys.Date(),'.csv'),row.names = F)
 
 names(rep0) <- c('variable', 'value','sd', 'ID')
 rep0 <- rep0 %>% mutate(
@@ -86,8 +88,8 @@ ypreds <- ypreds0 %>% melt(id = c("Age","Sex","Observed_Length", "H2","H3","H4")
                            ifelse(variable == '3 Zone',H2, 
                                   ifelse(variable == 'Lit',H3,
                                          H4)))) %>% select(-H2,-H3,-H4)
-write.csv(ypreds, paste0(getwd(),"/results/predicts_",Sys.Date(),'.csv'),row.names = F)
-
+# write.csv(ypreds, paste0(getwd(),"/results/predicts_",Sys.Date(),'.csv'),row.names = F)
+ypreds <- read.csv( paste0(getwd(),"/results/predicts_2018-11-21.csv"))
 ## plotting ----
 
 ## fits

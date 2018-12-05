@@ -3,7 +3,7 @@
 ################################################
 ## Functions for derivatives of GAM(M) models ##
 ################################################
-Deriv <- function(mod, n = 200, eps = 1e-7, newdata, term) {
+Deriv <- function(mod, n = 200, eps = 1e-4, newdata, term) {
   if(inherits(mod, "gamm"))
     mod <- mod$gam
   m.terms <- attr(terms(mod), "term.labels")
@@ -14,8 +14,9 @@ Deriv <- function(mod, n = 200, eps = 1e-7, newdata, term) {
   } else {
     newD <- newdata
   }
+  p <-proc.time()
   X0 <- predict(mod, data.frame(newD), type = "lpmatrix")
-  newD <- newD + eps
+  newD[,3:5] <- newD[,3:5] + eps ## only update smooths
   X1 <- predict(mod, data.frame(newD), type = "lpmatrix")
   Xp <- (X1 - X0) / eps
   Xp.r <- NROW(Xp)
@@ -24,6 +25,7 @@ Deriv <- function(mod, n = 200, eps = 1e-7, newdata, term) {
   bs.dims <- sapply(mod$smooth, "[[", "bs.dim") - 1
   ## number of smooth terms
   t.labs <- attr(mod$terms, "term.labels")
+  proc.time() - p
   ## match the term with the the terms in the model
   if(!missing(term)) {
     want <- grep(term, t.labs)
@@ -46,7 +48,7 @@ Deriv <- function(mod, n = 200, eps = 1e-7, newdata, term) {
   class(lD) <- "Deriv"
   lD$gamModel <- mod
   lD$eps <- eps
-  lD$eval <- newD - eps
+  lD$eval <- newD[,3:5] - eps
   lD ##return
 }
 
@@ -77,12 +79,21 @@ confint.Deriv <- function(object, term, alpha = 0.05, ...) {
 }
 
 signifD <- function(x, d, upper, lower, eval = 0) {
-  miss <- upper > eval & lower < eval
+  if(length(eval > 1)){
+    miss <- upper > eval[1] & upper < eval[2]
+    incr <- decr <- x
+    want <- d > eval
+    incr[!want | miss] <- NA
+    want <- d < eval
+    decr[!want | miss] <- NA
+  }
+  else{miss <- upper > eval & lower < eval
   incr <- decr <- x
   want <- d > eval
   incr[!want | miss] <- NA
   want <- d < eval
   decr[!want | miss] <- NA
+  }
   list(incr = incr, decr = decr)
 }
 
@@ -119,7 +130,7 @@ plot.Deriv <- function(x, alpha = 0.05, polygon = TRUE,
   ## compute confidence interval
   CI <- confint(x, term = term)
   ## plots
-  layout(matrix(seq_len(l), nrow = nplt[1], ncol = nplt[2]))
+  # layout(matrix(seq_len(l), nrow = nplt[1], ncol = nplt[2]))
   for(i in term) {
     upr <- CI[[i]]$upper
     lwr <- CI[[i]]$lower
@@ -144,6 +155,6 @@ plot.Deriv <- function(x, alpha = 0.05, polygon = TRUE,
       lines(x$eval[,i], x[[i]]$deriv, lwd = 2)
     }
   }
-  layout(1)
-  invisible(x)
+  # layout(1)
+  # invisible(x)
 }

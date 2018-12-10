@@ -24,6 +24,7 @@ bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/LWMSO.w_lat_long.csv")) %>%
                  "slon" = "Longitude_dd",
                  "SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
   select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%
+  sample_n(.,8239) %>%
   mutate(REG = "BC")
 # ## ALASKA ----
 aksurv <- read.csv(paste0(getwd(),"/data/raw/ak/AK_age_view_2018.csv")) %>%
@@ -34,10 +35,12 @@ aksurv <- read.csv(paste0(getwd(),"/data/raw/ak/AK_age_view_2018.csv")) %>%
   select(YEAR, LENGTH, AGE, SEX, STARTLAT, STARTLONG) %>%
   plyr::rename(c('YEAR' = 'Year', 'SEX' = 'Sex','AGE' = 'Age',
                  'LENGTH' = 'Length_cm', "STARTLAT" = "Latitude_dd","STARTLONG" = "Longitude_dd")) %>%
+  sample_n(.,8239) %>%
+  
   mutate(REG = "AK")
 
 ## combine ---
-all_data <- rbind(wcsurv,bcsurv,aksurv)
+# all_data <- rbind(wcsurv,bcsurv,aksurv)
 # save(all_data, file = paste0(getwd(),"/data/gam_data.rda"))
 
 ## some exploratory plots ----

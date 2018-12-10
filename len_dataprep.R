@@ -64,7 +64,7 @@ save(akl, file = paste0(getwd(),"/lenarray_AK.rda")); rm(akl0); rm(Ltemp)
 save(aknmat, file = paste0(getwd(),"/nmat_AK.rda"))
 
 ## WEST COAST ----
-load(paste0(getwd(), "/Bio__NWFSC.Combo_2018-09-25.rda"), verbose = T) ## loads as "Data"
+load("C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/WC/Bio__NWFSC.Combo_2018-09-25.rda") ## loads as "Data"
 len0 <- Data; rm(Data)
 
 ## drop len/age NAs and depths outside of strata

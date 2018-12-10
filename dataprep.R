@@ -10,7 +10,7 @@ require(dplyr); require(reshape); require(RColorBrewer); require(ggplot2)
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 
 ## WEST COAST ----
-load(paste0(getwd(), "/data/raw/WC/Bio__NWFSC.Combo_2018-09-25.rda"), verbose = T) ## loads as "Data"
+load(paste0("C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/WC/Bio__NWFSC.Combo_2018-09-25.rda"), verbose = T) ## loads as "Data"
 wcsurv0 <- Data; rm(Data)
 
 ## drop wcsurv/age NAs and depths outside of strata

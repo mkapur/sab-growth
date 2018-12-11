@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1544557713558.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "EB80FEE",
+    "lastKnownWriteTime" : 0,
+    "last_content_update" : 1544557713558,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "7B3F7916",
+        "caption" : "pcod",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=pcod&cache_key=7B3F7916",
+        "displayedObservations" : 1179,
+        "environment" : "",
+        "object" : "pcod",
+        "preview" : 0,
+        "totalObservations" : 1179,
+        "variables" : 8
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

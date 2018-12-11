@@ -36,22 +36,30 @@ aksurv <- read.csv(paste0(getwd(),"/data/raw/ak/AK_age_view_2018.csv")) %>%
   plyr::rename(c('YEAR' = 'Year', 'SEX' = 'Sex','AGE' = 'Age',
                  'LENGTH' = 'Length_cm', "STARTLAT" = "Latitude_dd","STARTLONG" = "Longitude_dd")) %>%
   sample_n(.,8239) %>%
-  
   mutate(REG = "AK")
 
 ## combine ---
-# all_data <- rbind(wcsurv,bcsurv,aksurv)
-# save(all_data, file = paste0(getwd(),"/data/gam_data.rda"))
+all_data <- rbind(wcsurv,bcsurv,aksurv)
+save(all_data, file = paste0(getwd(),"/data/gam_data.rda"))
 
 ## some exploratory plots ----
+
+all_data$REG <- as.factor(all_data$REG)
+levels(all_data$REG) <- c("Alaska","Canada","California Current")
 ggplot(all_data, aes(x = Length_cm, fill = Sex)) +
-  theme_sleek() +
-  theme(legend.position = c(0.05,0.9))+
-  geom_histogram(stat = 'bin', position = 'stack', 
-                 binwidth = 1) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        legend.position = c(0.05,0.9),
+        axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        strip.text = element_text(size=14))+
   scale_fill_manual(values = c("#d8b365","#5ab4ac"))+
-  facet_wrap(~REG) +
-  labs(x = 'Length (cm)')
+  scale_alpha(guide = 'none') +
+  labs(x = 'Length (cm)', y = "") +
+  geom_histogram(stat = 'bin', position = 'stack', 
+                 binwidth = 1) +  facet_wrap(~ REG)
+ggsave(file =  "C:/Users/mkapur/Dropbox/UW/sab-growth/plots/rawHist.png",
+       plot = last_plot(), height = 8, width = 12, unit = 'in', dpi = 520)
 
 ggplot(all_data, aes(x = Age, y = Length_cm, color = Sex)) +
   theme_sleek() +

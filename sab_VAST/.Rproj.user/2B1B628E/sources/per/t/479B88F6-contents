@@ -34,6 +34,7 @@ filter(clean_data, SPECIES_CODE==10130, !is.na(AGE)) %>% group_by(AGE) %>% mutat
 #                       sex=2, age="4", renames)
 pcod = build_corrected_df(clean_data,species_code = 21720,
                                 sex=2, age="4", renames)
+save(pcod, file = "./data/pcod_corrected.rda")
 
 yellowfin = build_corrected_df(clean_data,species_code = 10210,
                                      sex=2, age="7", renames)

@@ -5,17 +5,17 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2403600476",
+    "hash" : "611162208",
     "id" : "479B88F6",
-    "lastKnownWriteTime" : 1544470933,
-    "last_content_update" : 1544470933,
+    "lastKnownWriteTime" : 1544557723,
+    "last_content_update" : 1544557723580,
     "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/spatiotemporalBSAIgrowth-master/analysis.R",
     "project_path" : null,
     "properties" : {
-        "cursorPosition" : "37,0",
-        "scrollLine" : "16"
+        "cursorPosition" : "111,21",
+        "scrollLine" : "85"
     },
-    "relative_order" : 6,
+    "relative_order" : 10,
     "source_on_save" : false,
     "source_window" : "",
     "type" : "r_source"

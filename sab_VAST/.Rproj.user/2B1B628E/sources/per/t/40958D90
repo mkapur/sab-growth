@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1544553582475.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3988362431",
+    "id" : "40958D90",
+    "lastKnownWriteTime" : 1544554161,
+    "last_content_update" : 1544554161651,
+    "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/sab_VAST/R/build_corrected_df.R",
+    "project_path" : "R/build_corrected_df.R",
+    "properties" : {
+        "cursorPosition" : "15,4",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

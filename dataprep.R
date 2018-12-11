@@ -45,7 +45,7 @@ wcsurv <- wcsurv1 %>% mutate(H2 = 'WC', GEAR = NA) %>% select(Age, Length_cm, Se
 rm(wcsurv1); rm(wcsurv0)
 
 ## British Columbia ----
-bcsurv <- read.csv(paste0(getwd(),"/data/raw/BC/BC_LWMSO_1970-present.csv")) %>% 
+bcsurv <- read.csv("C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/BC/BC_LWMSO_1970-present.csv") %>% 
   filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & SPECIMEN_SEX_CODE %in% c("1","2") & NS_AREA != "" & SABLE_AREA_GROUP != "") %>%
   select(SPECIMEN_AGE, Fork_Length,SPECIMEN_SEX_CODE,SABLE_AREA_GROUP,NS_AREA,GEAR_CODE) %>%
   mutate(H2 = 'BC', H3 = NS_AREA,  Sex = ifelse(SPECIMEN_SEX_CODE == "2", 'F', "M"), Fork_Length = Fork_Length/10)  %>%
@@ -57,7 +57,7 @@ bcsurv <- sample_n(bcsurv, mean( nrow(aksurv),nrow(wcsurv)))
   
 
 # ALASKA ----
-aksurv <- read.csv(paste0(getwd(),"/data/raw/ak/AK_age_view_2018.csv")) %>%
+aksurv <- read.csv("C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/ak/AK_age_view_2018.csv") %>%
   ## drop period before 1995 and filter for top 6 as in Echave
   filter(., grepl(paste0(c("Southeast",'Kodiak',"Chirikof","Shumagin","Bering","Aleutian"), collapse="|"), GEOGRAPHIC_AREA_NAME)) %>%
   filter(SEX != 3 & !is.na(AGE) & !is.na(LENGTH) & YEAR > 1995) %>% 

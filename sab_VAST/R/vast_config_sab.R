@@ -1,6 +1,6 @@
 
 #Spatial settings - might need to change?
-Method = c("Grid", "Mesh", "Spherical_mesh")[1]
+Method = c("Grid", "Mesh", "Spherical_mesh")[2]
 grid_size_km = 50
 n_x = c(50, 100, 250, 500, 1000, 2000)[2] # Number of stations
 Kmeans_Config = list( "randomseed"=1, "nstart"=100, "iter.max"=1e3 )

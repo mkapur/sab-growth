@@ -48,7 +48,7 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
                                                   "BC" = BC_extrap,
                                                   "CC" = CC_extrap)
   rm(EBS_extrap); rm(NBS_extrap); rm(GOA_extrap); rm(BC_extrap); rm(CC_extrap)
-  Extrapolation_List$Data_Extrap <- subset(Extrapolation_List$Data_Extrap, Lon < 0)
+  # Extrapolation_List$Data_Extrap <- subset(Extrapolation_List$Data_Extrap, Lon < 0)
   
   Spatial_List = FishStatsUtils::make_spatial_info(
     grid_size_km = grid_size_km,
@@ -83,30 +83,72 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
   dimnames(X_xtp)[[1]] <- dimnames(covsperknot$Cov_xtp)[[1]]
   
   
-  TmbData = Data_Fn("Version"=Version, "FieldConfig"=FieldConfig,
-                    "RhoConfig"=RhoConfig, "ObsModel"=ObsModel, 
-                    "b_i"=Data_Geostat[,'Catch_KG'], "a_i"=Data_Geostat[,'AreaSwept_km2']+1, 
-                    "s_i"=Data_Geostat[,'knot_i']-1, "c_iz" = rep(0,nrow(Data_Geostat)),
-                    "t_i"=Data_Geostat[,'Year'], "a_xl"=Spatial_List$a_xl, "MeshList"=Spatial_List$MeshList, 
-                    "GridList"=Spatial_List$GridList, "Method"=Spatial_List$Method, "Options"=Options, X_xtp = X_xtp)
+  TmbData = Data_Fn(
+    "Version" = Version,
+    "FieldConfig" = FieldConfig,
+    "RhoConfig" = RhoConfig,
+    "ObsModel" = ObsModel,
+    "b_i" = Data_Geostat[, 'Catch_KG'],
+    "a_i" = Data_Geostat[, 'AreaSwept_km2'] + 1,
+    "s_i" = Data_Geostat[, 'knot_i'] - 1,
+    "c_iz" = rep(0, nrow(Data_Geostat)),
+    "t_i" = Data_Geostat[, 'Year'],
+    "a_xl" = Spatial_List$a_xl,
+    "MeshList" = Spatial_List$MeshList,
+    "GridList" = Spatial_List$GridList,
+    "Method" = Spatial_List$Method,
+    "Options" = Options,
+    X_xtp = X_xtp
+  )
   } else{
     
-    save.image(file="example.RData")
-    TmbData = Data_Fn("Version"=Version, "FieldConfig"=FieldConfig,
-                      "RhoConfig"=RhoConfig, "ObsModel"=ObsModel, 
-                      "b_i"=Data_Geostat[,'Catch_KG'], "a_i"=Data_Geostat[,'AreaSwept_km2']+1, 
-                      "s_i"=Data_Geostat[,'knot_i']-1, "c_iz" = rep(0,nrow(Data_Geostat)),
-                      "t_i"=Data_Geostat[,'Year'], "a_xl"=Spatial_List$a_xl, "MeshList"=Spatial_List$MeshList, 
-                      "GridList"=Spatial_List$GridList, "Method"=Spatial_List$Method, "Options"=Options)
+    
+    save.image(file = "example.RData")
+    TmbData = Data_Fn(
+      "Version" = Version,
+      "FieldConfig" = FieldConfig,
+      "RhoConfig" = RhoConfig,
+      "ObsModel" = ObsModel,
+      "b_i" = Data_Geostat[, 'Catch_KG'],
+      "a_i" = Data_Geostat[, 'AreaSwept_km2'] + 1,
+      "s_i" = Data_Geostat[, 'knot_i'] - 1,
+      "c_iz" = rep(0, nrow(Data_Geostat)),
+      "t_i" = Data_Geostat[, 'Year'],
+      "a_xl" = Spatial_List$a_xl,
+      "MeshList" = Spatial_List$MeshList,
+      "GridList" = Spatial_List$GridList,
+      "Method" = Spatial_List$Method,
+      "Options" = Options
+    )
   }
   
   
-  TmbList = Build_TMB_Fn("TmbData"=TmbData, "RunDir"=DateFile, "Version"=Version, "RhoConfig"=RhoConfig, 
-                         "loc_x"=Spatial_List$loc_x, "Method"=Method)
+  TmbList = Build_TMB_Fn(
+    "TmbData" = TmbData,
+    "RunDir" = DateFile,
+    "Version" = Version,
+    "RhoConfig" = RhoConfig,
+    "loc_x" = Spatial_List$loc_x,
+    "Method" = Method
+  )
   Obj = TmbList[["Obj"]]
-  Opt = TMBhelper::Optimize(obj=Obj, lower=TmbList[["Lower"]], upper=TmbList[["Upper"]], getsd=TRUE, savedir=DateFile, bias.correct=TRUE, newtonsteps=1, bias.correct.control=list(sd=FALSE, split=NULL, nsplit=1, vars_to_correct="Index_cyl"))
+  Opt = TMBhelper::Optimize(
+    obj = Obj,
+    lower = TmbList[["Lower"]],
+    upper = TmbList[["Upper"]],
+    getsd = TRUE,
+    savedir = DateFile,
+    bias.correct = TRUE,
+    newtonsteps = 1,
+    bias.correct.control = list(
+      sd = FALSE,
+      split = NULL,
+      nsplit = 1,
+      vars_to_correct = "Index_cyl"
+    )
+  )
   #, control = list(abs.tol = 1e-20))
-  OutFile = paste0(getwd(),"/",folder_name)
+  OutFile = paste0(getwd(), "/", folder_name)
   dir.create(OutFile)
   setwd(OutFile)
   Report = Obj$report()

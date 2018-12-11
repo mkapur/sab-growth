@@ -5,17 +5,17 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "851925782",
+    "hash" : "2584792305",
     "id" : "1001B7A3",
-    "lastKnownWriteTime" : 1544484500,
-    "last_content_update" : 1544484500265,
+    "lastKnownWriteTime" : 1544560513,
+    "last_content_update" : 1544560513896,
     "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/sab_VAST/analysisMK.R",
     "project_path" : "analysisMK.R",
     "properties" : {
-        "cursorPosition" : "49,0",
-        "scrollLine" : "23"
+        "cursorPosition" : "75,18",
+        "scrollLine" : "56"
     },
-    "relative_order" : 2,
+    "relative_order" : 4,
     "source_on_save" : false,
     "source_window" : "",
     "type" : "r_source"

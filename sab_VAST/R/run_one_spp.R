@@ -11,6 +11,8 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
     zone = 32,
     flip_around_dateline = F
   )
+
+  
   NBS_extrap = make_extrapolation_info(
     Region = "Northern_Bering_Sea",
     strata.limits = strata.limits,
@@ -25,6 +27,7 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
   )
   BC_extrap$Data_Extrap$Area_km2 <- BC_extrap$Area_km2_x
   names(BC_extrap$a_el) <- "All_areas"
+  
   GOA_extrap = make_extrapolation_info(
     Region = "gulf_of_alaska",
     strata.limits = strata.limits,
@@ -35,7 +38,7 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
     Region = "california_current",
     strata.limits = strata.limits,
     zone = 32,
-    flip_around_dateline = TRUE
+    flip_around_dateline = F
   )
   CC_extrap$Data_Extrap$Area_km2 <- CC_extrap$Area_km2_x
  
@@ -45,6 +48,7 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
                                                   "BC" = BC_extrap,
                                                   "CC" = CC_extrap)
   rm(EBS_extrap); rm(NBS_extrap); rm(GOA_extrap); rm(BC_extrap); rm(CC_extrap)
+  Extrapolation_List$Data_Extrap <- subset(Extrapolation_List$Data_Extrap, Lon < 0)
   
   Spatial_List = FishStatsUtils::make_spatial_info(
     grid_size_km = grid_size_km,

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1544484082896.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "479B88F6",
+    "lastKnownWriteTime" : 1544720119,
+    "last_content_update" : 1544720119521,
+    "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/spatiotemporalBSAIgrowth-master/analysis.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "40,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

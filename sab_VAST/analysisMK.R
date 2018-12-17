@@ -1,7 +1,7 @@
 ## Build and run VAST Analysis on LENGTH data for Sablefish
 ## M Kapur sourced from C Stawitz and J Thorson Winter 2018
 ## kapurm@uw.edu
-library(VAST); library(compiler); library(dplyr); library(TMB); library(ggplot2)
+library(VAST); library(compiler); library(dplyr); library(TMB); library(ggplot2); library(here)
 Version = "VAST_v5_3_0"
 mapply(source, list.files(paste0(getwd(),"/R/"), pattern = ".R", full.names=TRUE))
 
@@ -73,6 +73,7 @@ sab %>% select(-depth,-temp) %>%
 run_one_sppOG(pcod, 
             config_file = "vast_config_pcod.R",
             folder_name = "pcod_spatiot")
+
 run_one_spp(pcod, 
               config_file = "vast_config_pcod.R",
               folder_name = "pcod_spatiot")

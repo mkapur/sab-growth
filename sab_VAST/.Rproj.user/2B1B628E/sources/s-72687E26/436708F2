@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1544554180177.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "436708F2",
+    "lastKnownWriteTime" : 1544125735,
+    "last_content_update" : 1544125735,
+    "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/sab_VAST/R/data_process.R",
+    "project_path" : "R/data_process.R",
+    "properties" : {
+        "cursorPosition" : "3,97",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

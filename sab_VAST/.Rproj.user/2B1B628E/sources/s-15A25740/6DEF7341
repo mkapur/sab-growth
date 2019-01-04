@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1545159741711.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "6DEF7341",
+    "lastKnownWriteTime" : 1546549430,
+    "last_content_update" : 1546549430566,
+    "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/sab_VAST/R/run_one_spp.R",
+    "project_path" : "R/run_one_spp.R",
+    "properties" : {
+        "cursorPosition" : "184,2",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

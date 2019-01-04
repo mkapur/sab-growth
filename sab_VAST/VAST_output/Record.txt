@@ -37,10 +37,10 @@ $Kmeans_Config$iter.max
 
 
 $Region
-[1] "Eastern_Bering_Sea"
+[1] "NE_Pacific"
 
 $Species_set
-[1] 21720
+[1] 20510
 
 $strata.limits
      STRATA

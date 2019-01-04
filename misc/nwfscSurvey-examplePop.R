@@ -17,14 +17,19 @@ ls("package:nwfscSurvey")
 #=============          NWFSC Combo          ===================================
 #===============================================================================
 setwd("C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/WC")
-catch = PullCatch.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd()) 
-bio   = PullBio.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
+catch_combo = PullCatch.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd()) 
+bio_combo   = PullBio.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
 
-catch = PullCatch.fn(Name = "sablefish", SurveyName = "Triennial", SaveFile = TRUE, Dir = getwd()) 
-bio   = PullBio.fn(Name = "sablefish", SurveyName = "NWFSC.Combo", SaveFile = TRUE, Dir = getwd())
+catch_triennial= PullCatch.fn(Name = "sablefish", SurveyName = "Triennial", SaveFile = TRUE, Dir = getwd()) 
+bio_triennial  = PullBio.fn(Name = "sablefish", SurveyName = "Triennial", SaveFile = TRUE, Dir = getwd())
 
+catch <- rbind(catch_combo,catch_triennial)
+bio <- rbind(bio_combo, bio_triennial)
 head(catch)
 head(bio)
+
+# catch_temp = PullCatch.fn(Name = "sablefish", SurveyName = c("NWFSC.Combo","Triennial"), SaveFile = TRUE, Dir = getwd()) 
+
 
 # Can pull data based on the general name (Name) of the scientific name(SciName). The default year range (YearRange)
 # is set to cover all potential years.  The SurveyName options are: Triennial, AFSC.Slope, NWFSC.Slope, NWFSC.Shelf
@@ -48,13 +53,12 @@ biomass = Biomass.fn(dir = getwd(), dat = catch,  strat.df = strata, printfolder
 # Creates a csv file within the "printfolder" that will be saved within the directory location (dir).
 
 # Plot the biomass index
-PlotBio.fn(dir = getwd(), dat = biomass, main = "NWFSC shelf-slope bottom trawl survey", dopng = T)
+PlotBio.fn(dir = getwd(), dat = biomass, main = "NWFSC Triennial and Combo Surveys", dopng = T)
 
 #============================================================================================
 #Length Biological Data 
 #============================================================================================
-len = bio
-bio =len
+len <- bio
 len.bins = 11:47
 
 # Calculate the effN

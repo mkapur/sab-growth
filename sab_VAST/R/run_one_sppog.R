@@ -4,7 +4,7 @@ run_one_sppOG <- function(Data_Geostat, config_file, folder_name,
   setwd(here())
   source(paste0("R/",config_file))
   
-  Extrapolation_List = FishStatsUtils::make_extrapolation_info( Region="Eastern_Bering_Sea", strata.limits=strata.limits )
+  Extrapolation_List = FishStatsUtils::make_extrapolation_info( Region="california_current", strata.limits=strata.limits )
   Spatial_List = FishStatsUtils::make_spatial_info(grid_size_km=grid_size_km, n_x=n_x, Method=Method, 
                                                    Lon=Data_Geostat[,'Lon'], Lat=Data_Geostat[,'Lat'], 
                                                    Extrapolation_List=Extrapolation_List, 

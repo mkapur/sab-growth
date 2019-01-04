@@ -1,82 +1,43 @@
 ## Build and run VAST Analysis on LENGTH data for Sablefish
 ## M Kapur sourced from C Stawitz and J Thorson Winter 2018
 ## kapurm@uw.edu
+# devtools::install_github("james-thorson/VAST", ref="development", dep=T)
 library(VAST); library(compiler); library(dplyr); library(TMB); library(ggplot2); library(here)
+library(parallel); library(rlist)
+
+# Calculate the number of cores
+no_cores <- detectCores() - 1
+
+# Initiate cluster
+cl <- makeCluster(no_cores)
+
 Version = "VAST_v5_3_0"
-mapply(source, list.files(paste0(getwd(),"/R/"), pattern = ".R", full.names=TRUE))
 
-#Vector to rename columns to
-renames <- c('Year',
-             'Lat','Lon',
-             'length', 'depth', 'temp')
-# #Build Data_Geostat
 load("./data/vast_data.rda")
-# 
-vast_data <-
-  vast_data %>% mutate(SPECIES_CODE = 20510,
-                      GEAR_DEPTH = NA,
-                      Temp = NA,
-                      GEAR_TEMPERATURE = NA) %>%
-  filter(Longitude_dd <0) %>%
-  plyr::rename(
-    c(
-      'Length_cm' = 'LENGTH..cm.',
-      'Age' = 'AGE',
-      'Latitude_dd' = 'START_LATITUDE',
-      'Longitude_dd' = 'START_LONGITUDE',
-      'Year' = 'YEAR'
-    )
-  )
 
-# # with(vast_data, plot(START_LATITUDE ~ START_LONGITUDE, pch = 19))
-# p <- proc.time() ## about 9 mins
-sab <- build_corrected_df(
-  vast_data,
-  species_code = 20510,
-  sex = 'F',
-  age = "4",
-  renames
-)
-
-# vast_data$REG <- as.factor(vast_data$REG)
-# levels(vast_data$REG) <- c("Alaska","Canada","California Current")
-  ggplot(vast_data, aes(x = LENGTH..cm., fill = Sex)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        legend.position = c(0.05,0.9),
-        axis.text = element_text(size = 18),
-        legend.text = element_text(size = 14),
-        strip.text = element_text(size=14))+
-  scale_fill_manual(values = c("#d8b365","#5ab4ac"))+
-  scale_alpha(guide = 'none') +
-    labs(x = 'Length (cm)', y = "") +
-geom_histogram() +
-    facet_wrap(~ REG)
-  ggsave(file =  "C:/Users/mkapur/Dropbox/UW/sab-growth/plots/rawHist.png",
-         plot = last_plot(), height = 8, width = 12, unit = 'in', dpi = 520)
-
-
-# save(sab, file = "./data/corrected_sab.rda")
-load("./data/corrected_sab.rda")
+mapply(source, list.files(paste0(getwd(),"/R/"), pattern = ".R", full.names=TRUE))
+load("./data/sab_corrected.rda")
 load("./data/pcod_corrected.rda")
 
-sab %>% select(-depth,-temp) %>%
-run_one_spp(., 
-            config_file = "vast_config_sab.R",
-            folder_name = "sab_spatiot")
+## vector allocation issues when using full extent
+run_one_spp(
+  Data_Geostat = sab_corrected,
+  config_file = "vast_config_sab.R",
+  folder_name = "sab_spatiot",
+  covar_columns = NA,
+  REG = c('BC',"WC")
+)
 
-sab %>% select(-depth,-temp) %>%
-  run_one_sppOG(., 
-              config_file = "vast_config_sab.R",
-              folder_name = "sab_spatiot")
+# run_one_sppOG(sab_corrected,
+#             config_file = "vast_config_sab.R",
+#             folder_name = "sab_spatiot")
 
-run_one_sppOG(pcod, 
-            config_file = "vast_config_pcod.R",
-            folder_name = "pcod_spatiot")
+stopCluster(cl)
 
 run_one_spp(pcod, 
               config_file = "vast_config_pcod.R",
-              folder_name = "pcod_spatiot")
+              folder_name = "pcod_spatiot",
+            covar_columns = NA, REG = c('WC'))
 
 pos <- filter(pcod, Lon<0)
 for(i in unique(pcod$Year)){

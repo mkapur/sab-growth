@@ -1,17 +1,19 @@
 run_one_spp <- function(Data_Geostat, config_file, folder_name,
-                        covar_columns=NA){
+                        covar_columns=NA, REG = c('WC','BC','AK')){
   orig_dat <- Data_Geostat
   setwd(here())
   source(paste0("R/",config_file))
   
   ## thanks Jim
+  comblist <- list()
+  if('AK' %in% REG){
   EBS_extrap = make_extrapolation_info(
     Region = "Eastern_Bering_Sea",
     strata.limits = strata.limits,
     zone = 32,
     flip_around_dateline = F
   )
-
+  comblist <- list.append(comblist, EBS_extrap)
   
   NBS_extrap = make_extrapolation_info(
     Region = "Northern_Bering_Sea",
@@ -19,6 +21,16 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
     zone = 32,
     flip_around_dateline = F
   )
+  comblist <- list.append(comblist, NBS_extrap)
+  GOA_extrap = make_extrapolation_info(
+    Region = "gulf_of_alaska",
+    strata.limits = strata.limits,
+    zone = 32,
+    flip_around_dateline = T
+  )
+  comblist <- list.append(comblist, GOA_extrap)
+  }
+if('BC' %in% REG){
   BC_extrap = make_extrapolation_info(
     Region = "british_columbia",
     strata.limits = strata.limits,
@@ -27,13 +39,8 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
   )
   BC_extrap$Data_Extrap$Area_km2 <- BC_extrap$Area_km2_x
   names(BC_extrap$a_el) <- "All_areas"
-  
-  GOA_extrap = make_extrapolation_info(
-    Region = "gulf_of_alaska",
-    strata.limits = strata.limits,
-    zone = 32,
-    flip_around_dateline = T
-  )
+  }
+  if('WC' %in% REG){
   CC_extrap = make_extrapolation_info(
     Region = "california_current",
     strata.limits = strata.limits,
@@ -41,12 +48,37 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
     flip_around_dateline = F
   )
   CC_extrap$Data_Extrap$Area_km2 <- CC_extrap$Area_km2_x
- 
-  Extrapolation_List = combine_extrapolation_info("EBS" = EBS_extrap, 
+  append(comblist, CC_extrap)
+  }
+
+  if('WC' %in% REG & 'BC' %in% REG & 'AK' %in% REG){
+  Extrapolation_List <- combine_extrapolation_info("EBS" = EBS_extrap,
                                                   "NBS" = NBS_extrap,
                                                   "GOA" = GOA_extrap,
                                                   "BC" = BC_extrap,
                                                   "CC" = CC_extrap)
+  }
+  if('WC' %in% REG & 'BC' %in% REG){
+    Extrapolation_List <- combine_extrapolation_info(
+                                                     "BC" = BC_extrap,
+                                                     "CC" = CC_extrap)
+  }
+  
+  if('AK' %in% REG){
+    Extrapolation_List <- combine_extrapolation_info("EBS" = EBS_extrap,
+                                                     "NBS" = NBS_extrap,
+                                                     "GOA" = GOA_extrap)
+  }
+  
+  if('WC' %in% REG){
+    Extrapolation_List <- CC_extrap
+  }
+  
+  if('BC' %in% REG){
+    Extrapolation_List <- BC_extrap
+  }
+  
+  
   rm(EBS_extrap); rm(NBS_extrap); rm(GOA_extrap); rm(BC_extrap); rm(CC_extrap)
   # Extrapolation_List$Data_Extrap <- subset(Extrapolation_List$Data_Extrap, Lon < 0)
   
@@ -97,8 +129,8 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
     "MeshList" = Spatial_List$MeshList,
     "GridList" = Spatial_List$GridList,
     "Method" = Spatial_List$Method,
-    "Options" = Options,
-    X_xtp = X_xtp
+    "Options" = Options#,
+    # X_xtp = X_xtp ## stawitz recommended leaving out if no covariates
   )
   } else{
     

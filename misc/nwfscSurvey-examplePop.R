@@ -24,7 +24,8 @@ catch_triennial= PullCatch.fn(Name = "sablefish", SurveyName = "Triennial", Save
 bio_triennial  = PullBio.fn(Name = "sablefish", SurveyName = "Triennial", SaveFile = TRUE, Dir = getwd())
 
 catch <- rbind(catch_combo,catch_triennial)
-bio <- rbind(bio_combo, bio_triennial)
+bio <- rbind(bio_combo, bio_triennial$Lengths)
+# save(bio, file = "C:/Users/mkapur/Dropbox/UW/sab-growth/data/raw/WC/manual_tri_combo.rda")
 head(catch)
 head(bio)
 

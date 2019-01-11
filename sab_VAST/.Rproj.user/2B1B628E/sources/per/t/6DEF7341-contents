@@ -97,43 +97,45 @@ if('BC' %in% REG){
   )
   # Add knots to Data_Geostat
   Data_Geostat = cbind( Data_Geostat, "knot_i"=Spatial_List$knot_i )
-
-  if(!is.na(covar_columns)){
-  covsperknot <- suppressMessages(FishStatsUtils::format_covariates(
-    Lat_e = orig_dat$Lat,
-    Lon_e = orig_dat$Lon,
-    t_e = orig_dat$Year,
-    Cov_ep = orig_dat[,covar_columns],
-    Extrapolation_List = Extrapolation_List,
-    Spatial_List = Spatial_List,
-    FUN = mean,
-    Year_Set = sort(unique(orig_dat$Year)),
-    na.omit = "time-average"))
-  #X_xtp <- array(data=NA, dim=c(100,33,2))
-  X_xtp <- apply(covsperknot$Cov_xtp, 2:3, scale)
-  #X_xtp[, , 2] <- scale(exp(Dens_xt))
-  dimnames(X_xtp)[[1]] <- dimnames(covsperknot$Cov_xtp)[[1]]
-  
-  
-  TmbData = Data_Fn(
-    "Version" = Version,
-    "FieldConfig" = FieldConfig,
-    "RhoConfig" = RhoConfig,
-    "ObsModel" = ObsModel,
-    "b_i" = Data_Geostat[, 'Catch_KG'],
-    "a_i" = Data_Geostat[, 'AreaSwept_km2'] + 1,
-    "s_i" = Data_Geostat[, 'knot_i'] - 1,
-    "c_iz" = rep(0, nrow(Data_Geostat)),
-    "t_i" = Data_Geostat[, 'Year'],
-    "a_xl" = Spatial_List$a_xl,
-    "MeshList" = Spatial_List$MeshList,
-    "GridList" = Spatial_List$GridList,
-    "Method" = Spatial_List$Method,
-    "Options" = Options#,
-    # X_xtp = X_xtp ## stawitz recommended leaving out if no covariates
-  )
-  } else{
-    
+cat("line 100 \n")
+  # if(!is.na(covar_columns)){
+  #   cat("line 102 \n")
+  #   
+  # covsperknot <- suppressMessages(FishStatsUtils::format_covariates(
+  #   Lat_e = orig_dat$Lat,
+  #   Lon_e = orig_dat$Lon,
+  #   t_e = orig_dat$Year,
+  #   Cov_ep = orig_dat[,covar_columns],
+  #   Extrapolation_List = Extrapolation_List,
+  #   Spatial_List = Spatial_List,
+  #   FUN = mean,
+  #   Year_Set = sort(unique(orig_dat$Year)),
+  #   na.omit = "time-average"))
+  # #X_xtp <- array(data=NA, dim=c(100,33,2))
+  # X_xtp <- apply(covsperknot$Cov_xtp, 2:3, scale)
+  # #X_xtp[, , 2] <- scale(exp(Dens_xt))
+  # dimnames(X_xtp)[[1]] <- dimnames(covsperknot$Cov_xtp)[[1]]
+  # 
+  # TmbData = Data_Fn(
+  #   "Version" = Version,
+  #   "FieldConfig" = FieldConfig,
+  #   "RhoConfig" = RhoConfig,
+  #   "ObsModel" = ObsModel,
+  #   "b_i" = Data_Geostat[, 'Catch_KG'],
+  #   "a_i" = Data_Geostat[, 'AreaSwept_km2'] + 1,
+  #   "s_i" = Data_Geostat[, 'knot_i'] - 1,
+  #   "c_iz" = rep(0, nrow(Data_Geostat)),
+  #   "t_i" = Data_Geostat[, 'Year'],
+  #   "a_xl" = Spatial_List$a_xl,
+  #   "MeshList" = Spatial_List$MeshList,
+  #   "GridList" = Spatial_List$GridList,
+  #   "Method" = Spatial_List$Method,
+  #   "Options" = Options#,
+  #   # X_xtp = X_xtp ## stawitz recommended leaving out if no covariates
+  # )
+  # } else
+  # {
+  #   cat('covarNA "\n')
     
     save.image(file = "example.RData")
     TmbData = Data_Fn(
@@ -152,8 +154,8 @@ if('BC' %in% REG){
       "Method" = Spatial_List$Method,
       "Options" = Options
     )
-  }
-  
+  # }
+
   
   TmbList = Build_TMB_Fn(
     "TmbData" = TmbData,

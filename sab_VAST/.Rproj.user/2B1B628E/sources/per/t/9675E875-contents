@@ -28,13 +28,13 @@ run_one_spp(
   REG = c('BC',"WC")
 )
 ## vector allocation issues when using full extent
-run_one_spp(
-  Data_Geostat = sab_corrected,
-  config_file = "vast_config_sab.R",
-  folder_name = "sab_spt_AK",
-  covar_columns = NA,
-  REG = c("AK")
-)
+# run_one_spp(
+#   Data_Geostat = sab_corrected,
+#   config_file = "vast_config_sab.R",
+#   folder_name = "sab_spt_AK",
+#   covar_columns = NA,
+#   REG = c("AK")
+# )
 # run_one_sppOG(sab_corrected,
 #             config_file = "vast_config_sab.R",
 #             folder_name = "sab_spatiot")

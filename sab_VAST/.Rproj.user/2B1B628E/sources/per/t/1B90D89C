@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2754773718",
+    "hash" : "2176229964",
     "id" : "1B90D89C",
-    "lastKnownWriteTime" : 1544553517,
-    "last_content_update" : 1544553517,
+    "lastKnownWriteTime" : 1547066519,
+    "last_content_update" : 1547066519052,
     "path" : "C:/Users/mkapur/Dropbox/UW/sab-growth/sab_VAST/R/vast_config_sab.R",
     "project_path" : "R/vast_config_sab.R",
     "properties" : {
-        "cursorPosition" : "10,33",
+        "cursorPosition" : "13,12",
         "scrollLine" : "0"
     },
     "relative_order" : 4,

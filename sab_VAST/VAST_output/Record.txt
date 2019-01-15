@@ -12,7 +12,7 @@ $n_x
 
 $FieldConfig
   Omega1 Epsilon1   Omega2 Epsilon2 
-       0        0        1        1 
+       0        0        0        0 
 
 $RhoConfig
    Beta1    Beta2 Epsilon1 Epsilon2 

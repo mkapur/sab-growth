@@ -1,0 +1,67 @@
+# Ricker Model Demo
+
+run.ricker<-function(s,K){
+tmax=100
+Nstart=0.3
+
+
+Nmatrix=matrix(nrow=tmax,ncol=1);
+Nmatrix[1,1]=Nstart 
+N=Nstart;
+Nnext=Nstart
+
+# Simulate trajectory
+
+for (i in 2:tmax)
+ {
+N=Nmatrix[i-1,]
+Nnext=N*exp((1-s)*(1-N/K))
+Nmatrix[i,]=Nnext
+}
+
+#Create Ricker Plot
+Nmax=2;
+Nlist=seq(0,Nmax,0.01)
+
+Rickermat=matrix(nrow=length(Nlist),ncol=2);
+for (i in 1:length(Nlist))
+{
+N=Nlist[i]
+Rickermat[i,1]=N
+Rickermat[i,2]=N*exp((1-s)*(1-N/K))
+}
+
+# Creat Cobweb
+Cobweb=matrix(nrow=2*(tmax-1),ncol=2)
+for (i in 1:(tmax-1))
+{
+Cobweb[2*i-1,1]=Nmatrix[i]
+Cobweb[2*i-1,2]=Nmatrix[i+1]
+Cobweb[2*i,1]=Nmatrix[i+1]
+Cobweb[2*i,2]=Nmatrix[i+1]
+}
+
+
+# Plot Output
+par(mfrow=c(2,2),
+mar=c(4,4,2,2))
+# Plot trajectory
+plot(x=1:tmax,y=Nmatrix,type='l',xlim=c(0,50),ylim=c(0,2.0),col=4,xlab='Time',ylab='Abundance')
+# Plot cobweb using all trajectory
+plot(x=Rickermat[,1],y=Rickermat[,2],type='l',xlim=c(0,2.0),lwd=3,ylim=c(0,2.0),col=4,xlab='N(t)',ylab='N(t+1)')
+lines(x=0:Nmax,y=0:Nmax,lwd=3,col=2)
+lines(x=Cobweb[,1],y=Cobweb[,2],lwd=2,xlim=c(0,2.0),ylim=c(0,2.0),col=1)
+# Plot cobweb using steady state dynamics
+plot(x=Rickermat[,1],y=Rickermat[,2],type='l',xlim=c(0,2.0),lwd=3,ylim=c(0,2.0),col=4,xlab='N(t)',ylab='N(t+1)')
+lines(x=0:Nmax,y=0:Nmax,lwd=3,col=2)
+lines(x=Cobweb[50:nrow(Cobweb),1],y=Cobweb[50:nrow(Cobweb),2],lwd=2,xlim=c(0,2.0),ylim=c(0,2.0),col=1)
+mtext('Transient Dynamics Removed',side=3)
+par(mfrow=c(1,1))
+}
+
+library(manipulate)
+manipulate(run.ricker(s,K),
+           s=slider(-2,0.25,initial=0.25),
+           K=slider(0.5,2,initial=1)
+)
+

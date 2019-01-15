@@ -25,7 +25,7 @@ run_one_spp(
   config_file = "vast_config_sab.R",
   folder_name = "sab_spatiot",
   covar_columns = NA,
-  REG = c('BC',"WC")
+  REG = c("WC")
 )
 ## vector allocation issues when using full extent
 # run_one_spp(
@@ -44,7 +44,7 @@ stopCluster(cl)
 run_one_spp(pcod, 
               config_file = "vast_config_pcod.R",
               folder_name = "pcod_spatiot",
-            covar_columns = NA, REG = c('WC'))
+            covar_columns = NA, REG = c('AK'))
 
 pos <- filter(pcod, Lon<0)
 for(i in unique(pcod$Year)){

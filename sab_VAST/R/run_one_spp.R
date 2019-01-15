@@ -13,22 +13,22 @@ run_one_spp <- function(Data_Geostat, config_file, folder_name,
     zone = 32,
     flip_around_dateline = F
   )
-  comblist <- list.append(comblist, EBS_extrap)
-  
-  NBS_extrap = make_extrapolation_info(
-    Region = "Northern_Bering_Sea",
-    strata.limits = strata.limits,
-    zone = 32,
-    flip_around_dateline = F
-  )
-  comblist <- list.append(comblist, NBS_extrap)
-  GOA_extrap = make_extrapolation_info(
-    Region = "gulf_of_alaska",
-    strata.limits = strata.limits,
-    zone = 32,
-    flip_around_dateline = T
-  )
-  comblist <- list.append(comblist, GOA_extrap)
+  # comblist <- list.append(comblist, EBS_extrap)
+  # 
+  # NBS_extrap = make_extrapolation_info(
+  #   Region = "Northern_Bering_Sea",
+  #   strata.limits = strata.limits,
+  #   zone = 32,
+  #   flip_around_dateline = F
+  # )
+  # comblist <- list.append(comblist, NBS_extrap)
+  # GOA_extrap = make_extrapolation_info(
+  #   Region = "gulf_of_alaska",
+  #   strata.limits = strata.limits,
+  #   zone = 32,
+  #   flip_around_dateline = T
+  # )
+  # comblist <- list.append(comblist, GOA_extrap)
   }
 if('BC' %in% REG){
   BC_extrap = make_extrapolation_info(
@@ -65,9 +65,10 @@ if('BC' %in% REG){
   }
   
   if('AK' %in% REG){
-    Extrapolation_List <- combine_extrapolation_info("EBS" = EBS_extrap,
-                                                     "NBS" = NBS_extrap,
-                                                     "GOA" = GOA_extrap)
+    Extrapolation_List <- EBS_extrap
+  #   Extrapolation_List <- combine_extrapolation_info("EBS" = EBS_extrap,
+  #                                                    "NBS" = NBS_extrap,
+  #                                                    "GOA" = GOA_extrap)
   }
   
   if('WC' %in% REG){
@@ -97,7 +98,7 @@ if('BC' %in% REG){
   )
   # Add knots to Data_Geostat
   Data_Geostat = cbind( Data_Geostat, "knot_i"=Spatial_List$knot_i )
-cat("line 100 \n")
+  cat("line 100 \n")
   # if(!is.na(covar_columns)){
   #   cat("line 102 \n")
   #   

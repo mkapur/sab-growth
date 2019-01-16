@@ -1,0 +1,103 @@
+## this builds in the error on OM replicates.
+
+Bootstrap_Sim_Fn = function(RepI, recruit_dev){
+  message("Executing OM Bootstrap replicate ", RepI, " at ", Sys.time())
+  ## make new file in OM for this rep
+  DateFile <- paste0(SpeciesOM, Sys.Date())
+  RepFile <- paste0(DateFile,"/Rep",RepI,"/"); dir.create(RepFile, recursive=TRUE)
+
+  # copy control & other files from original OM into this OM rep
+  file.copy(
+    from = paste0(
+      SpeciesOM,
+      list.files(SpeciesOM,
+                 pattern = "starter|par|forecast|Forecast|data|control|.exe")
+    ),
+    to = RepFile,
+    overwrite = TRUE
+  )
+
+  # Modify recdevs of par file of rep at hand
+  Par <- scan_admb_par(paste0(RepFile,"ss3.par"))
+  Par[grep("recdev",names(Par))] <-  matrix(sample(recruit_dev,replace=TRUE),nrow=1)
+
+  ## sample Finit
+  Lines <- readLines(paste0(RepFile, Species,"_control.ss"))
+  LOI <- grep("overall start", Lines)[2] ## get line(s) of interest - fewer and fewer for latter EMS
+  NewLine <- strsplit(Lines[LOI], " ") ## grab all lines that match EMs; stupid separation -_-
+  NewLine[[1]][2] <- round(rnorm(1,0.2,0.1),2) ## sample F from distribution
+  Lines[LOI] <- paste0(NewLine[[1]], collapse = " ")
+  writeLines(text = Lines, con = paste0(RepFile, Species,"_control.ss"))
+
+  # Generate and write new F trajectories - Will read these directly from par
+  sDat <- SS_readdat(paste0(RepFile, Species,"_data.ss"))
+  nFleet <- sDat$Nfleet
+  nSeas <- sDat$nseas
+  nYears <- with(sDat, endyr - styr + 1) + 25
+
+  ## LOW
+  scale1 =  0.1/1.323
+  Fsim1.temp <- getFhist(nsim=1,Esd=0.001,nyears=nYears,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale=scale1)
+  Fsim1 <- Fsim1.temp[(length(Fsim1.temp) -  with(sDat, endyr - styr)) : length(Fsim1.temp) ]
+  # meanF1 <- round(mean(apply(Fsim1,1,mean)),2)
+  SeasonFrateF1 <- getSeasonFrate(Fsim1,nYears)
+
+
+  ## MED
+  scale2 = 0.2/1.323
+  Fsim2.temp <-getFhist(nsim=1,Esd=0.001,nyears=nYears,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale=scale2)
+  Fsim2 <- Fsim2.temp[(length(Fsim2.temp) -  with(sDat, endyr - styr)) : length(Fsim2.temp) ]
+  # meanF2 <-round(mean(apply(Fsim2,1,mean)),2)
+  SeasonFrateF3 <- getSeasonFrate(Fsim2,nYears)
+
+  ## HIGH
+  scale3 = 0.3/1.323
+  Fsim3.temp <-getFhist(nsim=1,Esd=0.001,nyears=nYears,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale=scale3)
+  Fsim3 <- Fsim3.temp[(length(Fsim3.temp) -  with(sDat, endyr - styr)) : length(Fsim3.temp) ]
+  # meanF3 <- round(mean(apply(Fsim3,1,mean)),2)
+  SeasonFrateF5 <- getSeasonFrate(Fsim3,nYears)
+
+  Which <- grep("F_rate",names(Par))
+
+  ## pick random vector
+  # fvects <- list(rep(SeasonFrateF1,2),rep(SeasonFrateF3,2),rep(SeasonFrateF5,2))
+  fvects <- list(Fsim1,Fsim2,Fsim3)
+  Par[Which] <- unlist(sample(fvects, 1))
+
+  ## a viz to track F sim sampling
+  if(RepI == 1) plot(sDat$styr:sDat$endyr,  Par[Which], ylim = c(0,0.50), type = 'l', ylab = "Initial F (sampled)", xlab = "Year")
+  if(RepI > 1) lines(sDat$styr:sDat$endyr, Par[Which])
+  write.table(Par, file=paste0(RepFile,"ss3.par"), row.names=FALSE, col.names=FALSE) ## dump to line
+
+
+
+  # Change starter file
+  Starter = SS_readstarter( file=paste0(RepFile,"starter.ss"), verbose=verbose)
+  Starter[['init_values_src']] = 1 ## read from par as-is
+  Starter[['N_bootstraps']] = 3 ## obs error - this needs to be here for the write bootstrap to work (just one iter)
+  SS_writestarter( mylist=Starter, dir=RepFile, overwrite=TRUE, verbose=verbose, warn=verbose)
+
+  # Run first time
+  setwd( RepFile )
+  shell( "ss3.exe -nohess")
+
+  # Write bootstrap simulation from datnew to data file
+  Lines = readLines( paste0(RepFile,"data.ss_new") )
+  Lines = Lines[(grep("#_bootstrap file: 1",Lines)+1):grep("ENDDATA",Lines)]
+  writeLines(text=Lines, con=paste0(RepFile,Starter[['datfile']]))
+
+  ## save plots
+  # model_1 <- SS_output(RepFile, covar=FALSE,ncols = 500)
+  # SS_plots(
+  #   model_1,
+  #   datplot = TRUE,
+  #   pdf = TRUE,
+  #   png = FALSE,
+  #   uncertainty = FALSE,
+  #   pwidth = 9,
+  #   pheight = 9,
+  #   rows = 2,
+  #   cols = 2
+  # )
+
+}

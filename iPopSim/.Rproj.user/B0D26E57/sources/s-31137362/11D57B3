@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1547583290993.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "11D57B3",
+    "lastKnownWriteTime" : 1547681937,
+    "last_content_update" : 1547681937502,
+    "path" : "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/iPopSim_MK.Rmd",
+    "project_path" : "iPopSim_MK.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "526,28",
+        "last_setup_crc32" : "31137362c68aea6b",
+        "scrollLine" : "510"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

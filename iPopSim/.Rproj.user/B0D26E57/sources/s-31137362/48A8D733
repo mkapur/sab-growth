@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1547586795855.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "48A8D733",
+    "lastKnownWriteTime" : 1547682040,
+    "last_content_update" : 1547682040096,
+    "path" : "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/system_presets_raw.R",
+    "project_path" : "system_presets_raw.R",
+    "properties" : {
+        "cursorPosition" : "230,2",
+        "scrollLine" : "206"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

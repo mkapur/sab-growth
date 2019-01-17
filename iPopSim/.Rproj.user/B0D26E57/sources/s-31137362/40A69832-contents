@@ -31,9 +31,9 @@ a1 = 0
 a2 = 15
 growth_lognormal_SD = 0.025
 # VBGF_K = 0.258
-VGBF_K = 0.45
+VBGF_K = 0.45
 
-Linf =L1+(L2-L1)/(1-exp(-VBGF_K*(a2-a1))) 
+Linf = L1+(L2-L1)/(1-exp(-VBGF_K*(a2-a1))) 
 
 ## Growth increment FUNCTION, NON TV: FROM V7
   

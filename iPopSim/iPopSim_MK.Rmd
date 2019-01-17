@@ -24,7 +24,7 @@ rm(list = ls())
 Initialization (Calculate SSB per recruit)
 These all iterate across ages at a yearly time step. Some modules like growth accumulate at a 1/2 year time step.
 Current run time:
-50 boots, 100 years ~15mins
+50 boots, 100 years ~15mins on sebastes
 ```{r Run Simulation and Save Outputs}
 options(warn = -1)
 nboot <- 4
@@ -37,7 +37,7 @@ for(l in 1:nrow(fLevs)){
 
   out_file <- paste0(getwd(),"/outputs/",fLevs[l,3],"/",paste(fLevs[l,1],fLevs[l,2], sep = "_"))
   ## Remove pre-existing MATRIX files
-  unlink(out_file, recursive=TRUE) ## delete pre-existing file
+  if(exists(out_file)) unlink(out_file, recursive=TRUE) ## delete pre-existing file
   dir.create(out_file) ## make master FLevel File
   
   for(boot_number in 1:nboot) { ## full nsims, line 20
@@ -86,7 +86,8 @@ for(l in 1:nrow(fLevs)){
     uni_ind = 0
     
     ## get F vector at two different levels with time break
-    Inst_F_vector <- c(select.effort(location = 'inputs/',  level = fLevs[l,1], nsim = 1000)[1:50],select.effort(location = 'inputs/',  level = fLevs[l,1], nsim = 1000)[51:101])
+    Inst_F_vector <- c(select.effort(location = 'inputs/',  level = fLevs[l,1], nsim = 1000)[1:74],
+                       select.effort(location = 'inputs/',  level = fLevs[l,1], nsim = 1000)[75:101])
 
     # Inst_F_vector = select.effort(location = 'inputs/',  level = 'LOW', nsim = 1000) ## subset a random time series from the effort simulator for a given fishing level; the 1000 just indicates how many sims it can choose from
     for(ry in 1:simu_year){ ## iterate sim years
@@ -508,7 +509,8 @@ write.table(t(colnames(OBS_Mean_Length_At_Age_RESULT)),paste0(path_name, "/SS3_O
 write.table(OBS_Mean_Length_At_Age_RESULT,paste0(path_name, "/SS3_OBS_Mean_Size_At_AgeE.csv",sep=""),row.names=FALSE,col.names=FALSE,sep=",",append = T) 
 # print(paste0('wrote SS3 mean size at age, sim ',sim_number," FLEVEL ",level))
   } ## end of number sims
-  plotComps(out_file)
+  gendat <- build_simComp(out_file)
+  plotComps(dat1 = gendat[[1]], dat2 = gendat[[2]], datN = gendat[[3]], saveloc = 1)
 } ## end of fishing_level
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
 ```
@@ -517,28 +519,27 @@ print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
 Now read in the stitched dataframe, which contains a subsample of fish from each year under a given regime, and fake the lat data.
 ```{r stich fake sets, echo = T}
 for(l in 1:nrow(fLevs)){
-  out_file <- paste0(getwd(),"/outputs/",fLevs[l,3],"/",paste(fLevs[l,1],fLevs[l,2], sep = "_"))
-  df <- read.csv(paste0(out_file,"/",tolower(paste(fLevs[l,1],fLevs[l,2])),"sim_ageComp.csv"))
-}
+ 
+  ## get output files for this Ftrend
+  ID <- paste(fLevs[l,1],fLevs[l,2])
+  lev0 <-  list.dirs(paste0(getwd(),"/outputs/"), full.names = T)[grep(paste(fLevs[l,1],fLevs[l,2],sep = "_"), list.dirs(paste0(getwd(),"/outputs/"), full.names = T))] 
+  
+  ## get pre-sampled age/length data
+  dat <- list.files(lev0, recursive = T, full.names = T)[grep(paste0(tolower(paste(fLevs[l,1],fLevs[l,2])),'sim_Comp.csv'),list.files(lev0, recursive = T, full.names = T))] %>%
+    map(read.csv) %>%
+  reduce(bind_rows) %>%
+    filter(Year %in% c(50:100))
+  
+  ## add lat manually
+  for(i in 1:nrow(dat)){
+    dat$Latitude_dd[i] <- ifelse(dat$REG[i] == 'R1', runif(1,0.0,14.0), runif(1,14.0,28.0))
+  }
+  
+  names(dat)[4] <- "fish_size"
+  genDat <- build_simComp(dat0=dat) ## make stuff for plotting
+    
+  plotComps(dat1 = gendat[[1]], dat2 = gendat[[2]], datN = gendat[[3]], saveloc = NA) ## all regions together
 
-boots  <- list.dirs(paste0(getwd(),"/outputs/"), recursive = T)[grep('boot',list.dirs(paste0(getwd(),"/outputs/"), recursive = T))]
-  ## bind all rows
-  dat <- list.files(boots, full.names = T)[grep('SAA',list.files(boots, full.names = T))] %>%
-    map(read.table,sep=",",header=T) %>%
-   reduce(bind_rows)  %>%
-    filter(Year %in% c(50:99))  %>% 
-    mutate(block = ifelse(Year < 75, 'early','late')) %>%
-    group_by(FSIM,block) %>%
-    sample_frac(0.33) %>%
-
-  
-  
-  
-   dat1 <- dat %>%
-    sample_n(10000) %>%
-    group_by(Year, Age) %>% summarise(n = n()) %>%
-    mutate(freq = n / sum(n))
-  dat2 <- dat1 %>% group_by(Year) %>% summarise(totN = sum(n))
 
 ```
 

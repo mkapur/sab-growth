@@ -1,4 +1,3 @@
-#
 ## GROWTH MODULE ----
 # length-weight
 lw_a = 1.3528e-006
@@ -8,7 +7,7 @@ lw_b = 3.4297
 # L1 = 62.69
 # L2 = 216.72
 L1 = 50
-L2 = 290
+L2 = 350
 a1 = 0
 a2 = 15
 growth_lognormal_SD = 0.025

@@ -12,10 +12,11 @@ pow=function(x,y){x^y}
 start_yr = 0
 
 # num of M only year 
-M_only_yr = 40
+M_only_yr = 50
 
 # Fishing mortality starting year
-F_start_yr = 60
+# F_start_yr = 60
+F_start_yr = 50
 
 simu_year = M_only_yr+F_start_yr
 
@@ -93,10 +94,6 @@ Inst_M = 0.25
 
 # catch data sampling rate
 #catch_sampling_rate = 0.9 
-
-# fishery-dependent catchability
-fishery_q = 0.00001
-sigma_CPUE = 0.1
 
 # selectivity ogive
 SEL_50 = 147

@@ -9,6 +9,7 @@ sptlvb.dll
 sptlvb.o
 sptlvb.dll
 sptlvb.o
+*contents
 .Rhistory
 mapdata/Commercial_Groundfish_Registration_Areas.zip
 spatiotemporalBSAIgrowth-master/.Rbuildignore
@@ -140,3 +141,4 @@ iPopSim/.Rproj.user/2B1B628E/sources/per/t/58039FFC
 iPopSim/.Rproj.user/2B1B628E/sources/per/t/58039FFC-contents
 iPopSim/.Rproj.user/2B1B628E/sources/per/t/856B016F
 iPopSim/.Rproj.user/2B1B628E/sources/per/t/856B016F-contents
+*.pper

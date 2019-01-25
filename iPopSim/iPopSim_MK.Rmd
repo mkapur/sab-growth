@@ -10,7 +10,6 @@ The purpose of this script is to extend an existing Individual Based Model to ac
 + ! add BSH LFSR
 + Remove time-varying growth
 
-Establish WD and Presets
 ```{r Setup, message = F, results='hide', echo = F}
 library(lattice)
 require(dplyr)
@@ -22,22 +21,35 @@ require(ggplot2)
 rm(list = ls())
 # generate.effort(level = c('LOW','MED','HIGH')[1], nsim = 1000) ## see system_presents for function; only occurs once
 ```
+
+Establish Presets & Scenarios
+
+```{r}
+options(warn = -1)
+nboot <- 4
+fLevs <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
+source('wrangle_data.R')
+```
+
 Initialization (Calculate SSB per recruit)
 These all iterate across ages at a yearly time step. Some modules like growth accumulate at a 1/2 year time step.
 Current run time:
 50 boots, 100 years ~15mins on sebastes
 ```{r Run Simulation and Save Outputs}
-options(warn = -1)
-nboot <- 4
-fLevs <- expand.grid(FLEVEL1 = c('LOW','MED','HIGH'), FLEVEL2 = c('LOW','MED','HIGH'), SPP = c('R1','R2'))
-source('wrangle_data.R')
+
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
-for(l in 1:nrow(fLevs)){
-  source(paste0('vb_params_',fLevs[l,3],'.R')) ## special VB params
-  source('system_presets.R') ## system functions 
+# for(l in 1:nrow(fLevs)){
+for(l in 1:3){
 
-  out_file <- paste0(getwd(),"/outputs/",fLevs[l,3],"/",paste(fLevs[l,1],fLevs[l,2], sep = "_"))
+  
+  source(paste0('vb_params_1.R')) ## special VB params
+  source('system_presets.R') ## system functions 
+  
+  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
+  scenID <- ifelse(is.na(fLevs[l,5]), paste(fLevs[l,3],fLevs[l,4],sep = "_"), paste(fLevs[l,3],fLevs[l,4],fLevs[l,5], sep = "_"))
+  out_file <-  paste0(scenname,"/",scenID)
+  
   ## Remove pre-existing MATRIX files
   if(exists(out_file)) unlink(out_file, recursive=TRUE) ## delete pre-existing file
   dir.create(out_file) ## make master FLevel File
@@ -88,14 +100,20 @@ for(l in 1:nrow(fLevs)){
     uni_ind = 0
     
     ## get F vector at two different levels with time break
-    Inst_F_vector <-
-      c(rep(0, 50),
-      generate.effort(level = fLevs[l, 1], nyears = 25),
-      generate.effort(level = fLevs[l, 2], nyears = 26))
-    
+    nyears <- fLevs[l,c("FMORT_TERM")]
+    Inst_F_vector <- vector() ## reset
+    Inst_F_vector[1:84] <-   c( ## create final fifty or 34 years
+      rep(0, 50),
+      generate.effort(level = fLevs[l, "FMORT_1"], nyears = nyears),
+      generate.effort(level = fLevs[l, "FMORT_2"], nyears = nyears)
+    )
+    if (nyears == 17) { ## add in last 17 years if needed
+      Inst_F_vector[85:101] <-
+        generate.effort(level = fLevs[l, "FMORT_3"], nyears = nyears)
+    }
+    ## save simulated F
     fdf <- rbind(fdf,data.frame(cbind(Inst_F_vector[51:101],1:51, rep(idx,51))))
-
-    # Inst_F_vector = select.effort(location = 'inputs/',  level = 'LOW', nsim = 1000) ## subset a random time series from the effort simulator for a given fishing level; the 1000 just indicates how many sims it can choose from
+    
     for(ry in 1:simu_year){ ## iterate sim years
       if(RECRUITs[ry] < 1){ ## fail if less than one recruit
         RECRUITs[ry]=1 ## coerce to 1
@@ -543,9 +561,19 @@ for(l in 1:nrow(fLevs)){
     filter(Year %in% c(50:100))
   
   ## add lat manually
+  
+  sptl <- fLevs[l,'SPATIAL']
+  
   for(i in 1:nrow(dat)){
-    dat$Latitude_dd[i] <- ifelse(dat$REG[i] == 'R1', runif(1,0.0,14.0), runif(1,14.0,28.0))
-  }
+    if(is.na(sptl)){
+       dat$Latitude_dd[i] <- runif(1, 0.0, 50.0) ## uniform range
+    } else if(sptl == 25){ ## 25 is shorthand for single uniform break
+     dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
+  } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
+     dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
+    } ## end else
+  } ## end i
+    
   
   names(dat)[4] <- "fish_size"
   genDat <- build_simComp(dat0=dat) ## make stuff for plotting

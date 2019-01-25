@@ -2,6 +2,9 @@
 *.o
 *.Rhistory
 *.pper
+*.CSV
+*.jpg
+*.pdf
 *.Rproj.user
 *shared
 *raw
@@ -42,3 +45,5 @@ iPopSim/.Rproj.user/B0D26E57/sources/per/t/11D57B3
 iPopSim/.Rproj.user/B0D26E57/sources/per/t/10E6EAA9
 iPopSim/.Rproj.user/B0D26E57/pcs/windowlayoutstate.pper
 iPopSim/.Rproj.user/B0D26E57/pcs/source-pane.pper
+*.jpg
+*.jpg

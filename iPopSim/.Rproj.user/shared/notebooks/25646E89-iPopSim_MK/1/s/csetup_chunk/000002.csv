@@ -27,3 +27,4 @@ Attaching package: ‘dplyr’
 "
 "0","# knitr::opts_chunk$set(root.dir =  ""C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim"")"
 "0","rm(list = ls())"
+"0","# generate.effort(level = c('LOW','MED','HIGH')[1], nsim = 1000) ## see system_presents for function; only occurs once"

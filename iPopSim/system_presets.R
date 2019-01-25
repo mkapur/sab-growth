@@ -137,7 +137,7 @@ selectivity  = function(true_age){
 test_fish_size = c(0:400)
 
 ## Effort Simulator ----
-generate.effort = function(level) {
+generate.effort = function(level, nyears) {
   getFhist<-function(nsim,Esd,nyears,dFmin,dFmax,bb,scale){
     ne<-nsim*10                                           # Number of simulated effort datasets
     dEfinal<-runif(ne,dFmin,dFmax)                        # Sample the final gradient in effort
@@ -166,9 +166,16 @@ generate.effort = function(level) {
   
   ## just run a single vector and save it to an ongoing data frame
   scaleL <- ifelse(level == 'HIGH', 0.3/1.323, ifelse(level == 'MED', 0.2/1.323, 0.1/1.323))
-  effvec <- as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = scaleL))
+  # effvec <- as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = scaleL))
   ## create a data frame based on your number of sims and desired fishing effort. Add in an extra year.
-  
+
+  if (level == 'HIGH') {
+    effvec <-   runif(nyears, 0.3, 0.4)
+  } else if (level == 'MED') {
+    effvec <-     runif(nyears, 0.2, 0.3)
+  } else{
+    effvec <-     runif(nyears, 0.1, 0.2)
+  }
   return(effvec)
 }
 #   df <- data.frame(

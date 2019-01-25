@@ -9,16 +9,6 @@ build_simComp <- function(out_file, dat0 = NA){
     map(read.table,sep=",",header=T) %>%
     reduce(bind_rows) 
   
-  dim(dat)
-  
-  
-  dat0 %>% 
-    group_by(Year,FSIM) %>%
-    summarise(meanF = mean(FMORT)) %>%
-    ggplot(., aes(x = Year, y = meanF, color = FSIM, group = FSIM)) +
-    scale_x_continuous(limits = c(50,100)) +
-    geom_line()
-  
   ## make summary dfs and plot 
   dat0 <- dat %>%
     sample_n(10000) 
@@ -106,5 +96,3 @@ plotComps <- function(dat1,dat2,datN, saveloc = NA){
   } 
 }
  
- 
-plotEffort <- 

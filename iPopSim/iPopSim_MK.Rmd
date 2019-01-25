@@ -2,7 +2,7 @@
 title: "Individual-Based Population Simulator"
 subtitle: "V1.7X, CAPAM 2017"
 author: "M Kapur adapted from Chang, Carvalho"
-output: html_notebook
+output: NULL
 ---
 The purpose of this script is to extend an existing Individual Based Model to act as an operating model of a low-fecund fishery, the Blue shark. This code builds upon the prior forms in the following ways:
 + addition of a low-fecundity stock-recruitment relationship [citation]
@@ -15,6 +15,7 @@ Establish WD and Presets
 library(lattice)
 require(dplyr)
 require(purrr)
+library(RColorBrewer)
 require(tidyr)
 require(ggplot2)
 # knitr::opts_chunk$set(root.dir =  "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim")
@@ -30,6 +31,7 @@ options(warn = -1)
 nboot <- 4
 fLevs <- expand.grid(FLEVEL1 = c('LOW','MED','HIGH'), FLEVEL2 = c('LOW','MED','HIGH'), SPP = c('R1','R2'))
 source('wrangle_data.R')
+fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 for(l in 1:nrow(fLevs)){
   source(paste0('vb_params_',fLevs[l,3],'.R')) ## special VB params
@@ -86,10 +88,12 @@ for(l in 1:nrow(fLevs)){
     uni_ind = 0
     
     ## get F vector at two different levels with time break
-    Inst_F_vector <- c(rep(0,50),generate.effort(level = fLevs[l,1])[1:24],
-                       generate.effort(  level = fLevs[l,1])[24:51])
+    Inst_F_vector <-
+      c(rep(0, 50),
+      generate.effort(level = fLevs[l, 1], nyears = 25),
+      generate.effort(level = fLevs[l, 2], nyears = 26))
     
-    effDF <- rbind(effDF, cbind(as.numeric(Inst_F_vector),as.numeric(1:51),rep(paste(fLevs[l,1],fLevs[l,2],fLevs[l,3], sep = "_"),51)))
+    fdf <- rbind(fdf,data.frame(cbind(Inst_F_vector[51:101],1:51, rep(idx,51))))
 
     # Inst_F_vector = select.effort(location = 'inputs/',  level = 'LOW', nsim = 1000) ## subset a random time series from the effort simulator for a given fishing level; the 1000 just indicates how many sims it can choose from
     for(ry in 1:simu_year){ ## iterate sim years
@@ -512,16 +516,16 @@ write.table(t(N_obs_mean_size_at_age),paste0(path_name, "/SS3_OBS_Mean_Size_At_A
 write.table(t(colnames(OBS_Mean_Length_At_Age_RESULT)),paste0(path_name, "/SS3_OBS_Mean_Size_At_AgeE.csv",sep=""),row.names=FALSE,col.names=FALSE,sep=",",append = T) 
 write.table(OBS_Mean_Length_At_Age_RESULT,paste0(path_name, "/SS3_OBS_Mean_Size_At_AgeE.csv",sep=""),row.names=FALSE,col.names=FALSE,sep=",",append = T) 
 # print(paste0('wrote SS3 mean size at age, sim ',sim_number," FLEVEL ",level))
-  } ## end of number sims
+  } ## end of boots
+  idx <- idx + 1
   genDat <- build_simComp(out_file)
   plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], saveloc = 1)
   rm(genDat)
 } ## end of fishing_level
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
-names(effDF) <- c('F_std','Year','MOD')
-effDF$Year <- as.numeric(effDF$Year)
-effDF$F_std <- as.numeric(effDF$F_std)
-write.csv(effDF,paste0(getwd(),"C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/genData/Fsim.csv"),row.names = F )
+names(fdf) <- c('F_std','Year','MOD')
+fdf$MOD <- as.factor(fdf$MOD)
+write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 ```
 
 
@@ -549,8 +553,10 @@ for(l in 1:nrow(fLevs)){
   names(dat)[4] <- "Length_cm"
   write.csv(dat, paste0(getwd(),"/genData/",tolower(paste0(unique(dat$FSIM))),"2Regions_Comp.csv"),row.names = F)
 
-  kaputils::plotF(SPRseries = effDF, saveplot = T, pdfcols = 3, plotloc = paste0(getwd(),'/plots') )
 }
+
+## Plot F trajectory once time
+  kaputils::plotF(SPRseries = fdf, saveplot = T, pdfcols = 3, plotloc = paste0(getwd(),'/plots') )
 
 ```
 

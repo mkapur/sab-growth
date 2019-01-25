@@ -153,7 +153,9 @@ for(l in 1:nrow(fLevs)){
           AgeE = AgeE,
           FMORT = c(Inst_F_vector[ry:(ry + Zdeath - 1)]),
           M = rep(Inst_M, Zdeath),  ## changed this to rep length Zdeath so it'd match
-          Sel = c(selectivity(fish_sizes)),
+          # Sel = c(selectivity(fish_sizes)),
+           Sel = c(selectivity(true_age)),
+
           FSIM = paste(fLevs[l,1],fLevs[l,2]),
           REG = fLevs[l,3]
         )
@@ -537,7 +539,7 @@ for(l in 1:nrow(fLevs)){
   
   names(dat)[4] <- "fish_size"
   genDat <- build_simComp(dat0=dat) ## make stuff for plotting
-  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], saveloc = NA) ## all regions together
+  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]],  saveloc = NA) ## all regions together
   names(dat)[4] <- "Length_cm"
   write.csv(dat, paste0(getwd(),"/genData/",tolower(paste0(unique(dat$FSIM))),"2Regions_Comp.csv"),row.names = F)
 

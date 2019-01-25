@@ -137,9 +137,7 @@ selectivity  = function(true_age){
 test_fish_size = c(0:400)
 
 ## Effort Simulator ----
-generate.effort = function(level,nsim) {
-  # 
- 
+generate.effort = function(level) {
   getFhist<-function(nsim,Esd,nyears,dFmin,dFmax,bb,scale){
     ne<-nsim*10                                           # Number of simulated effort datasets
     dEfinal<-runif(ne,dFmin,dFmax)                        # Sample the final gradient in effort
@@ -165,35 +163,33 @@ generate.effort = function(level,nsim) {
     Eerr<-array(exp(rnorm(nyears*nsim,rep(Emu,nyears),rep(Esd,nyears))),c(nsim,nyears))
     E*Eerr
   }
+  
+  ## just run a single vector and save it to an ongoing data frame
+  scaleL <- ifelse(level == 'HIGH', 0.3/1.323, ifelse(level == 'MED', 0.2/1.323, 0.1/1.323))
+  effvec <- as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = scaleL))
   ## create a data frame based on your number of sims and desired fishing effort. Add in an extra year.
   
-  
-  df <- data.frame(
-    'SIM' = rep(1:nsim, each = F_start_yr+1),
-    'YEAR' = rep(seq(1, F_start_yr+1, 1), nsim),
-    'FMORT' = if (level == 'HIGH') {
-      as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = 0.3/1.323))
-    }
-    else if (level == 'MED') {
-      as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = 0.2/1.323))
-    } else {
-      as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = 0.1/1.323))
-      
-    }
-  )
-  write.csv(df,
-            paste0(getwd(),'/inputs/FSIM_', level, '.csv'),
-            row.names = F)
+  return(effvec)
 }
+#   df <- data.frame(
+#     'SIM' = rep(1:nsim, each = F_start_yr+1),
+#     'YEAR' = rep(seq(1, F_start_yr+1, 1), nsim),
+#     'FMORT' = if (level == 'HIGH') {
+#       as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = 0.3/1.323))
+#     }
+#     else if (level == 'MED') {
+#       as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = 0.2/1.323))
+#     } else {
+#       as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = 0.1/1.323))
+#       
+#     }
+#   )
+#   write.csv(df,
+#             paste0(getwd(),'/inputs/FSIM_', level, '.csv'),
+#             row.names = F)
+# }
 
-select.effort = function(level, nsim, location){
-  ## pick a random vector (given by column SIM)
-  df = read.csv(paste0(location,'FSIM_',level,'.csv'))
-  effort.vect = floor(runif(1, 0, nsim))
-  Inst_F_vector = c(rep(0, M_only_yr), df[df$SIM == effort.vect,'FMORT'])
-  # print(summary(df$FMORT))
-  # return(Inst_F_vector)
-}
+
 
 
 ## Bookkeeping - set up empty dataframes for output ----
@@ -205,6 +201,7 @@ maketables = function(path_name){
   dinfo = data.frame(cohort=c(-999),ind =c(-999),fish_size=c(-999),
                      Year=c(-999),Age=c(-999),AgeE = c(-999),dtype="HEAD",
                      FMORT=c(-999),M=c(-999),Sel=c(-999), FSIM = c(-999), REG = c(-999))
+  eff <- data.frame(Year = NA, FMORT = NA, SIMID = NA)
   
   EXP_info = SAA ## same structure as SAA
   
@@ -292,3 +289,11 @@ maketables = function(path_name){
 #   }
 # )
 # 
+# select.effort = function(level, nsim, location){
+#   ## pick a random vector (given by column SIM)
+#   df = read.csv(paste0(location,'FSIM_',level,'.csv'))
+#   effort.vect = floor(runif(1, 0, nsim))
+#   Inst_F_vector = c(rep(0, M_only_yr), df[df$SIM == effort.vect,'FMORT'])
+#   # print(summary(df$FMORT))
+#   # return(Inst_F_vector)
+# }

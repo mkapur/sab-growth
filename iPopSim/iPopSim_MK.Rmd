@@ -86,8 +86,10 @@ for(l in 1:nrow(fLevs)){
     uni_ind = 0
     
     ## get F vector at two different levels with time break
-    Inst_F_vector <- c(select.effort(location = 'inputs/',  level = fLevs[l,1], nsim = 1000)[1:74],
-                       select.effort(location = 'inputs/',  level = fLevs[l,1], nsim = 1000)[75:101])
+    Inst_F_vector <- c(rep(0,50),generate.effort(level = fLevs[l,1])[1:24],
+                       generate.effort(  level = fLevs[l,1])[24:51])
+    
+    effDF <- rbind(effDF, cbind(as.numeric(Inst_F_vector),as.numeric(1:51),rep(paste(fLevs[l,1],fLevs[l,2],fLevs[l,3], sep = "_"),51)))
 
     # Inst_F_vector = select.effort(location = 'inputs/',  level = 'LOW', nsim = 1000) ## subset a random time series from the effort simulator for a given fishing level; the 1000 just indicates how many sims it can choose from
     for(ry in 1:simu_year){ ## iterate sim years
@@ -516,6 +518,10 @@ write.table(OBS_Mean_Length_At_Age_RESULT,paste0(path_name, "/SS3_OBS_Mean_Size_
   rm(genDat)
 } ## end of fishing_level
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
+names(effDF) <- c('F_std','Year','MOD')
+effDF$Year <- as.numeric(effDF$Year)
+effDF$F_std <- as.numeric(effDF$F_std)
+write.csv(effDF,paste0(getwd(),"C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/genData/Fsim.csv"),row.names = F )
 ```
 
 
@@ -543,6 +549,7 @@ for(l in 1:nrow(fLevs)){
   names(dat)[4] <- "Length_cm"
   write.csv(dat, paste0(getwd(),"/genData/",tolower(paste0(unique(dat$FSIM))),"2Regions_Comp.csv"),row.names = F)
 
+  kaputils::plotF(SPRseries = effDF, saveplot = T, pdfcols = 3, plotloc = paste0(getwd(),'/plots') )
 }
 
 ```

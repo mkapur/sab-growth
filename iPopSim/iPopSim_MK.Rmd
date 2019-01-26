@@ -40,22 +40,35 @@ Current run time:
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 # for(l in 1:nrow(fLevs)){
-for(l in 1:3){
+for(l in 35:36){
 
+  ## if there's a spatial break
+  if (fLevs[l, 'CAT'] == 'SPATIAL'  |
+      fLevs[l, "CAT"] == 'COMBO') {
+      ## special VB params
+      source(paste0(getwd(),"/vb_params_", fLevs[l, 'REG'], '.R'))
+      } else {
+      source(paste0(getwd(),"/vb_params_R1.R"))
+      }
   
-  source(paste0('vb_params_1.R')) ## special VB params
+  
   source('system_presets.R') ## system functions 
   
   scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
-  scenID <- ifelse(is.na(fLevs[l,5]), paste(fLevs[l,3],fLevs[l,4],sep = "_"), paste(fLevs[l,3],fLevs[l,4],fLevs[l,5], sep = "_"))
-  out_file <-  paste0(scenname,"/",scenID)
-  
+  scenID <-
+    ifelse(is.na(fLevs[l, 5]),
+    paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
+    paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
+  regID <- ifelse(!is.na(fLevs[l,8]),paste(fLevs[l,8]),"")
+  out_file0 <- paste0(scenname,"/",regID)
+
+  out_file <-  paste0(out_file0,"/",scenID); dir.create(out_file, showWarnings = F)
   ## Remove pre-existing MATRIX files
-  if(exists(out_file)) unlink(out_file, recursive=TRUE) ## delete pre-existing file
-  dir.create(out_file) ## make master FLevel File
+  # if(exists(out_file)) unlink(out_file, recursive=TRUE) ## delete pre-existing file
+  # dir.create(out_file) ## make master FLevel File
   
   for(boot_number in 1:nboot) { ## full nsims, line 20
-    cat(paste0(paste(fLevs[l,1],fLevs[l,2],fLevs[l,3]),' boot ',boot_number, "\n"))
+    cat(paste0(paste(fLevs[l,'DESC']," ",fLevs[l,'ID']),' boot ',boot_number, "\n"))
     ## Designate WRITE location
     path_name <- paste0(out_file,"/boot_",boot_number) 
     dir.create(path_name, showWarnings = F) ## make individual sim file
@@ -180,8 +193,8 @@ for(l in 1:3){
           # Sel = c(selectivity(fish_sizes)),
            Sel = c(selectivity(true_age)),
 
-          FSIM = paste(fLevs[l,1],fLevs[l,2]),
-          REG = fLevs[l,3]
+          FSIM = paste(fLevs[l,"FMORT_1"],fLevs[l,"FMORT_2"],fLevs[l,"FMORT_3"]),
+          REG = fLevs[l,"REG"]
         )
         
         ## MORTALITY MODULE:
@@ -205,8 +218,9 @@ for(l in 1:3){
           FMORT = c(Inst_F_vector[ry + Zdeath - 1]),
           M = c(Inst_M),
           Sel = c(selectivity(fish_sizes[Zdeath])),
-          FSIM = paste(fLevs[l,1],fLevs[l,2]),
-          REG = fLevs[l,3]
+
+          FSIM = paste(fLevs[l,"FMORT_1"],fLevs[l,"FMORT_2"],fLevs[l,"FMORT_3"]),
+          REG = fLevs[l,"REG"]
 
         )
         
@@ -549,10 +563,14 @@ write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 
 Read in both regions' subsampled data frame from each regime. Then fake lat data with a breakpoint at 14 "degrees". Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with a temporal break at year 75, and a spatial break at 14 degrees.
 ```{r stich fake sets, echo = T}
-for(l in 1:nrow(fLevs)){
- 
+for(l in 34:36){
+  
+  
+  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
+
   ## get output files for this Ftrend
-  lev0 <-  list.dirs(paste0(getwd(),"/outputs/"), full.names = T)[grep(paste(fLevs[l,1],fLevs[l,2],sep = "_"), list.dirs(paste0(getwd(),"/outputs/"), full.names = T))] 
+  lev0 <-  list.dirs(scenname, full.names = T)
+  # [grep(paste(fLevs[l,1],fLevs[l,2],sep = "_"), list.dirs(paste0(getwd(),"/outputs/"), full.names = T))] 
   
   ## get pre-sampled age/length data
   dat <- list.files(lev0, recursive = T, full.names = T)[grep(paste0(tolower(paste(fLevs[l,1],fLevs[l,2])),'sim_Comp.csv'),list.files(lev0, recursive = T, full.names = T))] %>%

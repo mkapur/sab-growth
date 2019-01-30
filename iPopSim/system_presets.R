@@ -37,7 +37,7 @@ Linf =L1+(L2-L1)/(1-exp(-VBGF_K*(a2-a1)))
 
 ## Growth increment FUNCTION, NON TV: FROM V7
 
-growth_incre  = function(fish_size){ 
+growth_incre  <- function(fish_size){ 
   y=(Linf-fish_size)*(1-exp(-VBGF_K))
   y
 }
@@ -170,11 +170,11 @@ generate.effort = function(level, nyears) {
   ## create a data frame based on your number of sims and desired fishing effort. Add in an extra year.
 
   if (level == 'HIGH') {
-    effvec <-   runif(nyears, 0.3, 0.4)
+    effvec <- runif(nyears, 0.3, 0.4)
   } else if (level == 'MED') {
-    effvec <-     runif(nyears, 0.2, 0.3)
+    effvec <-  runif(nyears, 0.2, 0.3)
   } else{
-    effvec <-     runif(nyears, 0.1, 0.2)
+    effvec <- runif(nyears, 0.1, 0.2)
   }
   return(effvec)
 }

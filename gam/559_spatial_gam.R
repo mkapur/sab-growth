@@ -17,13 +17,13 @@ all_data$Longitude_dd <- with(all_data, ifelse(Longitude_dd> 0, -1*Longitude_dd,
 ## change point gam in par est
 
 ## first fit with year only and check ACF
-mod <- gam(Length_cm ~ s(Year, bs = "cc"), data = all_data)
+# mod <- gam(Length_cm ~ s(Year, bs = "cc"), data = all_data)
 # mod <- lm(Length_cm ~ Year, data = all_data)
 # acf(resid(mod),  main = "ACF")
-# 
-# mod <- gam(Length_cm ~ Age + Sex + 
-#              s(Year, bs = "cc") + s(Latitude_dd), 
-#            data = all_data)
+
+mod <- gam(Length_cm ~ Age + Sex +
+             s(Year, bs = "cc") + s(Latitude_dd),
+           data = all_data)
 # summary(mod)
 
 ## plotting model

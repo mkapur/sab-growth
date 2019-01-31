@@ -1,17 +1,17 @@
 ## given a GAM model, identify breakpoints via Deriv
 
 
-getBreaks <- function(mod, simID){
+getBreaks <- function(gammod = mod, dat, scenario = scen ){
   
   
   ## get & eval derivatives ----
   llsmooth <- mod$smooth[2][[1]]
   llsmooth$knots
   ## calc first derivatives
-  pdat <- sample_n(all_data,1000)
+  pdat <- sample_n(dat,1000)
   pTerm <- predict(mod, newdata = pdat, type = "terms", se.fit = TRUE)
   p2 <- predict(mod, newdata = pdat) ## raw predicts
-  pdat <- transform(pdat, predLen = p2, se2_spt = pTerm$se.fit[,4], se2_yr = pTerm$se.fit[,3])
+  pdat <- transform(pdat, predLen = p2, se2_spt = pTerm$se.fit[,3], se2_yr = pTerm$se.fit[,2])
   df.res <- df.residual(mod)
   crit.t <- qt(0.025, df.res, lower.tail = FALSE)
   ## variances are additive just FYI
@@ -45,7 +45,7 @@ getBreaks <- function(mod, simID){
       m2.dci <- confint(m2.d, term = Term)
       
       # crit.eval = mean(m2.d[[Term]]$deriv) ## use mean
-      crit.eval = quantile(probs = c(0.025, 0.975), x=  m2.d[[Term]]$deriv) ## use tails
+      crit.eval = quantile(probs = c(0.025, 0.975), x =  m2.d[[Term]]$deriv) ## use tails
       ## identify where CI does NOT include some crit value (return NA where it does)
       m2.dsig <- signifD(m2.d$eval[[Term]], 
                          d = m2.d[[Term]]$deriv,
@@ -60,7 +60,7 @@ getBreaks <- function(mod, simID){
     }
   }
   
-  png( file = paste0(getwd(),"/plots/gam_smooths_update.png"), height = 6, width = 8, units = 'in', res = 500)
+  png( file = paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/",scenario,"gam_smooths.png"), height = 6, width = 8, units = 'in', res = 500)
   layout(matrix(1:4, ncol = 2))
   plot(mod,  select  =1,  scheme  
        =2,  lwd  =2, main = 'Year Smoother', cex.axis = 2)

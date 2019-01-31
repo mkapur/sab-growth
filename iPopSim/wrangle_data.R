@@ -6,7 +6,7 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
   
   ## bind all rows
   dat <- list.files(boots, full.names = T)[grep('SAA',list.files(boots, full.names = T))] %>%
-    map(read.table,sep=",",header=T) %>%
+    lapply(read.table,sep=",",header=T) %>%
     reduce(bind_rows) 
   
   ## make summary dfs and plot 

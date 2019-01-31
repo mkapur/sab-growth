@@ -9,7 +9,7 @@ library(ggsidekick)
 load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/WC/Bio__NWFSC.Combo_2018-09-25.rda") ## loads as "Data"
 load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/warehouse.RData") ## sent from melissa, no SAB after 2014 -- need to stitch
 data0 <- WareHouse.All.Ages.Env %>% filter(
-  year < 2003 & common_name == 'sablefish' &
+  common_name == 'sablefish' &
     !is.na(age_years) &
     !is.na(length_cm) & sex != 'U'
 ) %>% 
@@ -25,7 +25,12 @@ data0 <- WareHouse.All.Ages.Env %>% filter(
     GEAR_DEPTH = depth_ftm,
     Temp = Temperature_at_Surface_c,
     GEAR_TEMPERATURE = Temperature_at_Gear_c
-  ) %>% bind_rows(.,Data%>% filter(!is.na(Age) & !is.na(Length_cm) & Depth_m < 549 & Depth_m >= 55 & Sex != 'U')) 
+  ) %>% bind_rows(.,
+                  Data %>% filter(
+                    Year > 2014,
+                    !is.na(Age) &
+                      !is.na(Length_cm) & Depth_m < 549 & Depth_m >= 55 & Sex != 'U'
+                  ))
 
 
 wcsurv0 <- data0; rm(Data);rm(WareHouse.All.Ages.Env)

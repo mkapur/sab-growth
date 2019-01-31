@@ -17,9 +17,10 @@ require(purrr)
 library(RColorBrewer)
 require(tidyr)
 require(ggplot2)
-# knitr::opts_chunk$set(root.dir =  "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim")
+# devtools::install_github("mkapur/kaputils")
+# install.packages( "c:/users/maia kapur/dropbox/kaputils",  repos = NULL, type = "source", dependencies = T)
+library(kaputils)
 rm(list = ls())
-# generate.effort(level = c('LOW','MED','HIGH')[1], nsim = 1000) ## see system_presents for function; only occurs once
 ```
 
 Establish Presets & Scenarios
@@ -40,7 +41,7 @@ Current run time:
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 # for(l in 1:nrow(fLevs)){
-for(l in 35:36){
+for(l in 35:35){
 
   ## if there's a spatial break
   if (fLevs[l, 'CAT'] == 'SPATIAL'  |
@@ -115,17 +116,19 @@ for(l in 35:36){
     ## get F vector at two different levels with time break
     nyears <- fLevs[l,c("FMORT_TERM")]
     Inst_F_vector <- vector() ## reset
-    Inst_F_vector[1:84] <-   c( ## create final fifty or 34 years
+    Inst_F_vector[1:101] <-   c( ## create final fifty or 34 years
       rep(0, 50),
       generate.effort(level = fLevs[l, "FMORT_1"], nyears = nyears),
-      generate.effort(level = fLevs[l, "FMORT_2"], nyears = nyears)
+      generate.effort(level = fLevs[l, "FMORT_2"], nyears = nyears+1)
     )
     if (nyears == 17) { ## add in last 17 years if needed
       Inst_F_vector[85:101] <-
         generate.effort(level = fLevs[l, "FMORT_3"], nyears = nyears)
     }
     ## save simulated F
-    fdf <- rbind(fdf,data.frame(cbind(Inst_F_vector[51:101],1:51, rep(idx,51))))
+    fdf <- rbind(fdf, data.frame(cbind(Inst_F_vector[51:101],
+                                       1:51, 
+                                       rep(idx, 51), rep(boot_number,51))))
     
     for(ry in 1:simu_year){ ## iterate sim years
       if(RECRUITs[ry] < 1){ ## fail if less than one recruit
@@ -550,8 +553,8 @@ write.table(OBS_Mean_Length_At_Age_RESULT,paste0(path_name, "/SS3_OBS_Mean_Size_
 # print(paste0('wrote SS3 mean size at age, sim ',sim_number," FLEVEL ",level))
   } ## end of boots
   idx <- idx + 1
-  genDat <- build_simComp(out_file)
-  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], saveloc = 1)
+  genDat <- build_simComp(out_file,l=l)
+  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID  = genDat[[4]], saveloc = 1)
   rm(genDat)
 } ## end of fishing_level
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
@@ -561,48 +564,66 @@ write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 ```
 
 
-Read in both regions' subsampled data frame from each regime. Then fake lat data with a breakpoint at 14 "degrees". Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with a temporal break at year 75, and a spatial break at 14 degrees.
-```{r stich fake sets, echo = T}
-for(l in 34:36){
+Read in both regions' subsampled data frame from each regime; nesting varies depending whether there was a spatial regime or not. Apply breakpoints if specified in `scenarios`. Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with temporal and spatial breaks as specified.
+```{r assign spatial, echo = T}
+# for(l in 1:nrow(fLevs)){
+for(l in 35:35){
   
-  
-  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
-
-  ## get output files for this Ftrend
-  lev0 <-  list.dirs(scenname, full.names = T)
-  # [grep(paste(fLevs[l,1],fLevs[l,2],sep = "_"), list.dirs(paste0(getwd(),"/outputs/"), full.names = T))] 
-  
-  ## get pre-sampled age/length data
-  dat <- list.files(lev0, recursive = T, full.names = T)[grep(paste0(tolower(paste(fLevs[l,1],fLevs[l,2])),'sim_Comp.csv'),list.files(lev0, recursive = T, full.names = T))] %>%
-    map(read.csv) %>%
-  reduce(bind_rows) %>%
-    filter(Year %in% c(50:100))
-  
-  ## add lat manually
-  
+scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
   sptl <- fLevs[l,'SPATIAL']
+  if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
   
-  for(i in 1:nrow(dat)){
-    if(is.na(sptl)){
-       dat$Latitude_dd[i] <- runif(1, 0.0, 50.0) ## uniform range
-    } else if(sptl == 25){ ## 25 is shorthand for single uniform break
-     dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-  } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
-     dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
-    } ## end else
-  } ## end i
+
+    dat <- list.files(scenname, recursive = T, full.names = T)[grep('*sim_Comp.csv',list.files(scenname, recursive = T, full.names = T))] %>%
+      map(read.csv) %>%
+      reduce(bind_rows) %>%
+      filter(Year %in% c(50:100))
     
+  }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
+    
+    lev0 <-  list.dirs(scenname, full.names = T)
+    
+    scenID <-
+      ifelse(is.na(fLevs[l, 5]),
+             paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
+             paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
+    
+    # moddrop <- NA
+    # for(m in 1:length(lev0)){
+    #   if(length(list.dirs(lev0[m], recursive = F)) > 0)  moddrop[m] <- m
+    # }
+    # moddrop <- moddrop[!is.na(moddrop)]
+    # if(length(moddrop >0)) lev0 <- lev0[-moddrop]
+    ## get pre-sampled age/length data
+    dat <- list.files(scenname, recursive = T, full.names = T)[grep(paste0(scenID,'sim_Comp.csv'),list.files(scenname, recursive = T, full.names = T))] %>%
+      map(read.csv) %>%
+      reduce(bind_rows) %>%
+      filter(Year %in% c(50:100))
+  }
+
+    for(i in 1:nrow(dat)){  
+      if(is.na(sptl)){
+        dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
+      } else if(sptl == 25){ ## 25 is shorthand for single uniform break
+        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
+      } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
+        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
+      } ## end else
+    } ## end nrow
+  
+  
   
   names(dat)[4] <- "fish_size"
-  genDat <- build_simComp(dat0=dat) ## make stuff for plotting
-  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]],  saveloc = NA) ## all regions together
+  genDat <- build_simComp(dat0=dat,l=l) ## make stuff for plotting
+  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID = genDat[[4]], saveloc = NA) ## all regions together
   names(dat)[4] <- "Length_cm"
-  write.csv(dat, paste0(getwd(),"/genData/",tolower(paste0(unique(dat$FSIM))),"2Regions_Comp.csv"),row.names = F)
-
+  write.csv(dat, paste0(getwd(),"/genData/",basename(scenname),"_",scenID,".csv"),row.names = F)
+  
 }
 
-## Plot F trajectory once time
-  kaputils::plotF(SPRseries = fdf, saveplot = T, pdfcols = 3, plotloc = paste0(getwd(),'/plots') )
+## Plot F trajectory one time
+fdf %>% filter(MOD %in% floor(runif(6,1,35)) & boot == 1) %>% 
+  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/plots")
 
 ```
 

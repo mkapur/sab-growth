@@ -41,7 +41,7 @@ Current run time:
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 # for(l in 1:nrow(fLevs)){
-for(l in 35:35){
+for(l in 1:1){
 
   ## if there's a spatial break
   if (fLevs[l, 'CAT'] == 'SPATIAL'  |
@@ -558,7 +558,7 @@ write.table(OBS_Mean_Length_At_Age_RESULT,paste0(path_name, "/SS3_OBS_Mean_Size_
   rm(genDat)
 } ## end of fishing_level
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
-names(fdf) <- c('F_std','Year','MOD')
+names(fdf) <- c('F_std','Year','MOD','boot')
 fdf$MOD <- as.factor(fdf$MOD)
 write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 ```
@@ -567,17 +567,15 @@ write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 Read in both regions' subsampled data frame from each regime; nesting varies depending whether there was a spatial regime or not. Apply breakpoints if specified in `scenarios`. Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with temporal and spatial breaks as specified.
 ```{r assign spatial, echo = T}
 # for(l in 1:nrow(fLevs)){
-for(l in 35:35){
+for(l in 1:1){
   
-scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
+  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
   sptl <- fLevs[l,'SPATIAL']
   if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
-  
-
-    dat <- list.files(scenname, recursive = T, full.names = T)[grep('*sim_Comp.csv',list.files(scenname, recursive = T, full.names = T))] %>%
-      map(read.csv) %>%
+    dat <- list.files(scenname, recursive = T, full.names = T)[grep('*sim_Comp.csv',list.files(scenname, recursive = T, full.names = T))] %>% lapply(read.csv) %>%
       reduce(bind_rows) %>%
       filter(Year %in% c(50:100))
+    
     
   }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
     
@@ -596,20 +594,20 @@ scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
     # if(length(moddrop >0)) lev0 <- lev0[-moddrop]
     ## get pre-sampled age/length data
     dat <- list.files(scenname, recursive = T, full.names = T)[grep(paste0(scenID,'sim_Comp.csv'),list.files(scenname, recursive = T, full.names = T))] %>%
-      map(read.csv) %>%
+      lapply(read.csv) %>%
       reduce(bind_rows) %>%
       filter(Year %in% c(50:100))
   }
-
-    for(i in 1:nrow(dat)){  
-      if(is.na(sptl)){
-        dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
-      } else if(sptl == 25){ ## 25 is shorthand for single uniform break
-        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-      } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
-        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
-      } ## end else
-    } ## end nrow
+  
+  for(i in 1:nrow(dat)){  
+    if(is.na(sptl)){
+      dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
+    } else if(sptl == 25){ ## 25 is shorthand for single uniform break
+      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
+    } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
+      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
+    } ## end else
+  } ## end nrow
   
   
   

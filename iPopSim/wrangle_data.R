@@ -7,11 +7,16 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
   ## bind all rows
   dat <- list.files(boots, full.names = T)[grep('SAA',list.files(boots, full.names = T))] %>%
     lapply(read.table,sep=",",header=T) %>%
-    reduce(bind_rows) 
-  
+    reduce(bind_rows)
+
   ## make summary dfs and plot 
   dat0 <- dat %>%
-    sample_n(10000) 
+    sample_n(10000)
+  
+  
+  ## just read boot 1 cause issues with stoke
+  # dat0 <- read.table(paste0(out_file,"/boot_1/IBM_SAA_MATRIX.txt"),header = T,sep = ",")
+  
   scenID <-
     ifelse(is.na(fLevs[l, 5]),
            paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
@@ -30,14 +35,12 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
            paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))  
   
   dat1 <- dat0 %>%
-    group_by(Year, Age) %>% 
-    summarise(n = n()) %>%
-    mutate(freq = n / sum(n)) %>% 
+    group_by(Year, Age) %>%
+    dplyr::summarise(n = n()) %>%
+    dplyr::mutate(freq = n / sum(n)) %>% 
     filter(Year %in% c(50:99))
   
   dat1$Flev <- NA
-  
-  
   
   if(is.na(fLevs[l,5])){ ## if in 25 year blocks fill both
     dat1$Flev[dat1$Year %in% 0:49] <- "ZERO"
@@ -55,7 +58,7 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
   dat2 <- dat0 %>%
     mutate(fish_size = round(fish_size)) %>%
     group_by(Year, fish_size) %>% 
-    summarise(n = n()) %>%
+    dplyr::summarise(n = n()) %>%
     mutate(freq = n / sum(n)) %>% 
     filter(Year %in% c(50:99)) #%>%
     # mutate(block = ifelse(Year < 75, 'early','late'),
@@ -91,9 +94,9 @@ plotComps <- function(dat1,dat2,datN,scenID, saveloc = NA){
     geom_area(stat = 'identity', alpha = 0.5) +
     geom_line()+
     facet_wrap( ~ Year, ncol = 4) +
-    scale_x_continuous(limits = c(0,max(dat1$Age))) +
-    scale_y_continuous(breaks = seq(0,0.4,0.2),labels = seq(0,0.4,0.2)) +
-    annotate("text", x = 0.9*max(dat1$Age), y = 0.35, label = paste0("n = ",datN$totN)) +
+    # scale_x_continuous(limits = c(0,max(dat1$Age))) +
+    # scale_y_continuous(breaks = seq(0,0.4,0.2),labels = seq(0,0.4,0.2)) +
+    # annotate("text", x = 0.9*max(dat1$Age), y = 0.35, label = paste0("n = ",datN$totN)) +
     labs(y = 'proportion', title = paste0("Age comps") )+
     scale_fill_brewer(palette = "Dark2", name = "F Level")
   

@@ -61,7 +61,7 @@ prob_mature = function(fish_size){
 
 # num of super individuals - max recruits per year
 R0_super = 12
-# R0_super = 3000
+# R0_super = 300
 
 ## Beverton-Holt SRR 
 sigma_R = 0.1

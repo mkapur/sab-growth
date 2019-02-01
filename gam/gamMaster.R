@@ -4,7 +4,7 @@ fLevs <- read.csv('C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/inputs/scen
 
 require(mgcv);require(dplyr)
 
-for(l in c(1,35)){
+for(l in c(35)){
   
   ## get scenario name
   scen0 <- paste0(fLevs[l,'DESC'])

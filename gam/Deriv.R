@@ -78,10 +78,11 @@ confint.Deriv <- function(object, term, alpha = 0.05, ...) {
   res
 }
 
-signifMK <- function(x, d, upper, lower, eval = 0){
+signifMK <- function(x, d, upper, lower, eval = 0, crit.eval){
   miss <- upper > eval & lower < eval ## check if CI contains fail value
   rej <- x ## save evaluated point
-  want <- d > eval | d < eval ## T/F if derivative is greater or less than 0
+  # want <- d > eval  | d < eval ## T/F if derivative is greater or less than 0
+  want <- d > eval & d > crit.eval[2]  | d < eval & d < crit.eval[1] ## T/F if derivative is greater or less than 0
   rej[!want |miss] <- NA ## wherever equals zero or CI contains, input NA
   return(rej)
 }

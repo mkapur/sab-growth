@@ -1,8 +1,6 @@
 makeMod <- function(scenario,dat){
   
-
-  
-  mod <- gam(Length_cm ~ Age +  s(Year, bs = "cc") + s(Latitude_dd), data = dat)
+  mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd), data = dat)
   # summary(mod)
   
   ## plotting model
@@ -13,15 +11,14 @@ makeMod <- function(scenario,dat){
   graphics.off()
   
   ## now try with some AR structures and check AIC
-  mod1 <- gam(Length_cm ~ Age + 
-                s(Latitude_dd),
+  mod1 <- gam(Length_cm ~   s(Latitude_dd),
               correlation = corAR1(form = ~ 1|Year, p = 1),
               data = dat)
-  mod2 <- gam(Length_cm ~ Age +  s(Year, bs = "cc") +
+  mod2 <- gam(Length_cm ~ s(Year, bs = "cc") +
                 s(Latitude_dd),
               correlation = corAR1(form = ~ 1|Year, p = 2),
               data = dat)
-  mod3 <- gam(Length_cm ~ Age + s(Year, bs = "cc") +
+  mod3 <- gam(Length_cm ~  s(Year, bs = "cc") +
                 s(Latitude_dd),
               correlation = corAR1(form = ~ 1|Year, p = 3),
              data = dat)

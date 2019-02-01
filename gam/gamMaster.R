@@ -4,7 +4,7 @@ fLevs <- read.csv('C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/inputs/scen
 
 require(mgcv);require(dplyr)
 
-for(l in 30:37){
+for(l in c(1,35)){
   
   ## get scenario name
   scen0 <- paste0(fLevs[l,'DESC'])
@@ -13,7 +13,7 @@ for(l in 30:37){
                    paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
   scen <- paste(scen0,scen1,sep = "_")
   dat <-read.csv(paste0("C:/users/maia kapur/dropbox/uw/sab-growth/ipopsim/gendata/",
-                           scen,'.csv'))
+                           scen,'.csv')) %>% filter(Age == 4)
   mod <- makeMod(scenario = scen,dat)
   getBreaks(mod,dat, scen)
   

@@ -55,10 +55,13 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
 
       ## identify where mean crosses zero or falls out of bounds (NAs where it does)
       m2.dsig.zeros <- signifMK(x = m2.d$eval[[Term]],
-                                  d = m2.d[[Term]]$deriv,
-                                  upper = m2.dci[[Term]]$upper,
-                                  lower = m2.dci[[Term]]$lower,
-                                  eval = 0)
+                                d = m2.d[[Term]]$deriv,
+                                upper = m2.dci[[Term]]$upper,
+                                lower = m2.dci[[Term]]$lower,
+                                crit.eval = crit.eval,
+                                eval = 0)
+      
+      ## of passing ones, find outliers
       
       ## identify where CI crosses zero or falls out of bounds (NAs where it does)
       # m2.dsig.CIs <- signifCI(x = m2.d$eval[[Term]],
@@ -86,6 +89,7 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
   
   
   png( file = paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/",scenario,"gam_smooths.png"), height = 6, width = 8, units = 'in', res = 500)
+  
   layout(matrix(1:4, ncol = 2))
   
   

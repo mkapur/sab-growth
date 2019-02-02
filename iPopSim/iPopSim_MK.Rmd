@@ -41,7 +41,7 @@ Current run time:
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 # for(l in 1:nrow(fLevs)){
-for(l in 1:1){
+for(l in c(1,35,36)){
 
   ## if there's a spatial break
   if (fLevs[l, 'CAT'] == 'SPATIAL'  |
@@ -569,23 +569,31 @@ Read in both regions' subsampled data frame from each regime; nesting varies dep
 # for(l in 1:nrow(fLevs)){
 for(l in 1:1){
   
-  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
   sptl <- fLevs[l,'SPATIAL']
-  if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
-    dat <- list.files(scenname, recursive = T, full.names = T)[grep('*sim_Comp.csv',list.files(scenname, recursive = T, full.names = T))] %>% lapply(read.csv) %>%
-      reduce(bind_rows) %>%
-      filter(Year %in% c(50:100))
+  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
+  scenID <-
+    ifelse(is.na(fLevs[l, 5]),
+           paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
+           paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
+  regID <- ifelse(!is.na(fLevs[l,8]),paste(fLevs[l,8]),"")
+  out_file0 <- paste0(scenname,"/",regID)
+  
+  out_file <-  paste0(out_file0,"/",scenID)
+  # if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
     
+    for(b in 1:nboot){
+      dat <- read.table(paste0(out_file,"/",scenID,b,"sim_Comp.csv"),sep = ",",header = T) %>% filter(Year %in% c(50:100))
+   
+    # names(dat)[4] <- "fish_size"
+    # genDat <- build_simComp(dat0=dat,l=l) ## make stuff for plotting
+    # plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID = genDat[[4]], saveloc = NA) ## all regions together
+    # names(dat)[4] <- "Length_cm"
     
-  }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
+  # }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
     
-    lev0 <-  list.dirs(scenname, full.names = T)
+    # lev0 <-  list.dirs(scenname, full.names = T)
     
-    scenID <-
-      ifelse(is.na(fLevs[l, 5]),
-             paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
-             paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
-    
+
     # moddrop <- NA
     # for(m in 1:length(lev0)){
     #   if(length(list.dirs(lev0[m], recursive = F)) > 0)  moddrop[m] <- m
@@ -593,29 +601,27 @@ for(l in 1:1){
     # moddrop <- moddrop[!is.na(moddrop)]
     # if(length(moddrop >0)) lev0 <- lev0[-moddrop]
     ## get pre-sampled age/length data
-    dat <- list.files(scenname, recursive = T, full.names = T)[grep(paste0(scenID,'sim_Comp.csv'),list.files(scenname, recursive = T, full.names = T))] %>%
-      lapply(read.csv) %>%
-      reduce(bind_rows) %>%
-      filter(Year %in% c(50:100))
+    # dat <- list.files(scenname, recursive = T, full.names = T)[grep(paste0(scenID,'sim_Comp.csv'),list.files(scenname, recursive = T, full.names = T))] %>%
+    #   lapply(read.csv) %>%
+    #   reduce(bind_rows) %>%
+    #   filter(Year %in% c(50:100))
+      
+       for(i in 1:nrow(dat)){  
+      if(is.na(sptl)){
+        dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
+      } else if(sptl == 25){ ## 25 is shorthand for single uniform break
+        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
+      } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
+        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
+      } ## end else
+    } ## end nrow
   }
   
-  for(i in 1:nrow(dat)){  
-    if(is.na(sptl)){
-      dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
-    } else if(sptl == 25){ ## 25 is shorthand for single uniform break
-      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-    } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
-      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
-    } ## end else
-  } ## end nrow
+
+      write.csv(dat, paste0(getwd(),"/genData/",b,basename(scenname),"_",scenID,".csv"),row.names = F)
+
   
-  
-  
-  names(dat)[4] <- "fish_size"
-  genDat <- build_simComp(dat0=dat,l=l) ## make stuff for plotting
-  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID = genDat[[4]], saveloc = NA) ## all regions together
-  names(dat)[4] <- "Length_cm"
-  write.csv(dat, paste0(getwd(),"/genData/",basename(scenname),"_",scenID,".csv"),row.names = F)
+
   
 }
 

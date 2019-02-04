@@ -27,7 +27,7 @@ Establish Presets & Scenarios
 
 ```{r}
 options(warn = -1)
-nboot <- 4
+nboot <- 100
 fLevs <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
 source('wrangle_data.R')
 ```
@@ -41,7 +41,7 @@ Current run time:
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 # for(l in 1:nrow(fLevs)){
-for(l in c(1,35,36)){
+for(l in c(1:6,35,36)){
 
   ## if there's a spatial break
   if (fLevs[l, 'CAT'] == 'SPATIAL'  |
@@ -61,7 +61,8 @@ for(l in c(1,35,36)){
     paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
     paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
   regID <- ifelse(!is.na(fLevs[l,8]),paste(fLevs[l,8]),"")
-  out_file0 <- paste0(scenname,"/",regID)
+  out_file0 <- paste0(scenname,"/",regID); 
+  if(!exists(out_file0)) {dir.create(out_file0, showWarnings = F)}
 
   out_file <-  paste0(out_file0,"/",scenID); dir.create(out_file, showWarnings = F)
   ## Remove pre-existing MATRIX files
@@ -176,7 +177,7 @@ for(l in c(1,35,36)){
         r1 = runif(length(inst_Z_vector), 0, 1)
         Zdeath = which.max(r1 <= (1 - exp(-inst_Z_vector))) ## index where r1 is first less than probability of survival (incorporates change)
         fish_sizes = fish_sizes[1:Zdeath] ## trim fish_sizes to time at death
-        if(length(fish_sizes) >a2){print('length fish size > a2 line 122')}
+        if(length(fish_sizes) >a2){print('length fish size > a2 line 179')}
         
         ## SIZE-AT-TIME BOOKKEEPING 
         true_age = 1:Zdeath-1 ## actual lifespan before zdeath
@@ -567,7 +568,7 @@ write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 Read in both regions' subsampled data frame from each regime; nesting varies depending whether there was a spatial regime or not. Apply breakpoints if specified in `scenarios`. Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with temporal and spatial breaks as specified.
 ```{r assign spatial, echo = T}
 # for(l in 1:nrow(fLevs)){
-for(l in 1:1){
+for(l in c(1:6,35,36)){
   
   sptl <- fLevs[l,'SPATIAL']
   scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
@@ -577,23 +578,37 @@ for(l in 1:1){
            paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
   regID <- ifelse(!is.na(fLevs[l,8]),paste(fLevs[l,8]),"")
   out_file0 <- paste0(scenname,"/",regID)
-  
   out_file <-  paste0(out_file0,"/",scenID)
-  # if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
     
-    for(b in 1:nboot){
-      dat <- read.table(paste0(out_file,"/",scenID,b,"sim_Comp.csv"),sep = ",",header = T) %>% filter(Year %in% c(50:100))
-   
+  if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
+    
+    for(b in 1:nboot){ ## pair boots
+
+      dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0(b,'sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
+        lapply(read.csv,sep=",",header=T) %>%
+        reduce(bind_rows)
+      makeLat(dat) %>% write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",scenID,"_",b,".csv"),row.names = F)
+    }
+    # dat <- read.table(paste0(out_file,"/",scenID,b,"sim_Comp.csv"),sep = ",",header = T) %>% filter(Year %in% c(50:100))
+    
     # names(dat)[4] <- "fish_size"
     # genDat <- build_simComp(dat0=dat,l=l) ## make stuff for plotting
     # plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID = genDat[[4]], saveloc = NA) ## all regions together
     # names(dat)[4] <- "Length_cm"
     
-  # }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
+  }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
+    for(b in 1:nboot){ ## pair boots
+      dat <-
+        list.files(out_file, full.names = T, recursive = T)[grep(paste0(b, 'sim_Comp'),
+                                                                 list.files(out_file, full.names = T, recursive = T))] %>%  
+        lapply(read.csv, sep = ",", header = T) %>% 
+        reduce(bind_rows) 
+      makeLat(dat) %>% write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",scenID,"_",b,".csv"),row.names = F)
+    } ## end boot
+  } ## end else
+}  ## end levs
     
-    # lev0 <-  list.dirs(scenname, full.names = T)
     
-
     # moddrop <- NA
     # for(m in 1:length(lev0)){
     #   if(length(list.dirs(lev0[m], recursive = F)) > 0)  moddrop[m] <- m
@@ -606,28 +621,20 @@ for(l in 1:1){
     #   reduce(bind_rows) %>%
     #   filter(Year %in% c(50:100))
       
-       for(i in 1:nrow(dat)){  
-      if(is.na(sptl)){
-        dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
-      } else if(sptl == 25){ ## 25 is shorthand for single uniform break
-        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-      } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
-        dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
-      } ## end else
-    } ## end nrow
-  }
+     
+  
   
 
-      write.csv(dat, paste0(getwd(),"/genData/",b,basename(scenname),"_",scenID,".csv"),row.names = F)
+      
 
   
 
   
-}
+
 
 ## Plot F trajectory one time
-fdf %>% filter(MOD %in% floor(runif(6,1,35)) & boot == 1) %>% 
-  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/plots")
+ fdf %>% filter(MOD %in% floor(runif(6,1,35)) & boot == 1) %>%
+  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/MKapur/Dropbox/UW/sab-growth/iPopSim/plots")
 
 ```
 

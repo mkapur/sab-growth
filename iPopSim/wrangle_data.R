@@ -1,6 +1,6 @@
 build_simComp <- function(out_file, l=l, dat0 = NA){
   
-  if(is.na(dat0)){
+  # if(is.na(dat0)){
   ## identify boot directories for this F run
   boots  <- list.dirs(out_file, recursive = T)[grep('boot',list.dirs(out_file, recursive = T))]
   

@@ -194,8 +194,8 @@ for(l in c(1:6,35,36)){
           AgeE = AgeE,
           FMORT = c(Inst_F_vector[ry:(ry + Zdeath - 1)]),
           M = rep(Inst_M, Zdeath),  ## changed this to rep length Zdeath so it'd match
-          # Sel = c(selectivity(fish_sizes)),
-           Sel = c(selectivity(true_age)),
+          Sel = c(selectivity(fish_sizes)),
+           # Sel = c(selectivity(true_age)),
 
           FSIM = paste(fLevs[l,"FMORT_1"],fLevs[l,"FMORT_2"],fLevs[l,"FMORT_3"]),
           REG = fLevs[l,"REG"]

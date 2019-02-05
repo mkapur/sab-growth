@@ -1,10 +1,14 @@
 makeMod <- function(scenario,dat){
   
+  outdir0 <-  paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/", scenario)
+  if(!exists(outdir0)) dir.create(outdir0)
+  outdir <- paste0(outdir0,"/boot_",b); if(!exists(outdir)) dir.create(outdir)
   mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd), data = dat)
   # summary(mod)
   
   ## plotting model
-  png(paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/",scenario,"_mod1.png"))
+  
+  png(paste0(outdir,"/boot_",b,"_mod.png"))
   layout(matrix(1:3, ncol = 1))
   plot(mod, scale = 0)
   pacf(resid(mod), lag.max = 36, main = "pACF")
@@ -25,17 +29,12 @@ makeMod <- function(scenario,dat){
   
   cat("built three models \n")
   
-  ms <- MuMIn::model.sel(mod,mod1,mod2,mod3) ## no improvement
-  if(ms[1]$correlation != ''){ ## if model without correlation picked
-    stop("model without correlation picked, hand inspect \n")
-  }
-
-
+  # ms <- MuMIn::model.sel(mod,mod1,mod2,mod3) ## no improvement
+  # if(ms[1]$correlation != ''){ ## if model without correlation picked
+  #   stop("model without correlation picked, hand inspect \n")
+# }
   png(
-    file = paste0(
-      "C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/",
-      scenario,
-      "_gamcheck.png"
+    file = paste0(outdir,"/boot_",b,  "_gamcheck.png"
     ),
     height = 6,
     width = 8,

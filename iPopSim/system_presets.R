@@ -96,11 +96,11 @@ Inst_M = 0.25
 #catch_sampling_rate = 0.9 
 
 # selectivity ogive
-# SEL_50 = 147 
-# SEL_95 = 176
+SEL_50 = 147
+SEL_95 = 176
 ## ages -- eyeballed from plot!
-SEL_50 <- 2
-SEL_95 <- 4
+# SEL_50 <- 2
+# SEL_95 <- 4
 
 # fishery-dependent catchability
 fishery_q = 0.00001
@@ -125,14 +125,14 @@ OBS_age_bin = c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)
 Nsamp_Mean_length_at_age = 20
 
 # selectivity FUNCTION
-# selectivity  = function(fish_size){
-#   y=1/(1+exp(-log(19)*(fish_size-SEL_50)/(SEL_95-SEL_50)))
-#   y
-# }
-selectivity  = function(true_age){
-  y=1/(1+exp(-log(19)*(true_age-SEL_50)/(SEL_95-SEL_50)))
+selectivity  = function(fish_size){
+  y=1/(1+exp(-log(19)*(fish_size-SEL_50)/(SEL_95-SEL_50)))
   y
 }
+# selectivity  = function(true_age){
+#   y=1/(1+exp(-log(19)*(true_age-SEL_50)/(SEL_95-SEL_50)))
+#   y
+# }
 
 test_fish_size = c(0:400)
 

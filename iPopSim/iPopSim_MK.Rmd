@@ -620,20 +620,10 @@ for(l in c(1:6,35,36)){
     #   lapply(read.csv) %>%
     #   reduce(bind_rows) %>%
     #   filter(Year %in% c(50:100))
-      
-     
-  
-  
-
-      
-
-  
-
-  
-
 
 ## Plot F trajectory one time
- fdf %>% filter(MOD %in% floor(runif(6,1,35)) & boot == 1) %>%
+ fdf %>% 
+   filter(MOD %in% floor(runif(8,1,8)) & boot == 2) %>%
   kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/MKapur/Dropbox/UW/sab-growth/iPopSim/plots")
 
 ```

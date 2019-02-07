@@ -1,15 +1,18 @@
 rm(list = ls())
 require(dplyr)
 require(ggplot2)
-setwd("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/gam")
+setwd("C:/Users/mkapur/Dropbox/UW/sab-growth/gam")
 source("./makeMod.R");source("./getBreaks.R")
-fLevs <- read.csv('C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/inputs/scenarios.csv',na.strings = 'NA') ## manual file
+fLevs <- read.csv('C:/Users/mKapur/Dropbox/UW/sab-growth/iPopSim/inputs/scenarios.csv',na.strings = 'NA') ## manual file
 nboot <- 100
 require(mgcv);require(dplyr)
-
+compname <- c("Maia Kapur","mkapur")[2]
 breaks_df <- ydf <-  ldf <- data.frame()
 
-for(l in c(1:6,35,36)){
+testrows <- c(1:6,35:40)
+
+
+for(l in testrows){
   
   ## get scenario name
   scen0 <- paste0(fLevs[l,'DESC'])
@@ -19,10 +22,10 @@ for(l in c(1:6,35,36)){
   scen <- paste(scen0,scen1,sep = "_")
   
   for(b in 1:nboot){ ## loop boots
-    dat <- read.csv(paste0("C:/users/maia kapur/dropbox/uw/sab-growth/ipopsim/gendata/",
+    dat <- read.csv(paste0("C:/users/",compname,"/dropbox/uw/sab-growth/ipopsim/gendata/",
                            scen,"_",b,'.csv')) %>% filter(Age == 4)
     
-    outdir0 <-  paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/", scen)
+    outdir0 <-  paste0("C:/users/",compname,"/dropbox/uw/sab-growth/gam/plots/", scen)
     if(!exists(outdir0)) dir.create(outdir0)
     outdir <- paste0(outdir0,"/boot_",b); if(!exists(outdir)) dir.create(outdir)
     

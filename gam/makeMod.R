@@ -1,8 +1,8 @@
 makeMod <- function(scenario,dat){
   
-  outdir0 <-  paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/", scenario)
-  if(!exists(outdir0)) dir.create(outdir0)
-  outdir <- paste0(outdir0,"/boot_",b); if(!exists(outdir)) dir.create(outdir)
+  # outdir0 <-  paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/", scenario)
+  # if(!exists(outdir0)) dir.create(outdir0)
+  # outdir <- paste0(outdir0,"/boot_",b); if(!exists(outdir)) dir.create(outdir)
   mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd), data = dat)
   # summary(mod)
   

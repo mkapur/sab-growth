@@ -88,7 +88,7 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
     }
   
   
-  png(file = paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/",scenario,"/boot_",b,"/",b,"_gam_smooths.png"), height = 6, width = 8, units = 'in', res = 500)
+  png(file = paste0(outdir,"/",b,"_gam_smooths.png"), height = 6, width = 8, units = 'in', res = 500)
   
   layout(matrix(1:4, ncol = 2))
   
@@ -104,7 +104,7 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
   plot.Deriv(m2.d, term = 'Latitude_dd',cex.axis = 2,  main = 'derivative of latitude')
   abline(v = breaksdf[[2]], col = 'red')
   
-  dev.off()
+  graphics.off()
   
   return(breaksdf)
 }

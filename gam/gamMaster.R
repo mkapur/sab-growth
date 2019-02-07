@@ -1,8 +1,10 @@
 rm(list = ls())
+require(dplyr)
+require(ggplot2)
 setwd("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/gam")
 source("./makeMod.R");source("./getBreaks.R")
 fLevs <- read.csv('C:/Users/Maia Kapur/Dropbox/UW/sab-growth/iPopSim/inputs/scenarios.csv',na.strings = 'NA') ## manual file
-nboot <- 25
+nboot <- 100
 require(mgcv);require(dplyr)
 
 breaks_df <- ydf <-  ldf <- data.frame()

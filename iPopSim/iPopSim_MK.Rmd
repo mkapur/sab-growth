@@ -41,7 +41,7 @@ Current run time:
 fdf <- data.frame(); idx <- 1
 p = proc.time() ## set timer
 # for(l in 1:nrow(fLevs)){
-for(l in c(1:6,35,36)){
+for(l in c(35:40)){
 
   ## if there's a spatial break
   if (fLevs[l, 'CAT'] == 'SPATIAL'  |

@@ -30,7 +30,7 @@ options(warn = -1)
 nboot <- 100
 fLevs <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
 source('wrangle_data.R')
-testrows <- c(1:6,35:40)
+testrows <- c(39,40)
 ```
 
 Initialization (Calculate SSB per recruit)
@@ -569,7 +569,7 @@ write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 Read in both regions' subsampled data frame from each regime; nesting varies depending whether there was a spatial regime or not. Apply breakpoints if specified in `scenarios`. Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with temporal and spatial breaks as specified.
 ```{r assign spatial, echo = T}
 # for(l in 1:nrow(fLevs)){
-for(l in c(36:40)){
+for(l in c(39:40)){
   
   sptl <- fLevs[l,'SPATIAL']
   scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
@@ -625,7 +625,7 @@ for(l in c(36:40)){
 ## Plot F trajectory one time
  fdf %>% 
    filter(MOD %in% floor(runif(8,1,8)) & boot == 2) %>%
-  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/MKapur/Dropbox/UW/sab-growth/iPopSim/plots")
+  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/maia kapur/Dropbox/UW/sab-growth/iPopSim/plots")
 
 ```
 

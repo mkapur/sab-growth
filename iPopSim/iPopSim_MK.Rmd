@@ -114,7 +114,8 @@ for(l in testrows){
     
     uni_ind = 0
     ## Simple gen F vector using original etup
-    Inst_F_vector <- c(rep(0,M_only_yr),generate.effort(F_start_yr))
+    # Inst_F_vector <- c(rep(0,M_only_yr),generate.effort(F_start_yr))
+    Inst_F_vector <- rep(0,simu_year+1) ## to make them longer.
     ## get F vector at two different levels with time break
     # nyears <- fLevs[l,c("FMORT_TERM")]
     # Inst_F_vector <- vector() ## reset

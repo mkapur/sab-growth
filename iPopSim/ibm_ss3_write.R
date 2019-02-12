@@ -1,5 +1,34 @@
 ## not needed for GAM analysis - moved here Feb 11 2019
 
+IBM_SAA_MATRIX = read.table(paste0(path_name,"/IBM_SAA_MATRIX.txt"),sep=",",header=T)
+IBM_DEAD_MATRIX = read.table(paste0(path_name,"/IBM_DEAD_MATRIX.txt"),sep=",",header=T)
+
+# IBM_SAA_MATRIX = rbind(read.table(paste0(path_name,"/IBM_SAA_MATRIX_LOW.txt"),sep=",",header=T),
+#                        read.table(paste0(path_name,"/IBM_SAA_MATRIX_MED.txt"),sep=",",header=T),
+#                        read.table(paste0(path_name,"/IBM_SAA_MATRIX_HIGH.txt"),sep=",",header=T))
+
+# IBM_DEAD_MATRIX = rbind(read.table(paste0(path_name,"/IBM_DEAD_MATRIX_LOW.txt"),sep=",",header=T),
+#                         read.table(paste0(path_name,"/IBM_DEAD_MATRIX_MED.txt"),sep=",",header=T),
+#                         read.table(paste0(path_name,"/IBM_DEAD_MATRIX_HIGH.txt"),sep=",",header=T))
+
+# write.table(IBM_SAA_MATRIX,paste0(path_name,"/IBM_SAA_MATRIX.txt"),
+#             row.names = FALSE,col.names = T,sep=",")
+# write.table(IBM_DEAD_MATRIX,paste0(path_name,"/IBM_DEAD_MATRIX.txt"),
+#             row.names = FALSE,col.names = T,sep=",")
+
+## Generate Exploitable population
+IBM_EXP_MATRIX = NULL
+for(i in start_yr:(start_yr+simu_year-1)){
+  # print(paste("Year = ", i))
+  temp_Year = subset(IBM_SAA_MATRIX, Year==i)
+  r3 = runif(length(temp_Year[,1]),0,1)
+  index = which(r3 <= selectivity(temp_Year$fish_size))
+  EXP_info = temp_Year[index,]
+  write.table(EXP_info,paste0(path_name,"/IBM_EXP_MATRIX.txt"),append = TRUE,
+              row.names = FALSE,col.names = FALSE,sep=",")
+  IBM_EXP_MATRIX = rbind(IBM_EXP_MATRIX,EXP_info)
+} # end of year
+
 ## Generate Catch Matrix
 CATCH_MATRIX = subset(IBM_DEAD_MATRIX, dtype=="FISHED") ## all records of fishing death
 write.table(CATCH_MATRIX,paste0(path_name, "/CATCH_MATRIX.csv",sep=""),row.names = FALSE,col.names = TRUE,sep=",")

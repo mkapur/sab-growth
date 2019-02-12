@@ -70,7 +70,7 @@ aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/ak/AK_age
 
 ## combine ---
 all_data <- rbind(wcsurv,bcsurv,aksurv)
-save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/gam_data.rda")
+save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/gam_data_sab.rda")
 
 ## some exploratory plots ----
 

@@ -15,8 +15,8 @@ start_yr = 0
 M_only_yr = 50
 
 # Fishing mortality starting year
-# F_start_yr = 60
 F_start_yr = 50
+# F_start_yr = 101
 
 simu_year = M_only_yr+F_start_yr
 
@@ -137,8 +137,9 @@ selectivity  = function(fish_size){
 test_fish_size = c(0:400)
 
 ## Effort Simulator ----
-generate.effort = function(level, nyears) {
-  getFhist<-function(nsim,Esd,nyears,dFmin,dFmax,bb,scale){
+generate.effort <- function(F_start_yr, nsim  = 1){
+  getFhist<-function(nsim,Esd,nyears,dFmin,dFmax,bb){
+    
     ne<-nsim*10                                           # Number of simulated effort datasets
     dEfinal<-runif(ne,dFmin,dFmax)                        # Sample the final gradient in effort
     a<-(dEfinal-bb)/nyears                                # Derive slope to get there from intercept
@@ -151,9 +152,7 @@ generate.effort = function(level, nyears) {
     for(y in 2:nyears){
       E[,y]<-apply(dE[,1:y],1,sum)
     }
-    
-    E<-scale*E/array(apply(E,1,mean),dim=c(ne,nyears))          # Standardise Effort to average 1
-    
+    E<-E/array(apply(E,1,mean),dim=c(ne,nyears))          # Standardise Effort to average 1
     cond<-apply(E,1,min)>0
     pos<-(1:ne)[cond]
     pos<-pos[1:nsim]
@@ -162,22 +161,21 @@ generate.effort = function(level, nyears) {
     Emu<--0.5*Esd^2
     Eerr<-array(exp(rnorm(nyears*nsim,rep(Emu,nyears),rep(Esd,nyears))),c(nsim,nyears))
     E*Eerr
+    
+    
   }
   
-  ## just run a single vector and save it to an ongoing data frame
-  scaleL <- ifelse(level == 'HIGH', 0.3/1.323, ifelse(level == 'MED', 0.2/1.323, 0.1/1.323))
-  # effvec <- as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = scaleL))
-  ## create a data frame based on your number of sims and desired fishing effort. Add in an extra year.
-
-  if (level == 'HIGH') {
-    effvec <- runif(nyears, 0.3, 0.4)
-  } else if (level == 'MED') {
-    effvec <-  runif(nyears, 0.2, 0.3)
-  } else{
-    effvec <- runif(nyears, 0.1, 0.2)
-  }
-  return(effvec)
+  Fvect <- as.vector(getFhist(
+    nsim = nsim,
+    Esd = 0,
+    nyears = F_start_yr+1,
+    dFmin = -0.1,
+    dFmax = 0.1,
+    bb = 0.25
+  ))
+  return(Fvect)
 }
+
 #   df <- data.frame(
 #     'SIM' = rep(1:nsim, each = F_start_yr+1),
 #     'YEAR' = rep(seq(1, F_start_yr+1, 1), nsim),
@@ -241,7 +239,11 @@ makeLat<-function(dat){
       dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R0' ## uniform range
     } else if(sptl == 25){ ## 25 is shorthand for single uniform break
       dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-    } else if(sptl == 20){ ## 20 is shorthand for overlapping zones
+    } else if(sptl == 30){ ## 25 is shorthand for single uniform break
+      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,30.0), runif(1,30.00001,50.0))
+    } else if(sptl == 49){ ## 25 is shorthand for single uniform break
+      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,49.0), runif(1,49.00001,50.0))
+    } else if(sptl == "overlap"){ ## 20 is shorthand for overlapping zones
       dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
     } ## end else
   } ## end nrow
@@ -317,3 +319,46 @@ makeLat<-function(dat){
 #   # print(summary(df$FMORT))
 #   # return(Inst_F_vector)
 # }
+
+## from when we were trying to to F variation
+# generate.effort = function(level, nyears) {
+#   getFhist<-function(nsim,Esd,nyears,dFmin,dFmax,bb,scale){
+#     ne<-nsim*10                                           # Number of simulated effort datasets
+#     dEfinal<-runif(ne,dFmin,dFmax)                        # Sample the final gradient in effort
+#     a<-(dEfinal-bb)/nyears                                # Derive slope to get there from intercept
+#     a<-array(a,dim=c(ne,nyears))                          # Slope array
+#     bb<-array(bb,dim=c(ne,nyears))                        # Intercept array
+#     x<-array(rep(1:nyears,each=ne),dim=c(ne,nyears))      # Year array
+#     dE<-a*x+bb                                            # Change in effort
+#     E<-array(NA,dim=c(ne,nyears))                         # Define total effort array
+#     E[,1]<-dE[,1]
+#     for(y in 2:nyears){
+#       E[,y]<-apply(dE[,1:y],1,sum)
+#     }
+#     
+#     E<-scale*E/array(apply(E,1,mean),dim=c(ne,nyears))          # Standardise Effort to average 1
+#     
+#     cond<-apply(E,1,min)>0
+#     pos<-(1:ne)[cond]
+#     pos<-pos[1:nsim]
+#     
+#     E<-E[pos,]                                            # Sample only those without negative effort
+#     Emu<--0.5*Esd^2
+#     Eerr<-array(exp(rnorm(nyears*nsim,rep(Emu,nyears),rep(Esd,nyears))),c(nsim,nyears))
+#     E*Eerr
+  # }
+# }
+    ## just run a single vector and save it to an ongoing data frame
+    # scaleL <- ifelse(level == 'HIGH', 0.3/1.323, ifelse(level == 'MED', 0.2/1.323, 0.1/1.323))
+    # effvec <- as.vector(getFhist(nsim=1,Esd=0.001,nyears=F_start_yr+1,dFmin=-0.07,dFmax=0.07,bb=-0.1,scale = scaleL))
+    ## create a data frame based on your number of sims and desired fishing effort. Add in an extra year.
+    
+    # if (level == 'HIGH') {
+    #   effvec <- runif(nyears, 0.3, 0.4)
+    # } else if (level == 'MED') {
+    #   effvec <-  runif(nyears, 0.2, 0.3)
+    # } else{
+    #   effvec <- runif(nyears, 0.1, 0.2)
+    # }
+    # return(effvec)
+    

@@ -30,7 +30,7 @@ options(warn = -1)
 nboot <- 100
 fLevs <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
 source('wrangle_data.R')
-testrows <- c(39,40)
+testrows <- c(1:2)
 ```
 
 Initialization (Calculate SSB per recruit)
@@ -47,16 +47,15 @@ for(l in testrows){
   ## if there's a spatial break
   if (fLevs[l, 'CAT'] == 'SPATIAL'  |
       fLevs[l, "CAT"] == 'COMBO') {
-      ## special VB params
-      source(paste0(getwd(),"/vb_params_", fLevs[l, 'REG'], '.R'))
-      } else {
-      source(paste0(getwd(),"/vb_params_R1.R"))
-      }
+  ## special VB params
+  source(paste0(getwd(),"/vb_params_", fLevs[l, 'REG'], '.R')); source('system_presets.R') ## system functions 
+  } else {
+  source(paste0(getwd(),"/vb_params_R1.R")); source('system_presets.R') ## system functions
+  }
   
   
-  source('system_presets.R') ## system functions 
   
-  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
+  scenname <- paste0(getwd(),"/",fLevs[l,'DESC']);   if(!exists(scenname)) {dir.create(scenname, showWarnings = F)}
   scenID <-
     ifelse(is.na(fLevs[l, 5]),
     paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
@@ -114,21 +113,22 @@ for(l in testrows){
     SSBy[1] = SSB0
     
     uni_ind = 0
-    
+    ## Simple gen F vector using original etup
+    Inst_F_vector <- c(rep(0,M_only_yr),generate.effort(F_start_yr))
     ## get F vector at two different levels with time break
-    nyears <- fLevs[l,c("FMORT_TERM")]
-    Inst_F_vector <- vector() ## reset
-    Inst_F_vector[1:101] <-   c( ## create final fifty or 34 years
-      rep(0, 50),
-      generate.effort(level = fLevs[l, "FMORT_1"], nyears = nyears),
-      generate.effort(level = fLevs[l, "FMORT_2"], nyears = nyears+1)
-    )
-    if (nyears == 17) { ## add in last 17 years if needed
-      Inst_F_vector[85:101] <-
-        generate.effort(level = fLevs[l, "FMORT_3"], nyears = nyears)
-    }
+    # nyears <- fLevs[l,c("FMORT_TERM")]
+    # Inst_F_vector <- vector() ## reset
+    # Inst_F_vector[1:101] <-   c( ## create final fifty or 34 years
+    #   rep(0, 50),
+    #   generate.effort(level = fLevs[l, "FMORT_1"], nyears = nyears),
+    #   generate.effort(level = fLevs[l, "FMORT_2"], nyears = nyears+1)
+    # )
+    # if (nyears == 17) { ## add in last 17 years if needed
+    #   Inst_F_vector[85:101] <-
+    #     generate.effort(level = fLevs[l, "FMORT_3"], nyears = nyears)
+    # }
     ## save simulated F
-    fdf <- rbind(fdf, data.frame(cbind(Inst_F_vector[51:101],
+    fdf <- rbind(fdf, data.frame(cbind(Inst_F_vector,
                                        1:51, 
                                        rep(idx, 51), rep(boot_number,51))))
     
@@ -558,8 +558,10 @@ write.table(OBS_Mean_Length_At_Age_RESULT,paste0(path_name, "/SS3_OBS_Mean_Size_
   genDat <- build_simComp(out_file,l=l)
   plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID  = genDat[[4]], saveloc = 1)
   rm(genDat)
-} ## end of fishing_level
+} ## end of fLev[l]
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
+
+
 names(fdf) <- c('F_std','Year','MOD','boot')
 fdf$MOD <- as.factor(fdf$MOD)
 write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
@@ -569,9 +571,9 @@ write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 Read in both regions' subsampled data frame from each regime; nesting varies depending whether there was a spatial regime or not. Apply breakpoints if specified in `scenarios`. Save this to genData, and plot compiled A-L comp plots to plots/. Now you have a dataset with temporal and spatial breaks as specified.
 ```{r assign spatial, echo = T}
 # for(l in 1:nrow(fLevs)){
-for(l in c(39:40)){
+for(l in testrows){
   
-  sptl <- fLevs[l,'SPATIAL']
+  sptl <- fLevs[l,"SPATIAL"]
   scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
   scenID <-
     ifelse(is.na(fLevs[l, 5]),
@@ -581,10 +583,10 @@ for(l in c(39:40)){
   out_file0 <- paste0(scenname,"/",regID)
   out_file <-  paste0(out_file0,"/",scenID)
     
-  if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
+  # if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
     
     for(b in 1:nboot){ ## pair boots
-
+      cat("row ",l,"boot ",b, "\n")
       dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0(b,'sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
         lapply(read.csv,sep=",",header=T) %>%
         reduce(bind_rows)
@@ -597,16 +599,16 @@ for(l in c(39:40)){
     # plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID = genDat[[4]], saveloc = NA) ## all regions together
     # names(dat)[4] <- "Length_cm"
     
-  }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
-    for(b in 1:nboot){ ## pair boots
-      dat <-
-        list.files(out_file, full.names = T, recursive = T)[grep(paste0(b, 'sim_Comp'),
-                                                                 list.files(out_file, full.names = T, recursive = T))] %>%  
-        lapply(read.csv, sep = ",", header = T) %>% 
-        reduce(bind_rows) 
-      makeLat(dat) %>% write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",scenID,"_",b,".csv"),row.names = F)
-    } ## end boot
-  } ## end else
+  # }  else if(fLevs[l,'CAT'] %in% c('TEMPORAL', 'COMBO')) { ## merge by flev and region
+  #   for(b in 1:nboot){ ## pair boots
+  #     dat <-
+  #       list.files(out_file, full.names = T, recursive = T)[grep(paste0(b, 'sim_Comp'),
+  #                                                                list.files(out_file, full.names = T, recursive = T))] %>%  
+  #       lapply(read.csv, sep = ",", header = T) %>% 
+  #       reduce(bind_rows) 
+  #     makeLat(dat) %>% write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",scenID,"_",b,".csv"),row.names = F)
+  #   } ## end boot
+  # } ## end else
 }  ## end levs
     
     

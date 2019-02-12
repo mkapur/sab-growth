@@ -1,10 +1,12 @@
 makeMod <- function(scenario,dat){
   
-  # outdir0 <-  paste0("C:/users/maia kapur/dropbox/uw/sab-growth/gam/plots/", scenario)
+  # outdir0 <-  paste0("C:/users/",compname,"/dropbox/uw/sab-growth/gam/plots/", scenario)
   # if(!exists(outdir0)) dir.create(outdir0)
   # outdir <- paste0(outdir0,"/boot_",b); if(!exists(outdir)) dir.create(outdir)
-  mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd), data = dat)
-  # summary(mod)
+  # mod <- gam(Length_cm ~ s(Year) + s(Latitude_dd) + Age, data = dat)
+  # mod <- gam(Length_cm ~ s(Latitude_dd), data = dat)
+  mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd), data = dat) ## WTF is this
+    # summary(mod)
   
   ## plotting model
   
@@ -15,19 +17,19 @@ makeMod <- function(scenario,dat){
   graphics.off()
   
   ## now try with some AR structures and check AIC
-  mod1 <- gam(Length_cm ~   s(Latitude_dd),
-              correlation = corAR1(form = ~ 1|Year, p = 1),
-              data = dat)
-  mod2 <- gam(Length_cm ~ s(Year, bs = "cc") +
-                s(Latitude_dd),
-              correlation = corAR1(form = ~ 1|Year, p = 2),
-              data = dat)
-  mod3 <- gam(Length_cm ~  s(Year, bs = "cc") +
-                s(Latitude_dd),
-              correlation = corAR1(form = ~ 1|Year, p = 3),
-             data = dat)
+  # mod1 <- gam(Length_cm ~   s(Latitude_dd),
+  #             correlation = corAR1(form = ~ 1|Year, p = 1),
+  #             data = dat)
+  # mod2 <- gam(Length_cm ~ s(Year, bs = "cc") +
+  #               s(Latitude_dd),
+  #             correlation = corAR1(form = ~ 1|Year, p = 2),
+  #             data = dat)
+  # mod3 <- gam(Length_cm ~  s(Year, bs = "cc") +
+  #               s(Latitude_dd),
+  #             correlation = corAR1(form = ~ 1|Year, p = 3),
+  #            data = dat)
   
-  cat("built three models \n")
+  cat("built model \n")
   
   # ms <- MuMIn::model.sel(mod,mod1,mod2,mod3) ## no improvement
   # if(ms[1]$correlation != ''){ ## if model without correlation picked

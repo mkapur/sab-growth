@@ -101,46 +101,46 @@ sample_fit_vbgf <- function(length.data, start.L1, start.L2, start.k,
 
 ## run it for SAB -- values from appdx
 require(bbmle)
-ldat <- vast_data %>% filter(REG == 'WC' & Sex == 'F') %>% select(length = Length_cm,age= Age)
-sample_fit_vbgf(
-  length.data = ldat,
-  start.L1 = 26,
-  start.L2 =64,
-  start.k = 0.32,
-  start.cv.young = 0.07,
-  start.cv.old = 0.118,
-  lo.L1 = 20,
-  lo.L2 = 60,
-  lo.k = 0.25,
-  lo.cv.young = 0.05,
-  lo.cv.old = 0.11,
-  hi.L1 = 27,
-  hi.L2 = 66,
-  hi.k = 0.34,
-  hi.cv.young = 0.08,
-  hi.cv.old =0.20,
-  a3 = 0,
-  A =  53
-)
-
-ldat <- vast_data %>% filter(REG == 'WC' & Sex == 'M') %>% select(length = Length_cm,age= Age)
-sample_fit_vbgf(
-  length.data = ldat,
-  start.L1 = 0.1,
-  start.L2 = 57,
-  start.k = 0.41,
-  start.cv.young = 0.01,
-  start.cv.old = 0.0778,
-  lo.L1 = 0,
-  lo.L2 = 55,
-  lo.k = 0.40,
-  lo.cv.young = 0.0,
-  lo.cv.old = 0.07,
-  hi.L1 = 1,
-  hi.L2 = 60,
-  hi.k = 0.42,
-  hi.cv.young = 0.5,
-  hi.cv.old =0.10,
-  a3 = 0,
-  A =  53
-)
+# ldat <- vast_data %>% filter(REG == 'WC' & Sex == 'F') %>% select(length = Length_cm,age= Age)
+# sample_fit_vbgf(
+#   length.data = ldat,
+#   start.L1 = 26,
+#   start.L2 =64,
+#   start.k = 0.32,
+#   start.cv.young = 0.07,
+#   start.cv.old = 0.118,
+#   lo.L1 = 20,
+#   lo.L2 = 60,
+#   lo.k = 0.25,
+#   lo.cv.young = 0.05,
+#   lo.cv.old = 0.11,
+#   hi.L1 = 27,
+#   hi.L2 = 66,
+#   hi.k = 0.34,
+#   hi.cv.young = 0.08,
+#   hi.cv.old =0.20,
+#   a3 = 0,
+#   A =  53
+# )
+# 
+# ldat <- vast_data %>% filter(REG == 'WC' & Sex == 'M') %>% select(length = Length_cm,age= Age)
+# sample_fit_vbgf(
+#   length.data = ldat,
+#   start.L1 = 0.1,
+#   start.L2 = 57,
+#   start.k = 0.41,
+#   start.cv.young = 0.01,
+#   start.cv.old = 0.0778,
+#   lo.L1 = 0,
+#   lo.L2 = 55,
+#   lo.k = 0.40,
+#   lo.cv.young = 0.0,
+#   lo.cv.old = 0.07,
+#   hi.L1 = 1,
+#   hi.L2 = 60,
+#   hi.k = 0.42,
+#   hi.cv.young = 0.5,
+#   hi.cv.old =0.10,
+#   a3 = 0,
+#   A =  53
+# )

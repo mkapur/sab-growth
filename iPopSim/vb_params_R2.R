@@ -17,7 +17,7 @@ VBGF_K = 0.45
 
 ## convert raw function
 ## see https://www.nwfsc.noaa.gov/assets/25/6189_06162004_143158_tm43.pdf eq 46
-Linf <- L1+((L2-L1))/(1-exp(-VBGF_K*(a2-a1)))
+# L1+((L2-L1))/(1-exp(-VBGF_K*(a2-a1)))
 
 ## Christine Stawitz' method to convert from SS to VBGF
 # source("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/misc/Predict_Length_Fn.R")

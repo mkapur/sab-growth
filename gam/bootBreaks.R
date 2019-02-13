@@ -58,7 +58,57 @@ source("./makeMod.R");source("./getBreaks.R")
   ## save
   names(ldf) <- c('lat_breaks','scen','boot')
   ldf$lat_breaks2 <- factor(ldf$lat_breaks, levels=c(paste(1:50),NA))
-  write.csv(ldf, paste0(getwd(),"/summary_tables/ldf_raw_age_",age,".csv"),row.names = F)
+  write.csv(ldf, paste0(getwd(),"/summary_tables/ldf_raw_a",age,".csv"),row.names = F)
   
   # return(ldf)
 # }
+  
+  ## tabulate restuls ----
+  
+  ## assign levels so it plots in order
+  # corlevs <- data.frame(scen = c("F0L1S_25_MED_MED_MED","F0L1S_30_MED_MED_MED",
+  #                    "F0L1S_49_MED_MED_MED","F0LMW_MED_MED_MED","NoBreaks_MED_MED_MED"),
+  #                  scen2 = c("Break at 25°","Break at 30°",
+  #                    "Break at 49°",  "Overlap 20° - 25°", "No Breaks"))
+  # 
+  
+  # levels(ldf$scen) <-  c("No Breaks", "Break at 25°", "Break at 30°", 
+  #                        "Overlap 20° - 25°", "Break at 49°")
+  
+  levels(ldf$scen) <-  c("Break at 25°","Break at 30°",
+                         "Break at 49°",  "Overlap 20° - 25°", "No Breaks")
+  # ldf <- merge(ldf, corlevs, by = 'scen') 
+  
+  # trueb <- c(factor(NA),25,30,NA,49) ## true breaks, FILL OVERLAP BELOW
+  trueb <- c(25,30,49,NA,NA)
+  ntrue <- ldf %>% group_by(scen) %>% summarise(ct = n()) %>% data.frame() %>% mutate(trueb)
+  ntrue <- rbind(ntrue, data.frame(scen = rep("Overlap 20° - 25°",6),ct = rep(NA,6), trueb = 20:25))
+  
+  write.csv(ntrue, paste0(getwd(),"/summary_tables/ntrue_a6.csv"),row.names = F)
+  
+   ldf %>%
+    group_by(scen,  lat_breaks2) %>%
+    summarise(n = n()) %>%
+    mutate(freq = n / sum(n)) %>%
+    ggplot(., aes(x = lat_breaks2, y = freq)) +
+    geom_bar(stat = 'identity') +
+    theme_bw() +
+    theme(panel.grid = element_blank())+
+    scale_x_discrete(limits = c(paste(1:55),NA),breaks = c(paste(seq(0,50,5)),NA)) +
+    geom_vline(data = ntrue, aes(xintercept =trueb), col = 'red', linetype = 'dashed') +
+    facet_wrap(~scen,ncol = 1) +
+    labs(main = 'breaks identified', y = 'frequency', x = 'break location (° latitude)', main = 'spatial breaks')
+
+  ggsave(last_plot(), file = "./plots/ldf_a6.png")
+  
+  ## get max values
+  ldfprop <- read.csv("summary_tables/ldf_raw_a6.csv") %>%
+    group_by(scen,  lat_breaks) %>%
+    summarise(n = n()) %>%
+    mutate(freq = n / sum(n)) %>%
+    group_by(scen) %>%
+    filter(freq == max(freq)) %>% data.frame()
+  
+  write.csv(ldfprop, paste0(getwd(),"/summary_tables/ldf_prop_a6.csv"),row.names = F)
+  
+  cat('plotted & saved break tabulations \n')

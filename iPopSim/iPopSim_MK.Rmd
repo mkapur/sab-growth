@@ -28,9 +28,9 @@ Establish Presets & Scenarios
 ```{r}
 options(warn = -1)
 nboot <- 100
-fLevs <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
+scenarios <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
 source('wrangle_data.R')
-testrows <- c(1:nrow(fLevs))
+testrows <- c(1:nrow(scenarios))
 ```
 
 Initialization (Calculate SSB per recruit)
@@ -45,20 +45,19 @@ p = proc.time() ## set timer
 for(l in testrows){
 
   ## if there's a spatial break
-  if (fLevs[l, 'CAT'] == 'SPATIAL'  |
-      fLevs[l, "CAT"] == 'COMBO') {
+  if (scenarios[l, 'CAT'] == 'SPATIAL'){
   ## special VB params
-  source(paste0(getwd(),"/vb_params_", fLevs[l, 'REG'], '.R')); source('system_presets.R') ## system functions 
+  source(paste0(getwd(),"/vb_params_", scenarios[l, 'REG'], '.R')); source('system_presets.R') ## system functions 
   } else {
   source(paste0(getwd(),"/vb_params_R1.R")); source('system_presets.R') ## system functions
   }
   
-  scenname <- paste0(getwd(),"/",fLevs[l,'DESC']);   if(!exists(scenname)) {dir.create(scenname, showWarnings = F)}
+  scenname <- paste0(getwd(),"/",scenarios[l,'DESC']);   if(!exists(scenname)) {dir.create(scenname, showWarnings = F)}
   scenID <-
-    ifelse(is.na(fLevs[l, 5]),
-    paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
-    paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
-  regID <- ifelse(!is.na(fLevs[l,8]),paste(fLevs[l,8]),"")
+    ifelse(is.na(scenarios[l, 5]),
+    paste(scenarios[l, 3], scenarios[l, 4], sep = "_"),
+    paste(scenarios[l, 3], scenarios[l, 4], scenarios[l, 5],  sep = "_"))
+  regID <- ifelse(!is.na(scenarios[l,8]),paste(scenarios[l,8]),"")
   out_file0 <- paste0(scenname,"/",regID); 
   if(!exists(out_file0)) {dir.create(out_file0, showWarnings = F)}
 
@@ -68,7 +67,7 @@ for(l in testrows){
   # dir.create(out_file) ## make master FLevel File
   
   for(boot_number in 1:nboot) { ## full nsims, line 20
-    cat(paste0(paste(fLevs[l,'DESC']," ",fLevs[l,'ID']),' boot ',boot_number, "\n"))
+    cat(paste0(paste(scenarios[l,'DESC']," ",scenarios[l,'ID']),' boot ',boot_number, "\n"))
     ## Designate WRITE location
     path_name <- paste0(out_file,"/boot_",boot_number) 
     dir.create(path_name, showWarnings = F) ## make individual sim file
@@ -183,8 +182,8 @@ for(l in testrows){
           Sel = c(selectivity(fish_sizes)),
            # Sel = c(selectivity(true_age)),
 
-          FSIM = paste(fLevs[l,"FMORT_1"],fLevs[l,"FMORT_2"],fLevs[l,"FMORT_3"]),
-          REG = fLevs[l,"REG"]
+          FSIM = paste(scenarios[l,"FMORT_1"],scenarios[l,"FMORT_2"],scenarios[l,"FMORT_3"]),
+          REG = scenarios[l,"REG"]
         )
         
         ## MORTALITY MODULE:
@@ -261,13 +260,13 @@ Read in both regions' subsampled data frame from each regime; nesting varies dep
 # for(l in 1:nrow(fLevs)){
 for(l in testrows){
   
-  sptl <- fLevs[l,"SPATIAL"]
-  scenname <- paste0(getwd(),"/",fLevs[l,'DESC'])
+  sptl <- scenarios[l,"SPATIAL"]
+  scenname <- paste0(getwd(),"/",scenarios[l,'DESC'])
   scenID <-
-    ifelse(is.na(fLevs[l, 5]),
-           paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
-           paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
-  regID <- ifelse(!is.na(fLevs[l,8]),paste(fLevs[l,8]),"")
+    ifelse(is.na(scenarios[l, 5]),
+           paste(scenarios[l, 3], scenarios[l, 4], sep = "_"),
+           paste(scenarios[l, 3], scenarios[l, 4], scenarios[l, 5],  sep = "_"))
+  regID <- ifelse(!is.na(scenarios[l,8]),paste(scenarios[l,8]),"")
   out_file0 <- paste0(scenname,"/",regID)
   out_file <-  paste0(out_file0,"/",scenID)
     

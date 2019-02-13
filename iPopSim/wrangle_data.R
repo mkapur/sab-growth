@@ -25,7 +25,7 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
              paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
              paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))  ## extract interesting columns and save 
     dat0 %>% 
-      mutate(Length_cm = fish_size/10) %>% 
+      mutate(Length_cm = fish_size) %>% 
       select(Year, Age, AgeE, Length_cm, FSIM, FMORT, REG) %>% 
       write.csv(., paste0(out_file,"/",scenID,b,"sim_Comp.csv"),row.names = F)
     
@@ -112,7 +112,7 @@ plotComps <- function(dat1,dat2,datN,scenID, saveloc = NA,nboots = nboot){
     }
     
     ## plot lengths
-    p <-  ggplot(dat2[[b]], aes(x = fish_size*10, y = freq, fill= Flev)) +
+    p <-  ggplot(dat2[[b]], aes(x = fish_size, y = freq, fill= Flev)) +
       theme_bw() +
       theme(panel.grid = element_blank())+
       geom_area(stat = 'identity', alpha = 0.5) +
@@ -121,7 +121,7 @@ plotComps <- function(dat1,dat2,datN,scenID, saveloc = NA,nboots = nboot){
       # scale_x_continuous(limits = c(50,250)) +
       # scale_y_continuous(breaks = seq(0,0.25,0.1),labels = seq(0,0.25,0.1)) +
       # annotate("text", x = max(dat2[[b]]$fish_size)*9, y = 0.1, label = paste0("n = ",datN[[b]]$totN)) +
-      labs(y = 'proportion', x= "Length (mm)", title = paste0('Length comps'))+
+      labs(y = 'proportion', x= "Length (cm)", title = paste0('Length comps'))+
       scale_fill_brewer(palette = "Dark2", name = "F Level")
     
     if(is.na(saveloc)){

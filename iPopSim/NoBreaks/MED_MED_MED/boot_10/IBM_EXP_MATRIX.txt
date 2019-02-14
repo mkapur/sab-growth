@@ -1,1 +1,0 @@
-"cohort","uni_ind","ind","fish_size","Year","Age","AgeE","FMORT","M","Sel","FSIM","REG"

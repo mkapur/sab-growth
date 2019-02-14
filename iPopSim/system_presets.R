@@ -201,11 +201,11 @@ generate.effort <- function(F_start_yr, nsim  = 1){
 maketables = function(path_name){
   SAA = data.frame(cohort=c(-999),uni_ind = c(-999),ind =c(-999),
                    fish_size=c(-999),Year=(-999),Age=(-999),AgeE = c(-999),
-                   FMORT=c(-999),M=c(-999),Sel=c(-999), FSIM = c(-999), REG = c(-999))
+                   FMORT=c(-999),M=c(-999),Sel=c(-999),  REG = c(-999))
 
   dinfo = data.frame(cohort=c(-999),ind =c(-999),fish_size=c(-999),
                      Year=c(-999),Age=c(-999),AgeE = c(-999),dtype="HEAD",
-                     FMORT=c(-999),M=c(-999),Sel=c(-999), FSIM = c(-999), REG = c(-999))
+                     FMORT=c(-999),M=c(-999),Sel=c(-999),  REG = c(-999))
   eff <- data.frame(Year = NA, FMORT = NA, SIMID = NA)
 
   EXP_info = SAA ## same structure as SAA

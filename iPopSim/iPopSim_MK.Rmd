@@ -27,10 +27,10 @@ Establish Presets & Scenarios
 
 ```{r}
 options(warn = -1)
-nboot <- 100
+nboot <- 10
 scenarios <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
 source('wrangle_data.R')
-testrows <- c(1:nrow(scenarios))
+testrows <- 4:5
 ```
 
 Initialization (Calculate SSB per recruit)
@@ -38,30 +38,29 @@ These all iterate across ages at a yearly time step. Some modules like growth ac
 Current run time:
 50 boots, 100 years ~15mins on sebastes
 ```{r Run Simulation and Save Outputs}
-
 fdf <- data.frame(); idx <- 1
-p = proc.time() ## set timer
-# for(l in 1:nrow(fLevs)){
+p <- proc.time() ## set timer
 for(l in testrows){
 
   ## if there's a spatial break
-  if (scenarios[l, 'CAT'] == 'SPATIAL'){
+  if (!is.na(scenarios[l, 'SPATIAL'])){
   ## special VB params
   source(paste0(getwd(),"/vb_params_", scenarios[l, 'REG'], '.R')); source('system_presets.R') ## system functions 
   } else {
   source(paste0(getwd(),"/vb_params_R1.R")); source('system_presets.R') ## system functions
   }
   
-  scenname <- paste0(getwd(),"/",scenarios[l,'DESC']);   if(!exists(scenname)) {dir.create(scenname, showWarnings = F)}
-  scenID <-
-    ifelse(is.na(scenarios[l, 5]),
-    paste(scenarios[l, 3], scenarios[l, 4], sep = "_"),
-    paste(scenarios[l, 3], scenarios[l, 4], scenarios[l, 5],  sep = "_"))
-  regID <- ifelse(!is.na(scenarios[l,8]),paste(scenarios[l,8]),"")
-  out_file0 <- paste0(scenname,"/",regID); 
-  if(!exists(out_file0)) {dir.create(out_file0, showWarnings = F)}
+  scenname <- paste0(getwd(),"/",scenarios[l,"DESC"]);   if(!exists(scenname)) {dir.create(scenname, showWarnings = F)}
+  # scenID <-
+  #   ifelse(is.na(scenarios[l, 5]),
+  #   paste(scenarios[l, 3], scenarios[l, 4], sep = "_"),
+  #   paste(scenarios[l, 3], scenarios[l, 4], scenarios[l, 5],  sep = "_"))
+  regID <- ifelse(!is.na(scenarios[l,"REG"]),paste(scenarios[l,"REG"]),"")
+  out_file <- paste0(scenname,"/",regID); if(!exists(out_file)) {dir.create(out_file, showWarnings = F)}
+  # out_file0 <- paste0(scenname,"/",regID);
+  # if(!exists(out_file0)) {dir.create(out_file0, showWarnings = F)}
 
-  out_file <-  paste0(out_file0,"/",scenID); dir.create(out_file, showWarnings = F)
+  # out_file <-  paste0(out_file0,"/",scenID); dir.create(out_file, showWarnings = F)
   ## Remove pre-existing MATRIX files
   # if(exists(out_file)) unlink(out_file, recursive=TRUE) ## delete pre-existing file
   # dir.create(out_file) ## make master FLevel File
@@ -182,7 +181,7 @@ for(l in testrows){
           Sel = c(selectivity(fish_sizes)),
            # Sel = c(selectivity(true_age)),
 
-          FSIM = paste(scenarios[l,"FMORT_1"],scenarios[l,"FMORT_2"],scenarios[l,"FMORT_3"]),
+          # FSIM = paste(scenarios[l,"FMORT_1"],scenarios[l,"FMORT_2"],scenarios[l,"FMORT_3"]),
           REG = scenarios[l,"REG"]
         )
         
@@ -243,15 +242,15 @@ for(l in testrows){
   } ## end of boots
   idx <- idx + 1
   genDat <- build_simComp(out_file,l=l)
-  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]], scenID  = genDat[[4]], saveloc = 1)
+  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]],  saveloc = 1)
   rm(genDat)
 } ## end of fLev[l]
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))
 
 
-names(fdf) <- c('F_std','Year','MOD','boot')
-fdf$MOD <- as.factor(fdf$MOD)
-write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
+# names(fdf) <- c('F_std','Year','MOD','boot')
+# fdf$MOD <- as.factor(fdf$MOD)
+# write.csv(fdf,file=paste0(getwd(),"/genData/Fsim.csv"),row.names = F )
 ```
 
 
@@ -262,22 +261,24 @@ for(l in testrows){
   
   sptl <- scenarios[l,"SPATIAL"]
   scenname <- paste0(getwd(),"/",scenarios[l,'DESC'])
-  scenID <-
-    ifelse(is.na(scenarios[l, 5]),
-           paste(scenarios[l, 3], scenarios[l, 4], sep = "_"),
-           paste(scenarios[l, 3], scenarios[l, 4], scenarios[l, 5],  sep = "_"))
-  regID <- ifelse(!is.na(scenarios[l,8]),paste(scenarios[l,8]),"")
-  out_file0 <- paste0(scenname,"/",regID)
-  out_file <-  paste0(out_file0,"/",scenID)
+  # scenID <-
+  #   ifelse(is.na(scenarios[l, 5]),
+  #          paste(scenarios[l, 3], scenarios[l, 4], sep = "_"),
+  #          paste(scenarios[l, 3], scenarios[l, 4], scenarios[l, 5],  sep = "_"))
+  regID <- ifelse(!is.na(scenarios[l,"REG"]),paste(scenarios[l,"REG"]),"")
+  # out_file0 <- paste0(scenname,"/",regID)
+  out_file <-  paste0(scenname,"/",regID)
     
   # if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
     
     for(b in 1:nboot){ ## pair boots
       cat("row ",l,"boot ",b, "\n")
-      dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0(b,'sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
+      dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0(b,'_sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
         lapply(read.csv,sep=",",header=T) %>%
         reduce(bind_rows)
-      makeLat(dat) %>% write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",scenID,"_",b,".csv"),row.names = F)
+      makeLat(dat) %>% 
+        write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",b,".csv"),
+                  row.names = F)
     }
     # dat <- read.table(paste0(out_file,"/",scenID,b,"sim_Comp.csv"),sep = ",",header = T) %>% filter(Year %in% c(50:100))
     
@@ -312,9 +313,9 @@ for(l in testrows){
     #   filter(Year %in% c(50:100))
 
 ## Plot F trajectory one time
- fdf %>% 
-   filter(MOD %in% floor(runif(8,1,8)) & boot == 2) %>%
-  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/maia kapur/Dropbox/UW/sab-growth/iPopSim/plots")
+ # fdf %>% 
+ #   filter(MOD %in% floor(runif(8,1,8)) & boot == 2) %>%
+ #  kaputils::plotF(SPRseries =., saveplot = T, pdfcols = 1, plotloc = "C:/Users/maia kapur/Dropbox/UW/sab-growth/iPopSim/plots")
 
 ```
 

@@ -1,1 +1,0 @@
-"cohort","ind","fish_size","Year","Age","AgeE","dtype","FMORT","M","Sel","FSIM","REG"

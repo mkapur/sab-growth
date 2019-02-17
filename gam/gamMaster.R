@@ -14,8 +14,8 @@ dyn.load(dynlib("sptlvb"))
 compname <- c("Maia Kapur","mkapur")[1]
 
 ## Build mods, get breakpoints
-fLevs <- read.csv(paste0("C:/Users/",compname,"/Dropbox/UW/sab-growth/iPopSim/inputs/scenarios.csv"),na.strings = 'NA') ## manual file
-age <- 6; nboot <- 100; testrows <- unique(fLevs$DESC) ##
+scenarios <- read.csv(paste0("C:/Users/",compname,"/Dropbox/UW/sab-growth/iPopSim/inputs/scenarios.csv"),na.strings = 'NA') ## manual file
+age <- 6; nboot <- 100; testrows <- unique(scenarios$DESC) ##
 # source("bootBreaks.R") ## about 10 mins
 
 ## read in CSV generated above
@@ -40,8 +40,8 @@ for(l in 1:nrow(ldfprop)){
   # for(b in 1:nboot){ ## loop boots
   dat <- read.csv(paste0("C:/users/",compname,"/dropbox/uw/sab-growth/ipopsim/gendata/",
                          scen,"_",b,'.csv'))
-  dat$Length_cm <- dat$Length_cm*10 ## currently data are in in wrong units
-  if(scentemp == 'No Breaks') dat$REG[is.na(dat$REG)] <- 'R1'
+  # dat$Length_cm <- dat$Length_cm*10 ## currently data are in in wrong units
+  if(scen == 'NoBreaks') dat$REG <- as.factor('R1')
   
   ## now re-aggregate the data ----
   ## generate DES matrix of vectors and a KEY for later comparison
@@ -182,8 +182,14 @@ for(l in 1:nrow(ldfprop)){
 ## loop plotting ----
 plist <- list(); idx <- 1
 
-ldfprop$scentemp <-  c( "Break at 25°", "Break at 30°",  "Break at 49°", "Break at 49°",
-                       "Overlap 20° - 25°","No Breaks")
+# ldfprop$scentemp <-  c( "Break at 25?", "Break at 30?",  "Break at 49?", "Break at 49?",
+#                        "Overlap 20? - 25?","No Breaks")
+levels(ldf$scen) <-  c( "Break at 25 deg.", "Break at 49 deg.",
+                        "Low Contrast at 25 deg.", "Overlap 20-25 deg.","No Breaks")
+
+ldfprop$scentemp  <-  c( "Break at 25 deg.", "Break at 49 deg.","Break at 49 deg.",
+                                              "Low Contrast at 25 deg.", "Overlap 20-25 deg.","No Breaks")
+## should match
 for(l in 1:length(unique(ldf$scen))){
   
   
@@ -208,7 +214,7 @@ for(l in 1:length(unique(ldf$scen))){
     scale_x_discrete(limits = c(paste(1:55),NA),breaks = c(paste(seq(0,50,5)),NA)) +
     facet_wrap(~scen,ncol = 1) +
     geom_vline(data = subset(ntrue, scen == scentemp), aes(xintercept =trueb), col = 'red', linetype = 'dashed') +
-    labs(main = 'breaks identified', y = 'frequency', x = 'break location (° latitude)', main = 'spatial breaks')
+    labs(main = 'breaks identified', y = 'frequency', x = 'break location (? latitude)', main = 'spatial breaks')
   
   idx <- idx +1
   
@@ -222,7 +228,7 @@ for(l in 1:length(unique(ldf$scen))){
   ## exponentiate logk
   parest[parest$variable == 'log_k','value'] <- exp(parest[parest$variable == 'log_k','value'] )
   parest$variable <- ifelse(parest$variable=='log_k',"k",paste(parest$variable))
-  levels(parest$REG) <- c('Single Region','Region 1','Region 2')
+  levels(parest$REG) <- c('Single Region','Region 1','Region 3','Region 2')
   
   plist[[idx]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
     theme_bw() +
@@ -240,7 +246,8 @@ for(l in 1:length(unique(ldf$scen))){
   idx <- idx + 1
   ## plot fits
   ypreds <- read.csv( paste0(getwd(),"/results/",scen[1],"_predicts",Sys.Date(),".csv"))
-  levels(ypreds$REG) <- c('Region 1','Region 2')
+  levels(ypreds$REG) <- 
+    c('Region 1',ifelse(levels(ypreds$REG[2])== 'R2', 'Region 2', 'Region 3'))
   ## fits
   # mpred <- ypreds %>% group_by(Age,REG) %>% summarise(pred = mean(Predicted))
   plist[[idx]] <- ggplot(ypreds, aes(x = Age, y = Predicted )) +

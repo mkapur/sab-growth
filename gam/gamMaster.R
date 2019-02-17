@@ -247,7 +247,7 @@ for(l in 1:length(unique(ldf$scen))){
   ## plot fits
   ypreds <- read.csv( paste0(getwd(),"/results/",scen[1],"_predicts",Sys.Date(),".csv"))
   levels(ypreds$REG) <- 
-    c('Region 1',ifelse(levels(ypreds$REG[2])== 'R2', 'Region 2', 'Region 3'))
+    c('Region 1',ifelse(levels(ypreds$REG)[2] == 'R2', 'Region 2', 'Region 3'))
   ## fits
   # mpred <- ypreds %>% group_by(Age,REG) %>% summarise(pred = mean(Predicted))
   plist[[idx]] <- ggplot(ypreds, aes(x = Age, y = Predicted )) +

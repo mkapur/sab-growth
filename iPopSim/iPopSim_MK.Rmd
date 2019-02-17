@@ -27,10 +27,10 @@ Establish Presets & Scenarios
 
 ```{r}
 options(warn = -1)
-nboot <- 10
+nboot <- 100
 scenarios <- read.csv('inputs/scenarios.csv',na.strings = 'NA') ## manual file
 source('wrangle_data.R')
-testrows <- 4:5
+testrows <- 1:nrow(scenarios)
 ```
 
 Initialization (Calculate SSB per recruit)
@@ -242,7 +242,7 @@ for(l in testrows){
   } ## end of boots
   idx <- idx + 1
   genDat <- build_simComp(out_file,l=l)
-  plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]],  saveloc = 1)
+  # plotComps(dat1 = genDat[[1]], dat2 = genDat[[2]], datN = genDat[[3]],  saveloc = 1)
   rm(genDat)
 } ## end of fLev[l]
 print(paste("Full simulation time ",((proc.time()-p)/60)[1],"min(s)"))

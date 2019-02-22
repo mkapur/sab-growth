@@ -181,6 +181,7 @@ for(l in 1:nrow(ldfprop)){
 
 ## loop plotting ----
 plist <- list(); idx <- 1
+ldf$lat_breaks2 <- factor(ldf$lat_breaks, levels=c(paste(1:50),NA))
 
 # ldfprop$scentemp <-  c( "Break at 25?", "Break at 30?",  "Break at 49?", "Break at 49?",
 #                        "Overlap 20? - 25?","No Breaks")
@@ -211,10 +212,11 @@ for(l in 1:length(unique(ldf$scen))){
           axis.title = element_text(size = 10),
           legend.text = element_text(size = 10),
           strip.text = element_text(size=14))+
+    scale_y_continuous(limits = c(0,1)) +
     scale_x_discrete(limits = c(paste(1:55),NA),breaks = c(paste(seq(0,50,5)),NA)) +
     facet_wrap(~scen,ncol = 1) +
     geom_vline(data = subset(ntrue, scen == scentemp), aes(xintercept =trueb), col = 'red', linetype = 'dashed') +
-    labs(main = 'breaks identified', y = 'frequency', x = 'break location (? latitude)', main = 'spatial breaks')
+    labs(main = 'breaks identified', y = 'frequency', x = 'break location (deg. latitude)', main = 'spatial breaks')
   
   idx <- idx +1
   
@@ -228,7 +230,11 @@ for(l in 1:length(unique(ldf$scen))){
   ## exponentiate logk
   parest[parest$variable == 'log_k','value'] <- exp(parest[parest$variable == 'log_k','value'] )
   parest$variable <- ifelse(parest$variable=='log_k',"k",paste(parest$variable))
-  levels(parest$REG) <- c('Single Region','Region 1','Region 3','Region 2')
+  levels(parest$REG) <- 
+    c('Single Region','Region 1',
+      ifelse(levels(parest$REG)[3] == 'R2', 'Region 2','Region 3'),
+      ifelse(levels(parest$REG)[4] == 'R3', 'Region 3','Region 2'))
+      
   
   plist[[idx]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
     theme_bw() +
@@ -246,8 +252,7 @@ for(l in 1:length(unique(ldf$scen))){
   idx <- idx + 1
   ## plot fits
   ypreds <- read.csv( paste0(getwd(),"/results/",scen[1],"_predicts",Sys.Date(),".csv"))
-  levels(ypreds$REG) <- 
-    c('Region 1',ifelse(levels(ypreds$REG)[2] == 'R2', 'Region 2', 'Region 3'))
+  levels(ypreds$REG) <-  c('Region 1',ifelse(levels(ypreds$REG)[2] == 'R2', 'Region 2', 'Region 3'))
   ## fits
   # mpred <- ypreds %>% group_by(Age,REG) %>% summarise(pred = mean(Predicted))
   plist[[idx]] <- ggplot(ypreds, aes(x = Age, y = Predicted )) +
@@ -258,7 +263,7 @@ for(l in 1:length(unique(ldf$scen))){
           axis.title = element_text(size = 10),
           legend.text = element_text(size = 10),
           strip.text = element_text(size=14))+
-    # scale_y_continuous(limits = c(0,100)) +
+    scale_y_continuous(limits = c(0,500)) +
     scale_x_continuous(limits = c(0,15)) +
     scale_color_manual(values = c("#d8b365","#5ab4ac"))+
     scale_alpha(guide = 'none') +
@@ -274,6 +279,8 @@ grid.arrange(grobs = plist, ncol = 3) %>%
 ggsave(plot = ., 
        file = paste0(getwd(),"/plots/fullfigure.png"), width = 17, height = 11, units = 'in', dpi = 480)
 
+
+ldf %>% filter(scen == "Overlap 20-25 deg.") %>% mutate(overl = lat_breaks %in% c(20:25)) %>% group_by(overl) %>% summarise(n = n()) 
 ## dep----
 # ydf$year_breaks2 <- factor(ydf$year_breaks, levels=c(paste(1:50),NA))
 # 

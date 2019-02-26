@@ -16,7 +16,7 @@ compname <- c("Maia Kapur","mkapur")[1]
 ## Build mods, get breakpoints
 scenarios <- read.csv(paste0("C:/Users/",compname,"/Dropbox/UW/sab-growth/iPopSim/inputs/scenarios.csv"),na.strings = 'NA') ## manual file
 age <- 6; nboot <- 100; testrows <- unique(scenarios$DESC) ##
-# source("bootBreaks.R") ## about 10 mins
+# source("bootBreaks.R") ## about 10 mins -- don't need to do this >1x
 
 ## read in CSV generated above
 ldf <- read.csv("summary_tables/ldf_raw_a6.csv")
@@ -27,44 +27,48 @@ ntrue <- read.csv("summary_tables/ntrue_a6.csv")
 ## Now Aggregate each dataset at IDd breaks and assign R1/R2 ----
 
 
-for(l in 1:nrow(ldfprop)){
-  b <- 4 ## fixed b for now (single fit to data)
-  ## get scenario name
-  # scen0 <- paste0(fLevs[l,'DESC'])
-  # scen1 <-  ifelse(is.na(fLevs[l, 5]),
-  #                  paste(fLevs[l, 3], fLevs[l, 4], sep = "_"),
-  #                  paste(fLevs[l, 3], fLevs[l, 4], fLevs[l, 5],  sep = "_"))
-  # scen <- paste(scen0,scen1,sep = "_")
+for(l in 1:nrow(ldfprop)){ 
+  for(b in 1:nboot){
+
   scen <- paste0(ldfprop[l,'scen'])
   
   # for(b in 1:nboot){ ## loop boots
   dat <- read.csv(paste0("C:/users/",compname,"/dropbox/uw/sab-growth/ipopsim/gendata/",
                          scen,"_",b,'.csv'))
+  
+  
+  getGR <- function(ldf,dat){
+    
+    temp <- subset(ldf, scen == ldfprop[l,'scen'] & boot == b)
+    for(i in 1:nrow(temp)){ ## loop unique breaks
+    sptl <- temp[i,'lat_breaks2'] ## diagnosed break
+    for(i in 1:nrow(dat)){  
+      if(is.na(sptl)){
+        dat[i,"gamREG"] <- "R1"
+      } else if (dat[i,"Latitude_dd"] < sptl) {dat[i,"gamREG"] <- "R1"}
+      else if(dat[i,"Latitude_dd"] >= sptl & "R3" %in% levels(dat$REG)){
+        dat[i,"gamREG"] <- "R3"
+      }    else if(dat[i,"Latitude_dd"] >= sptl & "R2" %in% levels(dat$REG)){
+        dat[i,"gamREG"] <- "R2"
+      }
+    }
+    ## sanity check
+    dat %>% group_by(gamREG) %>% summarise(mean(Latitude_dd))
+    
+    
+  }
   # dat$Length_cm <- dat$Length_cm*10 ## currently data are in in wrong units
   if(scen == 'NoBreaks') dat$REG <- as.factor('R1')
   
   ## now re-aggregate the data ----
   ## generate DES matrix of vectors and a KEY for later comparison
-  DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) ## H1 is all zeros
-  ## get region
-  # temp0 <- with(dat, ifelse(Latitude_dd >= 49 & Year < 2005 ,0,
-  #                                ifelse(Latitude_dd >= 49 & Year >= 2005,1,
-  #                                       ifelse(Latitude_dd < 49 & Year < 2005,2,3))))
-  # ## get region and sex combos as factors
-  # DES <- as.numeric(factor(paste0(temp0,all_data[,'Sex'])))-1
+  DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
   DES <- ifelse(!is.na(dat$REG), as.numeric(dat$REG),1)-1 ## overwrite NA for nobreaks
   KEY <- paste(scen,DES,sep = "_")
   keybase <- unique(ifelse(!is.na(dat$REG), as.character(dat$REG),"R1")) ## text regions
   keybase[keybase == 'R0'] <- "R1"
 
-  # KEY <- paste0(c("North_Early","North_Late","South_Early","South_Late")[(temp0+1)],"_",all_data[,'Sex'])
-  # keybase <- apply(expand.grid(c("North_Early","North_Late","South_Early","South_Late"), c('F','M')), 1,
-  #                  paste, collapse="_")
-  
-  # save(DES, file = paste0(getwd(),"/data/DES_gam.rda"))
-  # save(KEY, file = paste0(getwd(),"/data/KEY_gam.rda"))
-  # load( paste0(getwd(),"/data/DES_gam.rda")) ## DES
-  # load( paste0(getwd(),"/data/KEY_gam.rda")) ## KEY
+
   
   ## run TMB parest----
 
@@ -231,9 +235,9 @@ for(l in 1:length(unique(ldf$scen))){
   parest[parest$variable == 'log_k','value'] <- exp(parest[parest$variable == 'log_k','value'] )
   parest$variable <- ifelse(parest$variable=='log_k',"k",paste(parest$variable))
   levels(parest$REG) <- 
-    c('Single Region','Region 1',
-      ifelse(levels(parest$REG)[3] == 'R2', 'Region 2','Region 3'),
-      ifelse(levels(parest$REG)[4] == 'R3', 'Region 3','Region 2'))
+    c('Single Region','Regime 1',
+      ifelse(levels(parest$REG)[3] == 'R2', 'Regime 2','Regime 3'),
+      ifelse(levels(parest$REG)[4] == 'R3', 'Regime 3','Regime 2'))
       
   
   plist[[idx]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
@@ -252,7 +256,7 @@ for(l in 1:length(unique(ldf$scen))){
   idx <- idx + 1
   ## plot fits
   ypreds <- read.csv( paste0(getwd(),"/results/",scen[1],"_predicts",Sys.Date(),".csv"))
-  levels(ypreds$REG) <-  c('Region 1',ifelse(levels(ypreds$REG)[2] == 'R2', 'Region 2', 'Region 3'))
+  levels(ypreds$REG) <-  c('Regime 1',ifelse(levels(ypreds$REG)[2] == 'R2', 'Regime 2', 'Regime 3'))
   ## fits
   # mpred <- ypreds %>% group_by(Age,REG) %>% summarise(pred = mean(Predicted))
   plist[[idx]] <- ggplot(ypreds, aes(x = Age, y = Predicted )) +

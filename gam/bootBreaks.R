@@ -19,7 +19,8 @@ source("./makeMod.R");source("./getBreaks.R")
     scen0 <- testrows[l]; scen1 <- paste0(rep('MED',3),collapse = "_")
     # scen <- paste(scen0,scen1,sep = "_")
     scen <- scen0
-    outdir0 <-  paste0("C:/users/",compname,"/dropbox/uw/sab-growth/gam/plots/", scen)
+    outdir0 <-  paste0("C:/users/",compname,"/dropbox/uw/sab-growth/gam/plots/", 
+                       scen)
     if(!exists(outdir0)) dir.create(outdir0)
 
     for(b in 1:nboot){ ## loop boots
@@ -72,7 +73,7 @@ source("./makeMod.R");source("./getBreaks.R")
   #                    "F0L1S_49_MED_MED_MED","F0LMW_MED_MED_MED","NoBreaks_MED_MED_MED"),
   #                  scen2 = c("Break at 25?","Break at 30?",
   #                    "Break at 49?",  "Overlap 20? - 25?", "No Breaks"))
-  # 
+  # pli
   
   levels(ldf$scen) <-  c( "Break at 25 deg.", "Break at 49 deg.",
                          "Low Contrast at 25 deg.", "Overlap 20-25 deg.","No Breaks")

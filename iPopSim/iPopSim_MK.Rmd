@@ -64,8 +64,8 @@ for(l in testrows){
   ## Remove pre-existing MATRIX files
   # if(exists(out_file)) unlink(out_file, recursive=TRUE) ## delete pre-existing file
   # dir.create(out_file) ## make master FLevel File
-  
-  for(boot_number in 1:nboot) { ## full nsims, line 20
+  nboot.temp <- ifelse(scenarios[l,"DESC"] == 'NoBreaks',nboot*2,nboot)
+  for(boot_number in 1:nboot.temp) { ## full nsims, line 20
     cat(paste0(paste(scenarios[l,'DESC']," ",scenarios[l,'ID']),' boot ',boot_number, "\n"))
     ## Designate WRITE location
     path_name <- paste0(out_file,"/boot_",boot_number) 
@@ -270,15 +270,18 @@ for(l in testrows){
   out_file <-  paste0(scenname,"/",regID)
     
   # if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
-    
-    for(b in 1:nboot){ ## pair boots
+      nboot.temp <- ifelse(scenarios[l,"DESC"] == 'NoBreaks',nboot*2,nboot)
+
+for(b in 1:nboot.temp){
       cat("row ",l,"boot ",b, "\n")
-      dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0(b,'_sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
+       dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0(b ,'_sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
         lapply(read.csv,sep=",",header=T) %>%
         reduce(bind_rows)
-      makeLat(dat) %>% 
+      makeLat(dat) %>%
         write.csv(., paste0(getwd(),"/genData/",basename(scenname),"_",b,".csv"),
                   row.names = F)
+        
+
     }
     # dat <- read.table(paste0(out_file,"/",scenID,b,"sim_Comp.csv"),sep = ",",header = T) %>% filter(Year %in% c(50:100))
     

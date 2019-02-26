@@ -114,5 +114,13 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
   
   graphics.off()
   
+  png(file = paste0(outdir,"/",b,"_gamAll.png"), height = 6, width = 8, units = 'in', res = 500)
+  layout(matrix(1:6, ncol = 2,byrow = T))
+  gam.check(mod)
+
+  plot(mod,   select = 2, scheme  =2, lwd  =2, main = 'Latitude Smoother', cex.axis = 2)
+  plot.Deriv(m2.d, term = 'Latitude_dd',cex.axis = 2,  main = 'derivative of latitude')
+  abline(v = breaksdf[[1]], col = 'red')
+  graphics.off()
   return(breaksdf)
 }

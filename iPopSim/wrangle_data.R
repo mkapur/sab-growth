@@ -18,7 +18,7 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
   # dat0 <- read.table(paste0(out_file,"/boot_1/IBM_SAA_MATRIX.txt"),header = T,sep = ",")
   dat1 <- dat2 <- datN <- list()
   
-  for(b in 1:nboot){
+  for(b in 1:nboot.temp){
     dat0 <- read.table(paste0(out_file,"/boot_",b,"/IBM_SAA_MATRIX.txt"),sep=",",header=T)
     # scenID <-
     #   ifelse(is.na(fLevs[l, 5]),
@@ -88,7 +88,7 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
 }
 
 
-plotComps <- function(dat1,dat2,datN, saveloc = NA, nboots = nboot){
+plotComps <- function(dat1,dat2,datN, saveloc = NA, nboot = nboot.temp){
   
   for(b in 1:nboot){
     

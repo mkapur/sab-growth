@@ -53,7 +53,7 @@ bcsurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/BC/LWMSO.
                  "slon" = "Longitude_dd",
                  "SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
   select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%
-  sample_n(.,8239) %>%
+  # sample_n(.,8239) %>%
   mutate(REG = "BC")
 
 # ## ALASKA ----
@@ -65,12 +65,12 @@ aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/ak/AK_age
   select(YEAR, LENGTH, AGE, SEX, STARTLAT, STARTLONG) %>%
   plyr::rename(c('YEAR' = 'Year', 'SEX' = 'Sex','AGE' = 'Age',
                  'LENGTH' = 'Length_cm', "STARTLAT" = "Latitude_dd","STARTLONG" = "Longitude_dd")) %>%
-  sample_n(.,8239) %>%
+  # sample_n(.,8239) %>%
   mutate(REG = "AK")
 
 ## combine ---
 all_data <- rbind(wcsurv,bcsurv,aksurv)
-save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/gam_data_sab.rda")
+save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/gam_data_sab_227.rda")
 
 ## some exploratory plots ----
 

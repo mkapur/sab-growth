@@ -16,7 +16,7 @@ Deriv <- function(mod, n = 200, eps = 1e-4, newdata, term) {
   }
   p <-proc.time()
   X0 <- predict(mod, data.frame(newD), type = "lpmatrix")
-  newD[,1:2] <- newD[,1:2] + eps ## only update smooths
+  newD[,1:ncol(newD)] <- newD[,1:ncol(newD)] + eps ## only update smooths
   X1 <- predict(mod, data.frame(newD), type = "lpmatrix")
   Xp <- (X1 - X0) / eps
   Xp.r <- NROW(Xp)

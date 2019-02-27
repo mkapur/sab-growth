@@ -16,7 +16,10 @@ Deriv <- function(mod, n = 200, eps = 1e-4, newdata, term) {
   }
   p <-proc.time()
   X0 <- predict(mod, data.frame(newD), type = "lpmatrix")
-  newD[,1:ncol(newD)] <- newD[,1:ncol(newD)] + eps ## only update smooths
+  icol  <- NA; for(i in 1:ncol(newD))  if(class(newD[,i]) == 'numeric') icol[i] <- i; icol <- icol[!is.na(icol)] ## return numeric vectors
+  
+  # newD[,1:ncol(newD)] <- newD[,1:ncol(newD)] + eps ## only update smooths
+  newD[,icol] <- newD[,icol] + eps ## only update smooths
   X1 <- predict(mod, data.frame(newD), type = "lpmatrix")
   Xp <- (X1 - X0) / eps
   Xp.r <- NROW(Xp)
@@ -48,7 +51,8 @@ Deriv <- function(mod, n = 200, eps = 1e-4, newdata, term) {
   class(lD) <- "Deriv"
   lD$gamModel <- mod
   lD$eps <- eps
-  lD$eval <- newD[,1:2] - eps
+  # lD$eval <- newD[,1:2] - eps
+  lD$eval <- newD[,icol] - eps
   lD ##return
 }
 
@@ -88,29 +92,16 @@ signifMK <- function(x, d, upper, lower, eval = 0, crit.eval){
 }
 
 ## hand it pdats, derivatives, intervals, and value to compare
-## this will simply reject derivatives that equal zero or fall outsize the CI 
-# signifD <- function(x, d, upper, lower, eval = 0) {
-#   if(length(eval > 1)){
-#     miss <- upper > eval[1] & upper < eval[2]
-#     incr <- decr <- x
-#     want <- d > eval
-#     incr[!want | miss] <- NA
-#     want <- d < eval
-#     decr[!want | miss] <- NA
-#   }
-#   else{
-#   miss <- upper > eval & lower < eval ## check if outside CI
-#   rej <- decr <- x ## store evaluated term
-#   want <- d > eval | d < eval## T/F if derivative is greater than term (return vector)
-#   # incr[!want | miss] <- NA ## wherever we DONT want or is outside bounds, input NA
-#   # want <- d < eval ## same again but for lower
-#   # decr[!want | miss] <- NA
-#   ##mk reboot just give me one list dont care about direction
-#   rej[!want |miss] <- NA
-#   }
-#   return(rej)
-# }
-
+## this will simply reject derivatives that equal zero or fall outside the CI 
+signifD <- function(x, d, upper, lower, eval = 0) {
+  miss <- upper > eval & lower < eval
+  incr <- decr <- x
+  want <- d > eval
+  incr[!want | miss] <- NA
+  want <- d < eval
+  decr[!want | miss] <- NA
+  list(incr = incr, decr = decr)
+}
 ## mk function -- see if derivative CI contains 0
 # signifCI <- function(x, upper, lower, eval = 0){
 #   rej <- x ## print in terms of evaluated quantities

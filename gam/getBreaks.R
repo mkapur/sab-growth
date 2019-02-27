@@ -12,8 +12,9 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
   # pdat <- dat
   pTerm <- predict(mod, newdata = pdat, type = "terms", se.fit = TRUE)
   p2 <- predict(mod, newdata = pdat) ## raw predicts
-  pdat <- transform(pdat, predLen = p2, se2_spt = pTerm$se.fit[,2], se2_yr = pTerm$se.fit[,1])
-  # pdat <- transform(pdat, predLen = p2, se2_spt = pTerm$se.fit[,1])
+  # pdat <- transform(pdat, predLen = p2, se2_spt = pTerm$se.fit[,2], se2_yr = pTerm$se.fit[,1])
+  # pdat <- transform(pdat, predLen = p2, se2_lat = pTerm$se.fit[,2],se2_lon = pTerm$se.fit[,3], se2_yr = pTerm$se.fit[,1])
+  
   
   df.res <- df.residual(mod)
   crit.t <- qt(0.025, df.res, lower.tail = FALSE)

@@ -8,8 +8,8 @@ require(mgcv); require(dplyr); require(reshape); require(RColorBrewer); require(
 
 ## data prep and explore ----
 # setwd("C:/Users/mkapur/Dropbox/UW/sab-growth") ## fimbria
-setwd("C:/Users/Maia Kapur/Dropbox/UW/sab-growth") ## sebastes
-load( paste0(getwd(),"/data/gam_data.rda")) ## all_data
+# setwd("C:/Users/Maia Kapur/Dropbox/UW/sab-growth") ## sebastes
+load( paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/gam_data_sab.rda")) ## all_data
 
 all_data$Year <- as.numeric(as.character(all_data$Year))
 all_data$Sex <- as.factor(all_data$Sex)
@@ -92,7 +92,7 @@ for(s in 1:2){
   for(t in 1:2){
     
     newD <- data.frame(Age = mean(seq(0,94,length = 100)), ## use mean age?
-                       Sex = c("M","F")[s], 
+                       Sex = (c("M","F"))[1], 
                        Year = seq(1981,2017,length = 100),
                        Longitude_dd = seq(-186,-116, length = 100),
                        Latitude_dd = seq(0,64,length = 100))
@@ -111,7 +111,8 @@ for(s in 1:2){
     m2.dsig <- signifD(m2.d$eval[[Term]], 
                        d = m2.d[[Term]]$deriv,
                        m2.dci[[Term]]$upper, 
-                       m2.dci[[Term]]$lower, eval = crit.eval)
+                       m2.dci[[Term]]$lower, 
+                       eval = crit.eval)
     pix <- c(which(!is.na(m2.dsig$incr)), which(!is.na(m2.dsig$decr)))
     vals <- m2.d$eval[[Term]][pix] ## what test vals did these correspond to
     breaksdf[[idx]] <- sort(c(unique(round(vals)))) ## get rounded unique
@@ -121,7 +122,7 @@ for(s in 1:2){
   }
 }
 
-png( file = paste0(getwd(),"/plots/gam_smooths_update.png"), height = 6, width = 8, units = 'in', res = 500)
+# png( file = paste0(getwd(),"/plots/gam_smooths_update.png"), height = 6, width = 8, units = 'in', res = 500)
 layout(matrix(1:4, ncol = 2))
 plot(mod,  select  =1,  scheme  
      =2,  lwd  =2, main = 'Year Smoother', cex.axis = 2)

@@ -20,7 +20,6 @@ mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd) + s(Longitude_dd), da
 
 ## get & eval derivatives ----
 llsmooth <- mod$smooth[2][[1]]
-# pdat <- sample_n(dat,100)
 pdat <- dat
 pTerm <- predict(mod, newdata = pdat, type = "terms", se.fit = TRUE)
 p2 <- predict(mod, newdata = pdat) ## raw predicts
@@ -99,12 +98,9 @@ for(t in 1:length(Terms)){
    geom_vline(xintercept = breaksdf[[t]], col = 'red') +
    labs(x = Terms[t], y = "f'(x)", title = paste0('First Derivative for ', temp0[[1]]$xlab)) 
  idx <- idx+1
- # plist[[t+2]] <- plot.Deriv(m2.d, term = Terms[t],cex.axis = 2,  main = paste0('derivative of ', Terms[t])); abline(v = breaksdf[[t]], col = 'red')
 }
 
- ## ! forcing breaksdf based on...intuition
- breaksdf[[2]] <- mean(breaksdf[[2]])
- breaksdf[[3]] <- mean(breaksdf[[3]][3:4])
+
  usa <- map_data("world") # we already did this, but we can do it again
  plist[[1]] <- ggplot() + 
    geom_polygon(data = usa, aes(x = long, y = lat, group = group)) + 
@@ -125,7 +121,7 @@ lay <- rbind(c(2,3,1,1),
              c(4,5,1,1),
              c(6,7,1,1))
 grid.arrange(grobs = plist, layout_matrix = lay)  %>% 
- ggsave(plot = .,  file = paste0(getwd(),"/plots/sab_smooth_map_a62.png"), width = 15, height = 7, units = 'in', dpi = 480)
+ ggsave(plot = .,  file = paste0(getwd(),"/plots/sab_smooth_map_a63.png"), width = 15, height = 7, units = 'in', dpi = 480)
 
 
 
@@ -144,9 +140,9 @@ for (i in 1:nrow(all_data)) {
 }
 
 
-DES <- ifelse(!is.na(all_data$gamREG), as.numeric(all_data$gamREG),1)-1 ## overwrite NA for nobreaks
+DES <- ifelse(!is.na(all_data$gamREG), as.numeric(all_data$gamREG),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
 KEY <- paste("sab",DES,sep = "_")
-keybase <- paste0("R",unique(all_data$gamREG)) ## text regions
+keybase <- paste0("R",1:3) ## text regions
 
 dat0 <- rep0 <- NULL ## later storage
 nStrata <- length(unique(DES))
@@ -185,7 +181,7 @@ fit <- nlminb(
 best <- model$env$last.par.best
 
 rep <- sdreport(model)
-dat0 <- c(dat0, model$report()$ypreds %>% data.frame()) ## each 6 cols is new sim
+dat0 <- c(dat0, model$report()$ypreds %>% data.frame()) 
 rep0 <- bind_rows(rep0,
                   bind_cols(
                     data.frame(names(rep$value)),
@@ -199,7 +195,7 @@ rep0 <- bind_rows(rep0,
   
 ## reformat outputs ----
 names(rep0) <- c('variable', 'value','sd', 'REG')
-write.csv(rep0, file = paste0(getwd(),"/results/SAB_parEst_1gam_",Sys.Date(),'.csv'),row.names = F)
+write.csv(rep0, file = paste0(getwd(),"/results/SAB_parEst_2gam_",Sys.Date(),'.csv'),row.names = F)
 
 ypreds0 <- cbind(dat0,all_data) %>% data.frame()  
 names(ypreds0)[1] <- c('Predicted')
@@ -213,7 +209,7 @@ cat("Fit TMB model  & saved outputs \n")
 
 
 ## plot estimates
-parest <- read.csv(paste0(getwd(),"/results/SAB_parEst_1gam_",Sys.Date(),'.csv')) %>%
+parest <- read.csv(paste0(getwd(),"/results/SAB_parEst_2gam_",Sys.Date(),'.csv')) %>%
   filter(variable != "Sigma" & variable != 't0') %>% mutate(source = 'Estimated')
 
 ## bind only regions of use
@@ -223,7 +219,7 @@ parest <- rbind(parest, read.csv("true_sab_vals.csv"))
 parest[parest$variable == 'log_k','value'] <- exp(parest[parest$variable == 'log_k','value'] )
 parest$variable <- ifelse(parest$variable=='log_k',"k",paste(parest$variable))
 # levels(parest$REG) <- c("ALL","R1","AK","R2","BC","R1","WC")
-parest$REG <- factor(parest$REG ,levels=c("ALL","R1","WC","R2","BC","R3","AK"))
+parest$REG <- factor(parest$REG ,levels=c("ALL","R1","WC","R3","BC","R2","AK"))
 
 plist <- list()
 plist[[1]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
@@ -242,7 +238,7 @@ plist[[1]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
   facet_wrap(~variable, scales = "free_y") 
 
 ## plot fits
-ypreds <- read.csv( paste0(getwd(),"/results/SAB_predicts",Sys.Date(),".csv"))
+ypreds <- read.csv( paste0(getwd(),"/results/SAB_predicts2019-02-28.csv"))
 ypreds$gamREG <- paste0('GAM-defined Region ',ypreds$gamREG," ", ypreds$Sex)
 # ypreds$Sex <- paste0('GAM-defined Region ',ypreds$gamREG)
 

@@ -38,7 +38,6 @@ Type objective_function<Type>::operator() ()
   for(int i = 0; i < Age.rows(); i++){
     yfit = Linf(DES(i))*(1-exp(-k(DES(i))*(Age(i) - t0(DES(i)))));
     ypreds(i) = yfit;
-    // Sigma = yfit*sigma0; // Francis 1988
     obj_fun -= dnorm(Length_cm(i),yfit,Sigma,true);
   }
   aic = 2*(2*nStrata*3+1) - 2*obj_fun;
@@ -46,7 +45,7 @@ Type objective_function<Type>::operator() ()
   REPORT(ypreds);
   ADREPORT(t0);
   ADREPORT(log_k);
-  ADREPORT(Linf);
+  ADREPORT(log_Linf);
   ADREPORT(Sigma);
   REPORT(aic);
   return(obj_fun);

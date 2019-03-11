@@ -6,8 +6,8 @@ library(ggsidekick)
 # setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 
 ## WEST COAST ----
-load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/WC/Bio__NWFSC.Combo_2018-09-25.rda") ## loads as "Data"
-load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/warehouse.RData") ## sent from melissa, no SAB after 2014 -- need to stitch
+load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/WC/Bio__NWFSC.Combo_2018-09-25.rda") ## loads as "Data"
+load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/WC/warehouse.RData") ## sent from melissa, no SAB after 2014 -- need to stitch
 data0 <- WareHouse.All.Ages.Env %>% filter(
   common_name == 'sablefish' &
     !is.na(age_years) &
@@ -30,7 +30,9 @@ data0 <- WareHouse.All.Ages.Env %>% filter(
                     Year > 2014,
                     !is.na(Age) &
                       !is.na(Length_cm) & Depth_m < 549 & Depth_m >= 55 & Sex != 'U'
-                  ))
+                  )) %>%
+  sample_n(.,15000) 
+  
 
 
 wcsurv0 <- data0; rm(Data);rm(WareHouse.All.Ages.Env)
@@ -42,10 +44,10 @@ rm(wcsurv0); rm(wcsurv1)
 
 
 ## British Columbia ----
-bcsurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/BC/LWMSO.w_lat_long.csv") %>%
+bcsurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/BC/LWMSO.w_lat_long.csv") %>%
   filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & 
            SPECIMEN_SEX_CODE %in% c("1","2") &
-           NS_AREA != "" & SABLE_AREA_GROUP != "" & slat != 0) %>%
+           NS_AREA != "" & SABLE_AREA_GROUP != "" & slat != 0 &  SABLE_SET_TYPE %in% c('StRS','OFFSHORE STANDARDIZED')) %>%
   select(SPECIMEN_AGE, Fork_Length,SPECIMEN_SEX_CODE,YEAR,slat,slon) %>%
   mutate(Sex = ifelse(SPECIMEN_SEX_CODE == "2", 'F', "M"), 
          Fork_Length = Fork_Length/10) %>%
@@ -53,11 +55,11 @@ bcsurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/BC/LWMSO.
                  "slon" = "Longitude_dd",
                  "SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
   select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%
-  # sample_n(.,8239) %>%
+  sample_n(.,15000) %>%
   mutate(REG = "BC")
 
 # ## ALASKA ----
-aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/ak/AK_age_view_2018.csv") %>%
+aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/ak/AK_age_view_2018.csv") %>%
   ## drop period before 1995 and filter for top 6 as in Echave
   filter(., grepl(paste0(c("Southeast",'Kodiak',"Chirikof","Shumagin","Bering","Aleutian"), collapse="|"), GEOGRAPHIC_AREA_NAME)) %>%
   filter(SEX != 3 & !is.na(AGE) & !is.na(LENGTH) ) %>%
@@ -65,12 +67,12 @@ aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/raw/ak/AK_age
   select(YEAR, LENGTH, AGE, SEX, STARTLAT, STARTLONG) %>%
   plyr::rename(c('YEAR' = 'Year', 'SEX' = 'Sex','AGE' = 'Age',
                  'LENGTH' = 'Length_cm', "STARTLAT" = "Latitude_dd","STARTLONG" = "Longitude_dd")) %>%
-  # sample_n(.,8239) %>%
+  sample_n(.,15000) %>%
   mutate(REG = "AK")
 
 ## combine ---
 all_data <- rbind(wcsurv,bcsurv,aksurv)
-save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/data/gam_data_sab_227.rda")
+save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/input_data/gam_data_sab_0311b.rda")
 
 ## some exploratory plots ----
 

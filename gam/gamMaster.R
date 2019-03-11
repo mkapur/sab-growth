@@ -25,8 +25,6 @@ ntrue <- read.csv("summary_tables/ntrue_a6.csv")
 
 
 ## Now Aggregate each dataset at IDd breaks and assign R1/R2 ----
-
-
 for(l in 1:nrow(ldfprop)){ 
   for(b in 1:nboot){
 

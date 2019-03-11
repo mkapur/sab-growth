@@ -2,7 +2,7 @@
 ## kapurm spring 2019
 ## source from gist
 rm(list = ls())
-source(paste0(getwd(),"/Deriv.R"))
+source(paste0(getwd(),"/functions/Deriv.R"))
 compile("sptlvb.cpp") ## will throw 'incomplete line' msg, ignore
 dyn.load(dynlib("sptlvb"))
 
@@ -10,13 +10,17 @@ compname <- c("Maia Kapur","mkapur")[1]
 require(mgcv); require(dplyr); require(reshape); require(RColorBrewer); require(ggplot2);library(TMB)
 require(maps);require(mapdata)
 ## load data
-load(paste0("C:/Users/",compname,"/Dropbox/UW/sab-growth//data/gam_data_sab_227.rda")) ## all_data -- made using gam_dataprep
+load(paste0("./input_data/gam_data_sab_0311b.rda")) ## all_data -- made using gam_dataprep and 15k subsample
 all_data$Longitude_dd[all_data$Longitude_dd > 0] <- all_data$Longitude_dd[all_data$Longitude_dd > 0]*-1
 dat <- all_data %>% filter(Age == 4 & Sex == 'F') 
 # with(dat, plot(Length_cm ~ Latitude_dd))
 
 mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd) + s(Longitude_dd), data = dat)
 # mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd) , data = dat)
+png("./figures/sab_gam_diagnostics.png", width = 7, height = 5, units = 'in', res = 420)
+layout(matrix(1:4, ncol = 2))
+gam.check(mod)
+graphics.off()
 
 ## get & eval derivatives ----
 llsmooth <- mod$smooth[2][[1]]
@@ -38,14 +42,18 @@ pdat <- transform(pdat,
 
 
 
-newD <- data.frame(Year = seq(1981,2017,length = 100),
-                   Longitude_dd = seq(-186,-116, length = 100),
-                   Latitude_dd = seq(0,64,length = 100)) ## whatever isn't modeled will just get ignored
+
 
 breaksdf <- list()
 Terms <- c("Year","Latitude_dd","Longitude_dd")
 for(t in 1:length(Terms)){
   Term <- Terms[t]
+  
+  
+  newD <- data.frame(Year = seq(1981,2017,length = 100),
+                     Longitude_dd = seq(-186,-116, length = 100),
+                     Latitude_dd = seq(0,64,length = 100)) ## whatever isn't modeled will just get ignored
+  
   
   m2.d <- Deriv(mod, newdata = newD)
   m2.dci <- confint(m2.d, term = Term)
@@ -74,7 +82,7 @@ plist <- list()
 idx <- 2
 ## extract plotting stuff
  pd <- plot(mod,   select = t, scheme  =2, lwd  =2, main = paste0(Terms[t],' Smoother'), cex.axis = 2, ylim = c(-10,ifelse(t != 3,10,500)))
-for(t in 1:length(Terms)){
+for(t in 2:length(Terms)){
  temp0 <- pd[t] ## get this smoother
  temp <- data.frame(cbind(temp0[[1]]$x,temp0[[1]]$fit, temp0[[1]]$se)); names(temp) = c('x','fit','se')
  plist[[idx]] <-  ggplot(temp, aes(x = x, y = fit)) +
@@ -84,7 +92,7 @@ for(t in 1:length(Terms)){
    geom_line(aes(y= fit-se), linetype = 'dashed') +
    geom_line(aes(y= fit+se), linetype = 'dashed') +
    geom_rug(sides = 'b') +
-   labs(x = Terms[t], y = "smoother", title = paste0('Smoother for ', temp0[[1]]$xlab)) 
+   labs(x = Terms[t], y = "smoother", title = paste0(letters[idx-1],") ",'Smoother for ', temp0[[1]]$xlab)) 
  idx <- idx+1
  CI <- confint(m2.d, term = Terms[t])
  m2.dtemp <- data.frame(cbind(m2.d$eval[,Terms[t]], m2.d[[Terms[t]]]$deriv, CI[[1]]$upper, CI[[1]]$lower)); names(m2.dtemp) = c('x','deriv','upper','lower')
@@ -95,8 +103,8 @@ for(t in 1:length(Terms)){
    geom_hline(yintercept = 0, col = 'grey22') +
    geom_line(aes(y= upper), linetype = 'dashed') +
    geom_line(aes(y= lower), linetype = 'dashed') +
-   geom_vline(xintercept = breaksdf[[t]], col = 'red') +
-   labs(x = Terms[t], y = "f'(x)", title = paste0('First Derivative for ', temp0[[1]]$xlab)) 
+   geom_vline(xintercept = breaksdf[[t]], lwd = 1.1, linetype = 'dashed', col = 'red') +
+   labs(x = Terms[t], y = "f'(x)", title =  paste0(letters[idx-1],") ",'First Derivative for ', temp0[[1]]$xlab)) 
  idx <- idx+1
 }
 
@@ -108,24 +116,32 @@ for(t in 1:length(Terms)){
    scale_x_continuous(expand = c(0,0), limits = c(-180,-110), breaks = seq(-180,-120,10), labels = paste(seq(-180,-120,10), "°W")) +
    scale_y_continuous(expand = c(0,0), limits = c(30,75), breaks = seq(30,75,10), labels =  paste(seq(30,75,10), "°N"))  +
    theme_minimal() +
-   theme(panel.grid.major = element_blank(), axis.title =element_blank()) +
-   geom_hline(yintercept = breaksdf[[2]], col = 'red')+
-   geom_vline(xintercept = breaksdf[[3]], col = 'red') +
-   ggtitle('Midpoint of Lat-Long Breaks') +
-   geom_label(aes(x = c(-150, -150,-120), y = c(60,45,45), 
-                  label = paste0("GAM Estimated Region ",c(2,3,1))),
+   theme(panel.grid.major = element_blank(),
+         axis.title =element_blank(), 
+         legend.position = c(0.2,0.15)) +
+   geom_hline(yintercept = breaksdf[[2]],lwd = 1.1, linetype = 'dashed', col = 'red')+
+   geom_vline(xintercept = breaksdf[[3]], lwd = 1.1, linetype = 'dashed', col = 'red') +
+   geom_point(data = dat, aes(x = Longitude_dd, y = Latitude_dd, size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
+   scale_fill_viridis_c(guide = "legend") +
+   labs(fill = "Length of Age-4 Fish (cm)",size  = "Length of Age-4 Fish (cm)") +
+   ggtitle('e) GAM-Estimated Regions, with raw data') +
+   geom_label(aes(x = c(-150,-120,-120), y = c(60,45,60), 
+                  label = paste0("GAM Estimated Region ",c(3,1,2))),
               fill = "white",col = 'black')
 
  
-lay <- rbind(c(2,3,1,1),
-             c(4,5,1,1),
-             c(6,7,1,1))
+# lay <- rbind(c(2,3,1,1),
+#              c(4,5,1,1))
+   lay <- rbind(c(2,2,1,1,1),
+                c(3,3,1,1,1),
+                c(4,4,1,1,1),
+                c(5,5,1,1,1))
 grid.arrange(grobs = plist, layout_matrix = lay)  %>% 
- ggsave(plot = .,  file = paste0(getwd(),"/plots/sab_smooth_map_a63.png"), width = 15, height = 7, units = 'in', dpi = 480)
+ ggsave(plot = .,  file = paste0("./figures/sab_smooth_map2.png"), width = 15, height = 7, units = 'in', dpi = 480)
 
 
 
-## now re-aggregate and do the fits ON ALL DATA ----
+## now re-aggregate and do the fits on all data, based on model ----
 DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
 ## get region
 # for(i in 2:length(breaksdf)){ ## loop spatial smooths -- just do simple for now
@@ -134,11 +150,12 @@ DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat))
 for (i in 1:nrow(all_data)) {
   all_data[i,'gamREG'] <-
     ifelse(all_data[i, "Latitude_dd"] <=  breaksdf[[2]] & all_data[i, "Longitude_dd"] > breaksdf[[3]], 1,
-           ifelse(all_data[i, "Latitude_dd"] > breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 2, 
-                  ifelse(all_data[i, "Latitude_dd"] <= breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 3, NA)))
+           ifelse(all_data[i, "Latitude_dd"] > breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 3, 
+                  ifelse(all_data[i, "Latitude_dd"] <= breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 4, 2)))
                          
 }
-
+## sanity check
+all_data %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
 
 DES <- ifelse(!is.na(all_data$gamREG), as.numeric(all_data$gamREG),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
 KEY <- paste("sab",DES,sep = "_")
@@ -195,13 +212,20 @@ rep0 <- bind_rows(rep0,
   
 ## reformat outputs ----
 names(rep0) <- c('variable', 'value','sd', 'REG')
-write.csv(rep0, file = paste0(getwd(),"/results/SAB_parEst_2gam_",Sys.Date(),'.csv'),row.names = F)
+
+rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf')])
+rep0$sd[rep0$variable == 'log_Linf'] <- exp(rep0$sd[rep0$variable == 'log_Linf'])
+rep0$variable <- factor(rep0$variable, levels = c("k","Linf","Sigma","t0","log_k","log_Linf")) ## enable new levels
+rep0$variable[rep0$variable == 'log_k'] <- 'k'
+rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'
+
+
+write.csv(rep0, file = paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'.csv'),row.names = F)
 
 ypreds0 <- cbind(dat0,all_data) %>% data.frame()  
 names(ypreds0)[1] <- c('Predicted')
 
-# write.csv(ypreds0,  paste0(getwd(),"/results/SAB_predicts",Sys.Date(),".csv"),row.names = F)
-ypreds <- read.csv( paste0(getwd(),"/results/SAB_predicts",Sys.Date(),".csv"))
+write.csv(ypreds0,  paste0("./GAM_output/SAB_predicts",Sys.Date(),".csv"),row.names = F)
 
 cat("Fit TMB model  & saved outputs \n")
 ## plotting ----
@@ -209,17 +233,17 @@ cat("Fit TMB model  & saved outputs \n")
 
 
 ## plot estimates
-parest <- read.csv(paste0(getwd(),"/results/SAB_parEst_2gam_",Sys.Date(),'.csv')) %>%
+parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'.csv')) %>%
   filter(variable != "Sigma" & variable != 't0') %>% mutate(source = 'Estimated')
 
 ## bind only regions of use
-parest <- rbind(parest, read.csv("true_sab_vals.csv")) 
+parest <- rbind(parest, read.csv("./input_data/true_sab_vals.csv")) 
 
 ## exponentiate logk
 parest[parest$variable == 'log_k','value'] <- exp(parest[parest$variable == 'log_k','value'] )
 parest$variable <- ifelse(parest$variable=='log_k',"k",paste(parest$variable))
 # levels(parest$REG) <- c("ALL","R1","AK","R2","BC","R1","WC")
-parest$REG <- factor(parest$REG ,levels=c("ALL","R1","WC","R3","BC","R2","AK"))
+parest$REG <- factor(parest$REG ,levels=c("ALL","R1","WC","R2","BC","R3","AK"))
 
 plist <- list()
 plist[[1]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
@@ -238,7 +262,7 @@ plist[[1]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
   facet_wrap(~variable, scales = "free_y") 
 
 ## plot fits
-ypreds <- read.csv( paste0(getwd(),"/results/SAB_predicts2019-02-28.csv"))
+ypreds <- read.csv( paste0("./GAM_output/SAB_predicts",Sys.Date(),".csv"))
 ypreds$gamREG <- paste0('GAM-defined Region ',ypreds$gamREG," ", ypreds$Sex)
 # ypreds$Sex <- paste0('GAM-defined Region ',ypreds$gamREG)
 
@@ -265,5 +289,5 @@ lay <- rbind(c(1,1,1,1),
              c(2,2,2,2))
              
 grid.arrange(grobs = plist, layout_matrix = lay) %>%  
-   ggsave(plot = .,  file = paste0(getwd(),"/plots/sab_fits_a4.png"), width = 10, height = 12, units = 'in', dpi = 480)
+   ggsave(plot = .,  file = "./figures/sab_fits_a4.png", width = 10, height = 12, units = 'in', dpi = 480)
   

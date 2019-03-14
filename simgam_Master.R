@@ -3,17 +3,14 @@
 ## and plot comparisons
 ## Maia Sosa Kapur kapurm@uw.edu WiSp 2019
 
-require(mgcv);require(dplyr);require(ggplot2); require(TMB)
+require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
 library(gridExtra); library(grid); library(lattice)
 
 compile("sptlvb.cpp") ## will throw 'incomplete line' msg, ignore
 dyn.load(dynlib("sptlvb"))
+compile("sptlschnute.cpp") 
+dyn.load(dynlib("sptlschnute"))
 
-# comparedf<- expand.grid(paste0("R",c(1:4)),paste0("R",c(1:4))) %>% mutate('compare' = ifelse(Var1 == Var2 | 
-#                                                                                    Var1 == 'R2' & Var2 == 'R3'  |
-#                                                                                    Var1 == 'R3' & Var2 == 'R2', TRUE,FALSE)) %>% 
-#   filter(!(Var1 == 'R4'))
-# names(comparedf)[1:2] <- c('Actual','Estimated')
 compname <- c("Maia Kapur","mkapur")[1]
 
 ## Build mods, get breakpoints
@@ -43,7 +40,6 @@ for(l in 1:length(unique(ldfprop$scen))){
     keybase <- unique(ifelse(!is.na(dat$gamREG), as.character(dat$gamREG),"R1")) ## text regions
     
     ## run TMB parest----
-    dat0 <- rep0 <- NULL ## later storage
     nStrata <- length(unique(DES))
     
     data <-
@@ -56,81 +52,39 @@ for(l in 1:length(unique(ldfprop$scen))){
     
     parameters <-
       list(
-        log_Linf = rep(log(200), nStrata),
+        log_Lone = rep(log(60), nStrata),
+        log_Ltwo = rep(log(275), nStrata),
         log_k = rep(log(0.3), nStrata),
         t0 = rep(0.1, nStrata),
         log_Sigma = 0
       )
     
     # Now estimate everything -- DO PHASES
-    map <- NULL
-    # map <- list(log_Linf = factor(NA)) ## get K, other stuff shouldn't change much
-    model <- MakeADFun(data, parameters,  DLL="sptlvb",silent=T,map=map)
-    fit <- nlminb(
-      model$par,
-      model$fn,
-      model$gr,
-      control = list(
-        rel.tol = 1e-12,
-        eval.max = 100000,
-        iter.max = 10000
-      )
-    )
-    # best <- model$env$last.par.best
-    # rep1 <- cbind(names(sdreport(model)$value)[2],
-    #               data.frame(sdreport(model)$value['log_k'], data.frame(sdreport(model)$sd[2])))
-    # names(rep1) <- c('variable', 'value', 'sd')
-    
-    # 
-    # map <- list(log_k = factor(NA))
+    # map <- NULL
+    map <- list(log_Lone = rep(factor(NA),nStrata)) ## get K, other stuff shouldn't change much
     # model <- MakeADFun(data, parameters,  DLL="sptlvb",silent=T,map=map)
-    # fit <- nlminb(
-    #   model$par,
-    #   model$fn,
-    #   model$gr,
-    #   control = list(
-    #     rel.tol = 1e-12,
-    #     eval.max = 100000,
-    #     iter.max = 10000
-    #   )
-    # )
-    # 
-    best <- model$env$last.par.best
-    rep <- sdreport(model)
+    phase1 <- fitMod(data, parameters, modversion = 'sptlschnute',map)[[2]]
+    parameters <-
+      list(
+        log_Lone = rep(log(60), nStrata),
+        log_Ltwo = log(phase1[phase1$variable == 'Ltwo','value']),
+        log_k = rep(log(0.3), nStrata),
+        t0 = rep(0.1, nStrata),
+        log_Sigma = 0
+      )
+    map <- list(log_Ltwo = rep(factor(NA),nStrata)) ## get K, other stuff shouldn't change much
+    phase2 <- fitMod(data, parameters, modversion = 'sptlschnute',map)
     
-    dat0 <- c(dat0, model$report()$ypreds %>% data.frame()) 
+    dat0 <- phase2[[1]]
+    rep0 <-phase2[[2]]
+    rep0[rep0$variable == 'Ltwo','sd'] <-     phase1[phase1$variable == 'Ltwo','sd']
+
     
-    rep0 <- bind_rows(rep0,
-                      bind_cols(
-                        data.frame(names(rep$value)),
-                        data.frame(rep$value),
-                        data.frame(rep$sd),
-                        
-                        data.frame(c(rep(keybase
-                                         , 3), rep("ALL", 1)))
-                        
-                      ))
-    names(rep0) <- c('variable', 'value','sd', 'REG')
-    
-    rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf')])
-    rep0$sd[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$sd[rep0$variable %in% c('log_k','log_Linf')]) 
-    rep0$variable <- factor(rep0$variable, levels = c("k","Linf","Sigma","t0","log_k","log_Linf")) ## enable new levels
-    rep0$variable[rep0$variable == 'log_k'] <- 'k'
-    rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'
-    
-    # rep3<-   bind_cols(
-    #   data.frame(names(rep2$value[c(1,3,4)])),
-    #   data.frame(rep2$value[c(1,3,4)]),
-    #   data.frame(rep2$sd[c(1,3,4)]))
-    # names(rep3) <- c('variable', 'value','sd')
-    # 
-    # rep0 <- rbind(rep0, cbind(rbind(rep1,rep3),data.frame(c(rep(keybase
-    #                                                             , 3), rep("ALL", 1)))))
-                  
-                  # ## reformat outputs ----
+   ## reformat outputs ----
     write.csv(rep0, file = paste0("./output_data/",scen,"_parEst_gam_",b,"_",Sys.Date(),'.csv'),row.names = F)
 
-    ypreds0 <- cbind(dat0,dat) %>% data.frame()
+    # ypreds0 <- cbind(dat0,dat) %>% data.frame()
+    ypreds0 <- data.frame(dat0)
     names(ypreds0)[1] <- c('Predicted')
 
     write.csv(ypreds0,  paste0("./output_data/",scen,"_predicts_",b,Sys.Date(),".csv"),row.names = F)
@@ -142,66 +96,55 @@ for(l in 1:length(unique(ldfprop$scen))){
     ## plot estimates
     gamREGS <- factor(unique(dat$gamREG), levels=c("R1", "R2","R3","R4"))
     REGS <-  factor(unique(dat$REG), levels=c("R1", "R2","R3","R4")) ## what was used to GENERATE
+    parms <- c('Lone','Ltwo','k','Linf')[1:2]
     
     parest <-  read.csv(paste0("./output_data/",scen,"_parEst_gam_",b,"_",Sys.Date(),'.csv')) %>%
-      filter(variable != "Sigma" & variable != 't0') %>% mutate(source = 'Estimated')
-    parest <- rbind(parest, (read.csv("./input_data/true_ibm_vals.csv") %>% filter(REG %in% REGS)))    ## only extract regions from 'actual' that were present in original
+      filter(variable %in% parms) %>% mutate(source = 'Estimated')
+    
+    parest <- rbind(parest, (read.csv("./input_data/true_ibm_vals.csv") %>% 
+                               filter(REG %in% REGS & variable %in% parms)))    ## only extract regions from 'actual' that were present in original
 
     parest$REG <- factor(parest$REG, levels=c("R1", "R2","R3","R4"))
     parest$lwr <- parest$value - 1.96*parest$sd
     parest$upr <- parest$value + 1.96*parest$sd
 
-    parms <- c('k','Linf')
    
-    for(iq in 1:length(gamREGS)){ ## loop regions
+    for(iq in 1:length(unique(parest$REG))){ ## loop regions
       cdf[idx,'scen'] <- scen
       cdf[idx,'boot'] <- b
-      cdf[idx,'gamREG'] <- gamREGS[iq]
+      cdf[idx,'gamREG'] <- if(!is.na(gamREGS[iq])){gamREGS[iq]}else{last(gamREGS)}
       cdf[idx,'REG'] <- if(!is.na(REGS[iq])){REGS[iq]}else{last(REGS)}
       ptf <- NULL
       for(v in  1:length(parms)){ ## loop variables
-        tmp <- subset(parest, variable == parms[v])
-        bounds <- tmp %>% filter(source == 'Estimated' & REG == gamREGS[iq]) %>% select(lwr,upr)
-        # cdf[idx,'k'] <- ptf[1];  cdf[idx,'Linf'] <- ptf[2]
+        tmp <- subset(parest, variable == parms[v] & source == 'Estimated'  | variable == parms[v] & source == 'Actual' & REG == cdf[idx,'REG'])
+        bounds <- tmp %>% filter(source == 'Estimated' & REG ==  cdf[idx,'gamREG'] ) %>% select(lwr,upr)
         ptf[v] <- tmp$value[tmp$source == 'Actual' &  tmp$REG ==    cdf[idx,'REG']] >= bounds[1] &
           tmp$value[tmp$source == 'Actual'&  tmp$REG ==    cdf[idx,'REG']] <= bounds[2]
       } ## end vars
-      cdf[idx,'k'] <- ptf[1];  cdf[idx,'Linf'] <- ptf[2]
+      cdf[idx,parms[1]] <- ptf[1];  cdf[idx,parms[2]] <- ptf[2]
       idx <- idx+1
     } ## end gamREGS
     idx <- idx+1
-    # cdf <- rbind(cdf, cdf)
-    # linfs <- subset(parest, variable == 'Linf')%>% filter(compare == TRUE)
-    # ks <- subset(parest, variable == 'k')%>% filter(compare == TRUE)
-    # ## loop regions
-    #   
-    #   cdf[idx,'scen'] <- scen
-    #   
-    #   # cdf[idx,'quad'] <- keybase[q]
-    #   
-    #   cdf[,'gamREG'] <- factor( cdf[,'gamREG'], levels=c("R1", "R2","R3","R4"))
-    #   
-    #   cdf[,'REG'] <- factor( cdf[,'REG'], levels=c("R1", "R2","R3","R4"))
-    #   
-    #  linf.actual <- merge(linfs,comparedf)  %>% filter( Actual ==  cdf[idx,'REG'] & Estimated ==  cdf[idx,'gamREG'] & source == 'Actual') %>% select(value)
-    #   linfTF <- linf.actual %
-    #   
-    #   if(subset(comparedf, Estimated == cdf[idx,'gamREG'] & Actual == cdf[idx,'REG'])$compare){
-    #     linfTF <- subset(parest, variable == 'Linf' & REG == cdf[idx,'REG'] & source == 'Actual')$value %in%
-    #       subset(parest, variable == 'Linf' & REG == cdf[idx,'gamREG'] & source == 'Estimated')$value
-    #       
-    #       }
-    # 
-    #   idx <- idx+1
-    # }
-    
-    # cdf <- rbind(cdf, cdf)
+   
   } ## end boots
 } ## end ldfrows
 
-cdf
+cdf0 <- cdf %>% filter(!is.na(scen) & !is.na(Lone) & !is.na(Ltwo)) 
+cdf0 %>% write.csv(.,file = './gam_output/cdf_',Sys.date(),'.csv',row.names = F)
 # cdf <- cdf[,c(1:5,11)]
 # names(cdf)[5:6] <- c('k','Linf')
 
-cdf %>% melt(id = c('scen','boot','gamREG','REG')) %>% group_by(scen) %>% dplyr::summarise(n = sum(value)) %>% mutate(prop = n/nrow(.))
+## When did regional designation go right? (original analysis)
+cdfaccu <- cdf0 %>% group_by(scen) %>% summarise(propa = sum(gamREG == REG)/n())
+write.csv(cdfaccu,file = './gam_output/cdf_accu_',Sys.date(),'csv',row.names = F)
+
+## Get coverage probs -- for all params. 
+## Note N varies because of varying # regions per boot. W
+## ill tabulate for k and linf indiscriminately, which is bad.
+cdfprop <- cdf0 %>% filter(!is.na(scen))  %>% 
+  melt(id = c('scen','boot','gamREG','REG')) %>% 
+  group_by(scen) %>% dplyr::summarise(n = sum(value)) %>% 
+  mutate(prop = n/nrow(.))
+write.csv(cdfprop,file = './gam_output/cdf_prop_',Sys.date(),'csv',row.names = F)
+
 

@@ -130,7 +130,7 @@ a6df <- list.files("./IBM_output/datasets/", full.names = T) %>%
 
 dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
 
-cdfprop <- read.csv('./gam_output/cdf_prop.csv')
+cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.date(),'.csv'))
 levels(cdfprop$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                                                   "Low Contrast at 25 deg.", 
                                   "Overlap 20-25 deg.","No Breaks")
@@ -146,10 +146,11 @@ plist1[[1]] <- ggplot(cdfprop, aes(x = scen, y = prop, fill = scen)) +
 
 
 
-cdfaccu <- read.csv('./gam_output/cdf_accu.csv')
+cdfaccu <- read.csv(paste0('./gam_output/cdf_accu',Sys.date(),'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                          "Low Contrast at 25 deg.", 
                          "Overlap 20-25 deg.","No Breaks")
+
 cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfaccu$propa )])
 plist1[[2]] <- ggplot(cdfaccu, aes(x = scen, y = propa, fill = scen)) +
   theme_minimal() +
@@ -161,6 +162,6 @@ plist1[[2]] <- ggplot(cdfaccu, aes(x = scen, y = propa, fill = scen)) +
 
 lay <- cbind(1,2)
 grid.arrange(grobs = plist1, layout_matrix = lay) %>%
-  ggsave(plot = .,  file = paste0("./figures/cdfprob.png"), width = 11, height = 8, units = 'in', dpi = 480)
+  ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 

@@ -136,7 +136,7 @@ cdf0 %>% write.csv(.,file = './gam_output/cdf_',Sys.date(),'.csv',row.names = F)
 
 ## When did regional designation go right? (original analysis)
 cdfaccu <- cdf0 %>% group_by(scen) %>% summarise(propa = sum(gamREG == REG)/n())
-write.csv(cdfaccu,file = './gam_output/cdf_accu_',Sys.date(),'csv',row.names = F)
+write.csv(cdfaccu,file = './gam_output/cdf_accu_',Sys.date(),'.csv',row.names = F)
 
 ## Get coverage probs -- for all params. 
 ## Note N varies because of varying # regions per boot. W
@@ -145,6 +145,6 @@ cdfprop <- cdf0 %>% filter(!is.na(scen))  %>%
   melt(id = c('scen','boot','gamREG','REG')) %>% 
   group_by(scen) %>% dplyr::summarise(n = sum(value)) %>% 
   mutate(prop = n/nrow(.))
-write.csv(cdfprop,file = './gam_output/cdf_prop_',Sys.date(),'csv',row.names = F)
+write.csv(cdfprop,file = './gam_output/cdf_prop_',Sys.date(),'.csv',row.names = F)
 
 

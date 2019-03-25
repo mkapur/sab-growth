@@ -6,43 +6,35 @@ library(ggsidekick)
 # setwd("C:/Users/mkapur/Dropbox/UW/sab-growth")
 
 ## WEST COAST ----
-load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/WC/Bio__NWFSC.Combo_2018-09-25.rda") ## loads as "Data"
-load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/WC/warehouse.RData") ## sent from melissa, no SAB after 2014 -- need to stitch
-data0 <- WareHouse.All.Ages.Env %>% filter(
-  common_name == 'sablefish' &
-    !is.na(age_years) &
-    !is.na(length_cm) & sex != 'U'
+# load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/WC/Bio__NWFSC.Combo_2018-09-25.rda") ## loads as "Data"
+# load("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/WC/warehouse.RData") ## sent from melissa, no SAB after 2014 -- need to stitch
+load(paste0("C:/Users/",compname,"/Dropbox/UW/sab-growth/raw_data/WC/WC_lengths_031519.rda")) ## extracted
+data0 <- bio %>% filter(
+  Common_name == 'sablefish' &
+    !is.na(Age) &
+    !is.na(Length_cm) & Sex != 'U' & !is.na(Sex)
 ) %>% 
   select(
-    Year = year,
-    Length_cm = length_cm,
-    Age = age_years,
-    Sex = sex,
-    Latitude_dd = latitude_dd,
-    Longitude_dd = longitude_dd,
-    REG = Salinity_at_Gear_psu,
-    SPECIES_CODE = pass,
-    GEAR_DEPTH = depth_ftm,
-    Temp = Temperature_at_Surface_c,
-    GEAR_TEMPERATURE = Temperature_at_Gear_c
-  ) %>% bind_rows(.,
-                  Data %>% filter(
-                    Year > 2014,
-                    !is.na(Age) &
-                      !is.na(Length_cm) & Depth_m < 549 & Depth_m >= 55 & Sex != 'U'
-                  )) %>%
+    Year,
+    Length_cm ,
+    Age ,
+    Sex ,
+    Latitude_dd ,
+    Longitude_dd
+  ) %>%
+mutate(REG = "WC") %>%
   sample_n(.,15000) 
   
 
-
-wcsurv0 <- data0; rm(Data);rm(WareHouse.All.Ages.Env)
-wcsurv1 <- wcsurv0 
-wcsurv <- wcsurv1 %>%
-  select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%   mutate(REG = "WC")
-rm(wcsurv0); rm(wcsurv1)
+# data0 %>%  ggplot(., aes(x = Year)) + geom_histogram() + scale_x_continuous(limits = c(1980,2020),breaks = seq(1983,2020,2))
 
 
-
+wcsurv <- data0
+wcsurv %>% group_by(Year) %>% summarise(n = n())
+# 
+# WareHouse.All.Ages.Env %>% filter(common_name == 'sablefish' & year < 2003 & 
+#                                     project == "Groundfish Triennial Shelf Survey"
+#                                   & !is.na(age_years)) %>% head()
 ## British Columbia ----
 bcsurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/BC/LWMSO.w_lat_long.csv") %>%
   filter(!is.na(SPECIMEN_AGE) & !is.na(Fork_Length) & 
@@ -73,12 +65,26 @@ aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/ak/AK_age
 ## combine ---
 all_data <- rbind(wcsurv,bcsurv,aksurv)
 
-save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/input_data/gam_data_sab_0312.rda")
+save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/input_data/gam_data_sab_0315.rda")
 # save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/coursework/STAT-554/project_code_data/all_data.csv", row.names = F)
 ## some exploratory plots ----
 
 all_data$REG <- as.factor(all_data$REG)
 levels(all_data$REG) <- c("Alaska","Canada","California Current")
+
+ggplot(all_data, aes(x = Year, fill = REG)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        legend.position = c(0.1,0.9),
+        axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        strip.text = element_text(size=14))+
+  scale_alpha(guide = 'none') +
+  labs(x = "Year", fill = 'Region of Origin', y = "# Records") +
+  geom_histogram(stat = 'bin', position = 'stack', 
+                 binwidth = 1, alpha = 0.6) 
+
+
 p <- ggplot(all_data, aes(x = Length_cm, fill = Sex)) +
   theme_minimal() +
   theme(panel.grid = element_blank(),

@@ -148,16 +148,17 @@ for(l in 1:length(unique(ldfprop$scen))){
       cdf[idx,parms[1]] <- ptf[1];  cdf[idx,parms[2]] <- ptf[2]
       # cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] == scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]
       # cdf[idx,"LON"] <- cdf[idx,"gamLON"] == scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]
-      if(cdf[idx,'scen']=="F0LMW")  { # won't match "overlap"
-        cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] >= 20 & cdf[idx,"gamLAT"] <= 25
-        cdf[idx,"LON"] <- cdf[idx,"gamLON"] >= 20 & cdf[idx,"gamLON"] <= 25
-      }
+   
       # if(is.na(cdf[idx,"gamLAT"])  | is.na(cdf[idx,"gamLON"])){ ## won't match NA
         # cdf[idx,"LAT"] <- ifelse(is.na(cdf[idx,"gamLAT"]) & is.na(scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]),TRUE,FALSE )
         # cdf[idx,"LON"] <- ifelse(is.na(cdf[idx,"gamLON"]) & is.na(scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]),TRUE,FALSE )
         cdf[idx,"LAT"] <- compareNA(cdf[idx,"gamLAT"],scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1])
         cdf[idx,"LON"] <- compareNA(cdf[idx,"gamLON"],scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1])
       # }
+        if(cdf[idx,'scen']=="F0LMW")  { # won't match "overlap"
+          cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] >= 20 & cdf[idx,"gamLAT"] <= 25
+          cdf[idx,"LON"] <- cdf[idx,"gamLON"] >= 20 & cdf[idx,"gamLON"] <= 25
+        }
       if(is.na(cdf[idx,"LAT"])) stop(paste0("Throwing NAs in spatial comparison ", scen, " ", idx, "\n"))
 
       idx <- idx+1

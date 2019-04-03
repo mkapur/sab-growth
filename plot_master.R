@@ -130,7 +130,8 @@ a6df <- list.files("./IBM_output/datasets/", full.names = T) %>%
 
 dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
 
-cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.date(),'.csv'))
+## Plot proportion agreegments ----
+cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv'))
 levels(cdfprop$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                                                   "Low Contrast at 25 deg.", 
                                   "Overlap 20-25 deg.","No Breaks")
@@ -138,30 +139,62 @@ cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop
 plist1 <- list()
 plist1[[1]] <- ggplot(cdfprop, aes(x = scen, y = prop, fill = scen)) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), legend.position = c(0.2,0.9)) +
+  theme(panel.grid = element_blank(), 
+        axis.text.x = element_text(angle = 5),
+        legend.position = c(0.9,0.9)) +
   scale_fill_grey()+
-  labs(x = '',y = 'Coverage Probability', fill = 'Spatial Scenario', title = 'a) Coverage Probability') +
-  geom_bar(stat = 'identity',width=0.6, position = position_dodge(width=0.5))
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = '',y = 'Coverage Probability', fill = 'Spatial Scenario', 
+       title = 'a) Coverage Probability for Endpoints of Growth Curve') +
+  geom_bar(stat = 'identity',width=0.6, position = position_dodge(width=0.7)) +
+  facet_wrap(~variable)
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
 
 
-cdfaccu <- read.csv(paste0('./gam_output/cdf_accu',Sys.date(),'.csv'))
+cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                          "Low Contrast at 25 deg.", 
                          "Overlap 20-25 deg.","No Breaks")
+levels(cdfaccu$variable) <- c('Latitude','Longitude')
 
-cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfaccu$propa )])
-plist1[[2]] <- ggplot(cdfaccu, aes(x = scen, y = propa, fill = scen)) +
+# cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfprop$prop  )])
+plist1[[2]] <- ggplot(cdfaccu, aes(x = scen, y = prop, fill = scen)) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), legend.position = c(0.2,0.9)) +
+  theme(panel.grid = element_blank(), legend.position ='none') +
   scale_fill_grey()+
-  labs(x = '',y = 'Proportion Detected Accurate Breaks', fill = 'Spatial Scenario', title = 'b) Proportion Detected Accurate Breaks') +
-  geom_bar(stat = 'identity',width=0.6, position = position_dodge(width=0.5))
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Spatial Scenario', title = 'b) Proportion Detected Accurate Breaks') +
+  geom_bar(stat = 'identity',width=0.6, position = position_dodge(width=0.5)) +
+  facet_wrap(~variable)
+
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfaccu.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
-lay <- cbind(1,2)
+lay <- rbind(c(1,1),2)
 grid.arrange(grobs = plist1, layout_matrix = lay) %>%
-  ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
+## Trajectories of individual fish from IBM ----
+L <- list.files("./IBM_output/", full.names = T, recursive = T)[grep("_55/IBM_SAA", list.files("./IBM_output/", full.names = T,recursive = T))]  
+O = lapply(L, function(x) {
+  DF <- read.csv(x, header = T, sep = ",")
+  DF$ID <- paste0(basename(dirname(dirname(dirname(x)))))
+  return(DF)})
+df1 <- do.call(rbind, O)
+df1$REG[df1$REG == 'R0'] <- 'R1'
+df2 <- df1 %>% group_by(ID,Age,REG) %>% summarise(meanL = mean(fish_size))
+df2 <- subset(df1,  cohort = 44) %>% filter(!is.na(REG))
+  # group_by(ID, Age) %>% 
+  # summarise(meanL = mean(fish_size), minL = min(fish_size), maxL = max(fish_size))
 
+ggplot(df2, aes(x = Age, y = fish_size, color = REG, group = cohort)) +
+  theme_classic()+
+  theme(legend.position = c(0.9,0.1), 
+        legend.text = element_text(size = 14), 
+        legend.title = element_text(size = 14),
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 14)) +
+  scale_color_viridis_d(guide = "legend") +
+  geom_point(size = 3, alpha = 0.2) +
+  labs(x = 'Age (years)', y = 'Length (cm)', color = "Growth Regime") 
+ggsave(plot = last_plot(),  file = paste0("./figures/ibm_growth.png"), width = 8, height = 6, units = 'in', dpi = 480)

@@ -156,7 +156,7 @@ cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                          "Low Contrast at 25 deg.", 
                          "Overlap 20-25 deg.","No Breaks")
-levels(cdfaccu$variable) <- c('Latitude','Longitude')
+levels(cdfaccu$variable) <- c('Latitude','Longitude', 'Both Latitude and Longitude')
 
 # cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfprop$prop  )])
 plist1[[2]] <- ggplot(cdfaccu, aes(x = scen, y = prop, fill = scen)) +

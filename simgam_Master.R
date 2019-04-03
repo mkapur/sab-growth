@@ -22,6 +22,13 @@ source("./functions/getGR.R");source("./functions/fitMod.R")
 ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6.csv"))
 cdf <- data.frame();idx <-1 ## storage coverage prob totals, rbind each scen
 
+compareNA <- function(v1,v2) {
+  same <- (v1 == v2) | (is.na(v1) & is.na(v2))
+  same[is.na(same)] <- FALSE
+  return(same)
+}
+
+
 for(l in 1:length(unique(ldfprop$scen))){ 
   for(b in 1:nboot){
     
@@ -139,14 +146,20 @@ for(l in 1:length(unique(ldfprop$scen))){
           tmp$value[tmp$source == 'Actual'&  tmp$REG ==    cdf[idx,'REG']] <= bounds[2]
       } ## end vars
       cdf[idx,parms[1]] <- ptf[1];  cdf[idx,parms[2]] <- ptf[2]
-      cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] == scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]
-      cdf[idx,"LON"] <- cdf[idx,"gamLON"] == scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]
+      # cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] == scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]
+      # cdf[idx,"LON"] <- cdf[idx,"gamLON"] == scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]
       if(cdf[idx,'scen']=="F0LMW")  { # won't match "overlap"
         cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] >= 20 & cdf[idx,"gamLAT"] <= 25
         cdf[idx,"LON"] <- cdf[idx,"gamLON"] >= 20 & cdf[idx,"gamLON"] <= 25
       }
+      # if(is.na(cdf[idx,"gamLAT"])  | is.na(cdf[idx,"gamLON"])){ ## won't match NA
+        # cdf[idx,"LAT"] <- ifelse(is.na(cdf[idx,"gamLAT"]) & is.na(scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]),TRUE,FALSE )
+        # cdf[idx,"LON"] <- ifelse(is.na(cdf[idx,"gamLON"]) & is.na(scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1]),TRUE,FALSE )
+        cdf[idx,"LAT"] <- compareNA(cdf[idx,"gamLAT"],scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1])
+        cdf[idx,"LON"] <- compareNA(cdf[idx,"gamLON"],scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1])
+      # }
+      if(is.na(cdf[idx,"LAT"])) stop(paste0("Throwing NAs in spatial comparison ", scen, " ", idx, "\n"))
 
-      
       idx <- idx+1
     } ## end gamREGS
     idx <- idx+1
@@ -162,6 +175,7 @@ cdf0 %>% write.csv(.,file = paste0('./gam_output/cdf_',Sys.Date(),'.csv'),row.na
 ## When did regional designation go right? (original analysis)
 cdfaccu <- cdf0 %>% 
   select(scen, LAT, LON) %>% 
+  mutate(both = LAT == LON) %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 

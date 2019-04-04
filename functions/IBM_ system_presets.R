@@ -22,6 +22,7 @@ simu_year = M_only_yr+F_start_yr
 ## GROWTH MODULE, MOVED TO REGION SPECIFIC FILE----
 
 # # SS3 growth model (vonBert with L1&L2, SS3 3.34f mannual, Page 42)
+## check out page 9 equation A.1.5 of methot & wetzel appx
 Linf =L1+(L2-L1)/(1-exp(-VBGF_K*(a2-a1))) 
 
 ## Growth increment FUNCTION, NON TV: FROM V7

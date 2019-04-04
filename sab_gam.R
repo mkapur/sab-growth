@@ -18,7 +18,7 @@ require(maps);require(mapdata); require(gridExtra)
 load(paste0("./input_data/gam_data_sab_0315.rda")) ## all_data -- made using gam_dataprep and 15k subsample
 all_data$Longitude_dd[all_data$Longitude_dd > 0] <- all_data$Longitude_dd[all_data$Longitude_dd > 0]*-1
 
-for(AA in c(3,10)){
+for(AA in c(4,10)){
   for(SS in c("F","M")){
     dat <- all_data %>% filter( Age == AA  & Sex == SS) 
     mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd) + s(Longitude_dd),data = dat)
@@ -150,14 +150,16 @@ for(AA in c(3,10)){
     #                   ifelse(all_data[i, "Latitude_dd"] <= breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 4, 2)))
     #   
     # }
-    breaksdf <- data.frame(lat_breaks2 = breaksdf[[2]], lon_breaks2 = breaksdf[[1]])
+    breaksdf <- data.frame(yr_breaks = breaksdf[[1]], lat_breaks2 = breaksdf[[2]], lon_breaks2 = breaksdf[[1]])
     dat <- getGR(tempdf = all_data, breaksdf)
     ## sanity check
     dat %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
-    
-    DES <- ifelse(!is.na(dat$gamREG), as.numeric(dat$gamREG),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
+    dat$cREG <- paste0(dat$gamREG,"_",dat$Period)
+    # DES <- ifelse(!is.na(dat$gamREG), as.numeric(dat$gamREG),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
+    DES <- ifelse(!is.na(dat$cREG), as.numeric(as.factor(dat$cREG)),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
     KEY <- paste("sab",DES,sep = "_")
-    keybase <- paste0("R",1:length(unique(DES))) ## text regions
+    # keybase <- paste0("R",1:length(unique(DES))) ## text regions
+    keybase <- unique(dat$cREG) ## text regions
     
     dat0 <- rep0 <- NULL ## later storage
     nStrata <- length(unique(DES))
@@ -204,19 +206,20 @@ for(AA in c(3,10)){
                         data.frame(rep$sd),
                         
                         data.frame(c(rep(keybase
-                                         , 3), rep("ALL", 1)))
-                        
-                      ))
-    
+                                         , 5), rep("ALL", 1)))))
     ## reformat outputs ----
     names(rep0) <- c('variable', 'value','sd', 'REG')
     
-    rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf')])
-    rep0$sd[rep0$variable == 'log_Linf'] <- exp(rep0$sd[rep0$variable == 'log_Linf'])
-    rep0$variable <- factor(rep0$variable, levels = c("k","Linf","Sigma","t0","log_k","log_Linf")) ## enable new levels
+    # rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf')])
+    # rep0$sd[rep0$variable == 'log_Linf'] <- exp(rep0$sd[rep0$variable == 'log_Linf'])
+    # rep0$variable <- factor(rep0$variable, levels = c("k","Linf","Sigma","t0","log_k","log_Linf")) ## enable new levels
+    # rep0$variable[rep0$variable == 'log_k'] <- 'k'
+    # rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'
+    rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf' )])
+    rep0$sd[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$sd[rep0$variable %in% c('log_k','log_Linf')])
+    rep0$variable <- factor(rep0$variable, levels = c("k","log_Ltwo","Linf","Sigma","t0","log_k","log_Linf","L1","L2")) ## enable new levels
     rep0$variable[rep0$variable == 'log_k'] <- 'k'
     rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'
-    
     
     write.csv(rep0, file = paste0("./GAM_output/SAB_parEst_gam_",AA,SS,"_",Sys.Date(),'.csv'),row.names = F)
     

@@ -16,6 +16,10 @@ age <- 6
 #   filter(Age == 6)
 # dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
 
+## how many NA years (should be most!!)
+ldf %>% group_by(scen) %>% summarise(naY = sum(is.na(yr_breaks)), n = n()) %>% mutate(naY/n)
+
+
 ## panel plot of one gendata for each scenario ---
 scens <-  unique(scenarios$DESC)
 scens.title <- scens.title0 <- scens
@@ -138,10 +142,10 @@ levels(cdfprop$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
 cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 plist1 <- list()
 plist1[[1]] <- ggplot(cdfprop, aes(x = scen, y = prop, fill = scen)) +
-  theme_minimal() +
+  theme_bw() +
   theme(panel.grid = element_blank(), 
-        axis.text.x = element_text(angle = 5),
-        legend.position = c(0.9,0.9)) +
+        axis.text.x = element_text(size = 8),
+        legend.position = c(0.9,0.75)) +
   scale_fill_grey()+
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Coverage Probability', fill = 'Spatial Scenario', 
@@ -154,26 +158,33 @@ plist1[[1]] <- ggplot(cdfprop, aes(x = scen, y = prop, fill = scen)) +
 
 cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
-                         "Low Contrast at 25 deg.", 
+                         "Low Contrast at 25 deg.",
                          "Overlap 20-25 deg.","No Breaks")
-levels(cdfaccu$variable) <- c('Latitude','Longitude', 'Both Latitude and Longitude')
+levels(cdfaccu$variable) <- c('Both Latitude and Longitude','Latitude','Longitude' )
 
 # cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfprop$prop  )])
 plist1[[2]] <- ggplot(cdfaccu, aes(x = scen, y = prop, fill = scen)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), legend.position ='none') +
+  theme_bw() +
+  theme(panel.grid = element_blank(), 
+        axis.text.x = element_text( size = 8),
+        legend.position = 'none') +
   scale_fill_grey()+
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Spatial Scenario', title = 'b) Proportion Detected Accurate Breaks') +
-  geom_bar(stat = 'identity',width=0.6, position = position_dodge(width=0.5)) +
+  geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +
   facet_wrap(~variable)
 
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfaccu.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
-lay <- rbind(c(1,1),2)
+lay <- rbind(c(1,1,1,1), 
+             c(2,2,2,2))
 grid.arrange(grobs = plist1, layout_matrix = lay) %>%
-  ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.Date(),".png"),
+         width = 15, height = 10, units = 'in', dpi = 480)
 
+
+rbind(cdfprop, cdfaccu) %>% group_by(scen) %>%
+  summarise(mean(prop)) 
 ## Trajectories of individual fish from IBM ----
 L <- list.files("./IBM_output/", full.names = T, recursive = T)[grep("_55/IBM_SAA", list.files("./IBM_output/", full.names = T,recursive = T))]  
 O = lapply(L, function(x) {

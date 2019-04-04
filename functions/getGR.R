@@ -1,6 +1,7 @@
 getGR <- function(tempdf,breaksdf){
   blat <- breaksdf$lat_breaks2
   blon <- breaksdf$lon_breaks2
+  byr <- breaksdf$yr_breaks
   for(i in 1:nrow(tempdf)){ ## loop unique breaks
     tempdf$gamREG[i] <- ifelse(tempdf[i,"Latitude_dd"] >= blat & 
                                  tempdf[i,"Longitude_dd"] >= blon, "R3", 
@@ -16,7 +17,7 @@ getGR <- function(tempdf,breaksdf){
       if (tempdf[i, "Latitude_dd"] >= blat &  is.na(blon)) { tempdf$gamREG[i] <- 'R3' }
       if (tempdf[i, "Latitude_dd"] < blat &  is.na(blon)) {tempdf$gamREG[i] <- 'R1' }
     }
-
+    tempdf[i,'Period'] <- ifelse(tempdf[i,'Year'] < byr, 'early','late')
     
   }
   return(tempdf)

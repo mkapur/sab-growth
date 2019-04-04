@@ -176,7 +176,7 @@ cdf0 %>% write.csv(.,file = paste0('./gam_output/cdf_',Sys.Date(),'.csv'),row.na
 ## When did regional designation go right? (original analysis)
 cdfaccu <- cdf0 %>% 
   select(scen, LAT, LON) %>% 
-  mutate(both = LAT == LON) %>%
+  mutate(both = (LAT == T & LON == T)) %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 

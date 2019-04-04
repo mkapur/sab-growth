@@ -39,8 +39,9 @@ ldf <- data.frame()
         }
       }
   
-      tldf <- cbind(as.numeric(bdf[[2]]), as.numeric(bdf[[3]]), as.character(rep(scen, length(bdf[[1]]))), rep(b, length(bdf[[1]])))
-  
+      # tldf <- cbind(as.numeric(bdf[[2]]), as.numeric(bdf[[3]]), as.character(rep(scen, length(bdf[[1]]))), rep(b, length(bdf[[1]])))
+      tldf <- cbind(as.numeric(bdf[[1]]), as.numeric(bdf[[2]]), as.numeric(bdf[[3]]), as.character(rep(scen, length(bdf[[1]]))), rep(b, length(bdf[[1]])))
+      
       ldf <- rbind(ldf, tldf)
  
     } ## end boots
@@ -48,7 +49,7 @@ ldf <- data.frame()
   } ## end fLevsd
   
   ## save
-  names(ldf) <- c('lat_breaks','lon_breaks','scen','boot')
+  names(ldf) <- c('yr_breaks','lat_breaks','lon_breaks','scen','boot')
   ldf$lat_breaks2 <- factor(ldf$lat_breaks, levels=c(paste(1:50),NA))
   ldf$lon_breaks2 <- factor(ldf$lon_breaks, levels=c(paste(1:50),NA))
   write.csv(ldf, file = paste0("./GAM_output/ldf_raw_a",age,".csv"),row.names = F)

@@ -209,3 +209,65 @@ ggplot(df2, aes(x = Age, y = fish_size, color = REG, group = cohort)) +
   geom_point(size = 3, alpha = 0.2) +
   labs(x = 'Age (years)', y = 'Length (cm)', color = "Growth Regime") 
 ggsave(plot = last_plot(),  file = paste0("./figures/ibm_growth.png"), width = 8, height = 6, units = 'in', dpi = 480)
+
+
+## combo SAB map for a6 and a10 breaks
+  dat <- all_data %>% filter(Age == 30 & Sex == 'M')
+    ggplot() + 
+    geom_polygon(data = usa, aes(x = long, y = lat, group = group)) + 
+    coord_quickmap() +
+    scale_x_continuous(expand = c(0,0), limits = c(-180,-110), breaks = seq(-180,-120,10), labels = paste(seq(-180,-120,10), "°W")) +
+    scale_y_continuous(expand = c(0,0), limits = c(30,75), breaks = seq(30,75,10), labels =  paste(seq(30,75,10), "°N"))  +
+    theme_minimal() +
+    theme(panel.grid.major = element_blank(),
+          axis.title =element_blank(), 
+          legend.position = c(0.1,0.2),
+          legend.key.size = unit(0.75, "cm"),
+          legend.text = element_text(size = 12)) +
+    geom_hline(yintercept = c(36,50),lwd = 1.1, linetype = 'dashed', col = 'red') +
+    geom_vline(xintercept =  -130, lwd = 1.1, linetype = 'dashed', col = 'red') +
+      ## ecosystem break
+    geom_vline(xintercept =  -145, lwd = 1.1, linetype = 'dashed', col = 'blue') +
+    geom_rect(fill = 'white', aes(xmin = -180, xmax = -130.1, ymin = 30, ymax = 49.9)) +
+    geom_point(data = dat, aes(x = Longitude_dd, y = Latitude_dd, size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
+    scale_fill_viridis_c(guide = "legend") +
+    labs(fill = paste0("Length (cm)"),
+         size = paste0("Length (cm)"),
+         title = "GAM- and Ecosystem-based Regions with Age 30 Fish") +
+      geom_label(aes(x = c(-155,-138,-120,-120,-120), 
+                    y = c(65,65,65,40,32),
+                    label = c(paste('Region ',5:1)) ),size = 6, col = 'black',fill = 'white',show.legend   =FALSE)
+    ggsave(plot = last_plot(),  file = paste0("./figures/sab_zones.png"), width = 8, height = 6, units = 'in', dpi = 480)
+    
+df1<-all_data %>% filter(Age %in% c(4,6,30)) %>% 
+  group_by(REG, Age) %>% summarise(n = n()) 
+
+df1 %>%
+  group_by(Age) %>% summarise(mn = mean(n))
+
+## predicts and parest for sab ----
+parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'.csv'))
+ypreds <- read.csv(paste0("./GAM_output/SAB_predicts_",Sys.Date(),".csv"))
+## plot fits
+
+
+ypreds$gamREG <- paste0('GAM-defined Region ',ypreds$gamREG," ", ypreds$Sex)
+
+# ypreds$Sex <- paste0('GAM-defined Region ',ypreds$gamREG)
+
+## fits
+ggplot(ypreds, aes(x = Age, y = Predicted, col = REG )) +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        legend.position = 'right',
+        legend.background = element_blank(),
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        strip.text = element_text(size=14))+
+  scale_alpha(guide = 'none') +
+  scale_color_viridis_d(guide = "legend") +
+  geom_point(alpha = 0.5, aes(y = Length_cm)) +
+  geom_line(lwd = 1.1, col = 'black')+
+  labs(y = 'Length (cm)', col = "Actual Data Source", title = "b) Fitted") +
+  facet_wrap(~gamREG + Sex + Period,ncol = 5)

@@ -18,9 +18,11 @@ require(maps);require(mapdata); require(gridExtra)
 load(paste0("./input_data/gam_data_sab_0315.rda")) ## all_data -- made using gam_dataprep and 15k subsample
 all_data$Longitude_dd[all_data$Longitude_dd > 0] <- all_data$Longitude_dd[all_data$Longitude_dd > 0]*-1
 
-for(AA in c(4,10)){
+for(AA in c(20)){
   for(SS in c("F","M")){
-    dat <- all_data %>% filter( Age == AA  & Sex == SS) 
+    dat <- all_data %>% filter( Age == AA  & Sex == SS)
+    # dat <- all_data %>% filter( Age == 6  | Age == 10  & Sex == SS)
+    
     mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd) + s(Longitude_dd),data = dat)
     png(paste0("./figures/sab_gam_diagnostics_",AA,SS,".png"), width = 7, height = 5, units = 'in', res = 420)
     layout(matrix(1:4, ncol = 2))
@@ -105,11 +107,11 @@ for(AA in c(4,10)){
         geom_hline(yintercept = 0, col = 'grey22') +
         geom_line(aes(y= upper), linetype = 'dashed') +
         geom_line(aes(y= lower), linetype = 'dashed') +
-        geom_vline(xintercept = breaksdf[[t]], lwd = 1.1, linetype = 'dashed', col = 'red') +
+        scale_x_continuous(expand = c(0,0), limits = c(min(m2.dtemp$x),max(m2.dtemp$x))) +
+        geom_vline(xintercept = ifelse(is.na(breaksdf[[t]]),-999,breaksdf[[t]]), lwd = 1.1, linetype = 'dashed', col = 'red') +
         labs(x = Terms[t], y = "f'(x)", title =  paste0(letters[idx-1],") ",'First Derivative for ', temp0[[1]]$xlab)) 
       idx <- idx+1
     }
-    
     
     plist[[1]] <- ggplot() + 
       geom_polygon(data = usa, aes(x = long, y = lat, group = group)) + 
@@ -120,16 +122,15 @@ for(AA in c(4,10)){
       theme(panel.grid.major = element_blank(),
             axis.title =element_blank(), 
             legend.position = c(0.2,0.15)) +
-      geom_hline(yintercept = breaksdf[[2]],lwd = 1.1, linetype = 'dashed', col = 'red')+
-      geom_vline(xintercept = breaksdf[[3]], lwd = 1.1, linetype = 'dashed', col = 'red') +
+      geom_hline(yintercept =ifelse(is.na(breaksdf[[2]]),-999,breaksdf[[2]]),lwd = 1.1, linetype = 'dashed', col = 'red') +
+      ## had to force this to plot off-map if NA cause throwing 'discrete' error
+      geom_vline(xintercept =  ifelse(is.na(breaksdf[[3]]),-999,breaksdf[[3]]), lwd = 1.1, linetype = 'dashed', col = 'red') +
       geom_point(data = dat, aes(x = Longitude_dd, y = Latitude_dd, size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
       scale_fill_viridis_c(guide = "legend") +
       labs(fill = paste0("Length of Age-",AA," ",SS," Fish (cm)"),
            size = paste0("Length of Age-",AA," ",SS," Fish (cm)")) +
-      ggtitle(paste0('g) GAM-Estimated Regions, with raw data Age-',AA,", ",SS)) +
-      geom_label(aes(x = c(-155,-125,-125), y = c(60,45,60), 
-                     label = paste0("GAM Estimated Region ",c(3,1,2))),
-                 fill = "white",col = 'black')
+      ggtitle(paste0('g) GAM-Estimated Regions, with raw data Age-',AA,", ",SS)) #+
+    
     
     lay <- rbind(c(2,2,3,3,NA),
                  c(4,4,5,5,NA),
@@ -142,19 +143,15 @@ for(AA in c(4,10)){
     
     ## now re-aggregate and do the fits on all data, based on model ----
     DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
-
-    # for (i in 1:nrow(all_data)) {
-    #   all_data[i,'gamREG'] <-
-    #     ifelse(all_data[i, "Latitude_dd"] <=  breaksdf[[2]] & all_data[i, "Longitude_dd"] > breaksdf[[3]], 1,
-    #            ifelse(all_data[i, "Latitude_dd"] > breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 3, 
-    #                   ifelse(all_data[i, "Latitude_dd"] <= breaksdf[[2]] &  all_data[i, "Longitude_dd"] < breaksdf[[3]], 4, 2)))
-    #   
-    # }
-    breaksdf <- data.frame(yr_breaks = breaksdf[[1]], lat_breaks2 = breaksdf[[2]], lon_breaks2 = breaksdf[[1]])
+    # breaksdf <- data.frame(yr_breaks = breaksdf[[1]], lat_breaks2 = breaksdf[[2]], lon_breaks2 = breaksdf[[1]])
+    breaksdf <- data.frame(yr_breaks = 2010, lat_breaks2 = c(36,50), lon_breaks2 =c(-130,-145))
+    
     dat <- getGR(tempdf = all_data, breaksdf)
     ## sanity check
     dat %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
-    dat$cREG <- paste0(dat$gamREG,"_",dat$Period)
+    dat %>% group_by(gamREG,REG) %>% summarise(n = n())
+    
+    dat$cREG <- paste0(dat$gamREG,"_",dat$Period,"_",dat$Sex)
     # DES <- ifelse(!is.na(dat$gamREG), as.numeric(dat$gamREG),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
     DES <- ifelse(!is.na(dat$cREG), as.numeric(as.factor(dat$cREG)),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
     KEY <- paste("sab",DES,sep = "_")
@@ -164,6 +161,7 @@ for(AA in c(4,10)){
     dat0 <- rep0 <- NULL ## later storage
     nStrata <- length(unique(DES))
     
+    ## this will assign a unique DES depending on period X sex X region -- whatever is in DES
     data <-
       list(
         Length_cm = dat[,"Length_cm"],
@@ -204,9 +202,7 @@ for(AA in c(4,10)){
                         data.frame(names(rep$value)),
                         data.frame(rep$value),
                         data.frame(rep$sd),
-                        
-                        data.frame(c(rep(keybase
-                                         , 5), rep("ALL", 1)))))
+                        data.frame(c(rep(keybase, 5), rep("ALL", 1)))))
     ## reformat outputs ----
     names(rep0) <- c('variable', 'value','sd', 'REG')
     
@@ -220,50 +216,18 @@ for(AA in c(4,10)){
     rep0$variable <- factor(rep0$variable, levels = c("k","log_Ltwo","Linf","Sigma","t0","log_k","log_Linf","L1","L2")) ## enable new levels
     rep0$variable[rep0$variable == 'log_k'] <- 'k'
     rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'
-    
-    write.csv(rep0, file = paste0("./GAM_output/SAB_parEst_gam_",AA,SS,"_",Sys.Date(),'.csv'),row.names = F)
+    write.csv(rep0, file = paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'.csv'),row.names = F)
     
     ypreds0 <- cbind(dat0,dat) %>% data.frame()  
     names(ypreds0)[1] <- c('Predicted')
-    
-    write.csv(ypreds0,  paste0("./GAM_output/SAB_predicts",AA,SS,"_",Sys.Date(),".csv"),row.names = F)
+        write.csv(ypreds0,  paste0("./GAM_output/SAB_predicts_",Sys.Date(),".csv"),row.names = F)
     
     cat("Fit TMB model  & saved outputs \n")
     ## plotting ----
     
     
     
-    ## plot estimates
-    # parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",AA,SS,"_",Sys.Date(),".csv")) %>%
-    #   filter(variable != "Sigma" & variable != 't0') %>% mutate(source = 'Estimated')
-    # 
-    # ## bind only regions of use
-    # parest <- rbind(parest, read.csv("./input_data/true_sab_vals.csv")) 
-    # 
-    # ## exponentiate logk
-    # parest[parest$variable == 'log_k','value'] <- exp(parest[parest$variable == 'log_k','value'] )
-    # parest$variable <- ifelse(parest$variable=='log_k',"k",paste(parest$variable))
-    # # levels(parest$REG) <- c("ALL","R1","AK","R2","BC","R1","WC")
-    # parest$REG <- factor(parest$REG ,levels=c("ALL","R1","WC","R2","BC","R3","AK",'R4'))
-    # cat("Read in Parameter Estimates \n")
-    # 
-    # plist <- list()
-    # plist[[1]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
-    #   theme_bw() +
-    #   theme(panel.grid = element_blank(),
-    #         legend.position = c(0.9,0.9),
-    #         legend.background = element_blank(),
-    #         axis.text = element_text(size = 10),
-    #         axis.title = element_text(size = 10),
-    #         legend.text = element_text(size = 10),
-    #         strip.text = element_text(size=14))+
-    #   scale_color_manual(values = c("red","black"))+
-    #   geom_point() +
-    #   geom_errorbar(aes(ymin = value - 1.96*sd, ymax = value + 1.96*sd)) +
-    #   labs(x = 'Spatial Stratum', y = "", col = "") +
-    #   facet_wrap(~variable, scales = "free_y") +
-    #   ggtitle("a)")
-    # 
+    
     # ## plot fits
     # ypreds <- read.csv(  paste0("./GAM_output/SAB_predicts",AA,SS,"_",Sys.Date(),".csv"))
     # ypreds$gamREG <- paste0('GAM-defined Region ',ypreds$gamREG," ", ypreds$Sex)

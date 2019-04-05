@@ -246,28 +246,52 @@ df1 %>%
   group_by(Age) %>% summarise(mn = mean(n))
 
 ## predicts and parest for sab ----
-parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'.csv'))
-ypreds <- read.csv(paste0("./GAM_output/SAB_predicts_",Sys.Date(),".csv"))
-## plot fits
+## parest
+parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'.csv')) %>% 
+  filter(variable != "Sigma" & variable != 't0') %>% mutate(source = 'Estimated')
+parest <- rbind(parest, read.csv("./input_data/true_sab_vals.csv")) 
 
+levels(parest$REG) <- c("ALL","R1","AK","R2","BC","R1","WC")
+parest$REG <- factor(parest$REG ,levels=c("ALL","R1","WC","R2","BC","R3","AK",'R4'))
 
-ypreds$gamREG <- paste0('GAM-defined Region ',ypreds$gamREG," ", ypreds$Sex)
-
-# ypreds$Sex <- paste0('GAM-defined Region ',ypreds$gamREG)
+# plist[[1]] <- ggplot(parest, aes(x = REG, y = value, col = source))+
+#   theme_bw() +
+#   theme(panel.grid = element_blank(),
+#         legend.position = c(0.9,0.9),
+#         legend.background = element_blank(),
+#         axis.text = element_text(size = 10),
+#         axis.title = element_text(size = 10),
+#         legend.text = element_text(size = 10),
+#         strip.text = element_text(size=14))+
+#   scale_color_manual(values = c("red","black"))+
+#   geom_point() +
+#   geom_errorbar(aes(ymin = value - 1.96*sd, ymax = value + 1.96*sd)) +
+#   labs(x = 'Spatial Stratum', y = "", col = "") +
+#   facet_wrap(~variable, scales = "free_y") +
+#   ggtitle("a)")
+# 
 
 ## fits
+ypreds <- read.csv(paste0("./GAM_output/SAB_predicts_",Sys.Date(),".csv"))
+
+ypreds$gamREG <- paste0('Region ',ypreds$gamREG)
+levels(ypreds$Sex) <- c('Females','Males')
+levels(ypreds$Period) <- c('pre-2010','2010-Present')
+
+
 ggplot(ypreds, aes(x = Age, y = Predicted, col = REG )) +
-  theme_bw() +
+  theme_classic() +
   theme(panel.grid = element_blank(),
         legend.position = 'right',
         legend.background = element_blank(),
-        axis.text = element_text(size = 14),
-        axis.title = element_text(size = 14),
-        legend.text = element_text(size = 14),
-        strip.text = element_text(size=14))+
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        strip.text = element_text(size=10))+
   scale_alpha(guide = 'none') +
   scale_color_viridis_d(guide = "legend") +
   geom_point(alpha = 0.5, aes(y = Length_cm)) +
   geom_line(lwd = 1.1, col = 'black')+
-  labs(y = 'Length (cm)', col = "Actual Data Source", title = "b) Fitted") +
-  facet_wrap(~gamREG + Sex + Period,ncol = 5)
+  labs(y = 'Length (cm)', col = "Actual Data Source") +
+  facet_wrap(~gamREG + Sex + Period,ncol = 4)
+ggsave(plot = last_plot(),  file = paste0("./figures/sab_fits.png"), width = 10, height = 8, units = 'in', dpi = 480)

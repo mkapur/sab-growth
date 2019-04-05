@@ -41,12 +41,11 @@ Type objective_function<Type>::operator() ()
     L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(15 - t0(DES(i)))));
   }
   
- 
 
   REPORT(ypreds);
   ADREPORT(t0);
-  ADREPORT(log_k);
-  ADREPORT(log_Linf);
+  ADREPORT(k);
+  ADREPORT(Linf);
   ADREPORT(L1);
   ADREPORT(L2);
   ADREPORT(Sigma);

@@ -18,6 +18,7 @@ getGR <- function(tempdf,breaksdf){
         if (tempdf[i, "Latitude_dd"] >= blat &  is.na(blon)) { tempdf$gamREG[i] <- 'R3' }
         if (tempdf[i, "Latitude_dd"] < blat &  is.na(blon)) {tempdf$gamREG[i] <- 'R1' }
       }
+      tempdf[i,'Period'] <- ifelse(tempdf[i,'Year'] < byr[1], 'early','late')
       
     } ## end loop
   } ## end if all == 1
@@ -36,10 +37,11 @@ getGR <- function(tempdf,breaksdf){
       } else{
         tempdf$gamREG[i] <- "R1"
       }
+      tempdf[i,'Period'] <- ifelse(tempdf[i,'Year'] < byr[1], 'early','late')
+      
     } ## end loop
   } ## end else
   
-  tempdf[i,'Period'] <- ifelse(tempdf[i,'Year'] < byr[1], 'early','late')
   
   return(tempdf)
 }

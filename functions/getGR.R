@@ -2,15 +2,21 @@ getGR <- function(tempdf,breaksdf){
   blat <- breaksdf$lat_breaks2
   blon <- breaksdf$lon_breaks2
   byr <- breaksdf$yr_breaks
-  if(length(blat) == 1 & length(blon) == 1 & length(byr)==1){
+  if(length(blat) == 1 & length(blon) == 1 & length(byr)==1){  ## assign regions for comparison with endpoints
     for(i in 1:nrow(tempdf)){ ## loop unique breaks
-      tempdf$gamREG[i] <- ifelse(tempdf[i,"Latitude_dd"] >= blat & 
-                                   tempdf[i,"Longitude_dd"] >= blon, "R3", 
-                                 ifelse(tempdf[i,"Latitude_dd"] >= blat & 
+    tempdf[i,'Period'] <- ifelse(!is.na(byr),ifelse(tempdf[i,'Year'] < byr[1], 'early','late'),'pooled')
+      
+      tempdf$gamREG[i] <- ifelse(tempdf[i,"Latitude_dd"] >= blat &
+                                   tempdf[i,"Longitude_dd"] >= blon, "R3",
+                                 ifelse(tempdf[i,"Latitude_dd"] >= blat &
                                           tempdf[i,"Longitude_dd"] < blon, "R2",
-                                        ifelse(tempdf[i,"Latitude_dd"] < blat & 
+                                        ifelse(tempdf[i,"Latitude_dd"] < blat &
                                                  tempdf[i,"Longitude_dd"] < blon, "R1","R4")))
+      
+      if (is.na(blat)  & is.na(blon) & tempdf[i,'Period'] == 'early'){tempdf$gamREG[i] <- 'R1'; next()}
+      if (is.na(blat)  & is.na(blon) & tempdf[i,'Period'] == 'late'){tempdf$gamREG[i] <- 'R2'; next()}
       if (is.na(blat)  & is.na(blon)){tempdf$gamREG[i] <- 'R1'; next()}
+
       if (is.na(blat)) {
         if (tempdf[i, "Longitude_dd"] >= blon &  is.na(blat)) { tempdf$gamREG[i] <- 'R3' }
         if (tempdf[i, "Longitude_dd"] < blon &is.na(blat)) { tempdf$gamREG[i] <- 'R1'}
@@ -18,12 +24,11 @@ getGR <- function(tempdf,breaksdf){
         if (tempdf[i, "Latitude_dd"] >= blat &  is.na(blon)) { tempdf$gamREG[i] <- 'R3' }
         if (tempdf[i, "Latitude_dd"] < blat &  is.na(blon)) {tempdf$gamREG[i] <- 'R1' }
       }
-      tempdf[i,'Period'] <- ifelse(tempdf[i,'Year'] < byr[1], 'early','late')
       
     } ## end loop
-  } ## end if all == 1
+  } ## end if length of all breaks == 1
   else{
-    for(i in 1:nrow(tempdf)){ ## loop unique breaks -- we are working with two of each
+    for(i in 1:nrow(tempdf)){ ## loop unique breaks -- we are working with two of each due to time breaks (SAB ONLY)
       if(tempdf[i,"Latitude_dd"] >= blat[2]){ ## northernmost set
         if(tempdf[i,"Longitude_dd"] <= blon[2]){
           tempdf$gamREG[i] <- "R5"
@@ -40,6 +45,9 @@ getGR <- function(tempdf,breaksdf){
       tempdf[i,'Period'] <- ifelse(tempdf[i,'Year'] < byr[1], 'early','late')
       
     } ## end loop
+    
+    
+    
   } ## end else
   
   

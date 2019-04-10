@@ -29,15 +29,16 @@ fitMod <- function(data, parameters, modversion = "sptlschnute", map){
                                        , 5), rep("ALL", 1)))))
   
   
-  names(rep0) <- c('variable', 'value','sd', 'REG')
+  names(rep0) <- c('variable', 'value','sd', 'cREG')
+  rep0$REG <- gsub("_.*", "\\1", rep0$cREG)
+  rep0$cREG <- gsub(".*._", "\\1", rep0$cREG)
   
   rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf' )])
   rep0$sd[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$sd[rep0$variable %in% c('log_k','log_Linf')])
   rep0$variable <- factor(rep0$variable, levels = c("k","log_Ltwo","Linf","Sigma","t0","log_k","log_Linf","L1","L2")) ## enable new levels
   rep0$variable[rep0$variable == 'log_k'] <- 'k'
   rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'
-  # rep0$variable[rep0$variable == 'log_Lone'] <- 'Lone'
-  # rep0$variable[rep0$variable == 'log_Ltwo'] <- 'Ltwo'
+
   
   return(list(dat0,rep0))
 }

@@ -78,3 +78,4 @@ plotComps <- function(dat1,dat2,datN, saveloc = NA, nboot = nboot.temp){
 } ## end function 
 
 
+

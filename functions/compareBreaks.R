@@ -39,10 +39,9 @@ vars <- paste0('R',1:4,"_");   vis <- c("pooled",'early','late'); Rlevs <- c("R1
   if(is.na(breaksdf$yr_breaks)){
     for(iq in 1:length(gamREGS)){ ## loop regions, this leads to varying # samples (denoms)
       ptf <- NULL
-      # cat(paste0(idx," comparison done for ", scen," ",b," ",gamREGS[iq],"\n"))
       cdf[idx,'scen'] <- scen
       cdf[idx,'boot'] <- b
-      cdf[idx,'REG'] <- as.factor(if(!is.na(REGS[iq])){REGS[iq]}else{last(REGS)})
+      cdf[idx,'REG'] <- as.factor(if(!is.na(REGS[iq])){REGS[iq]}else{last(REGS)}) ## if anything other than R1, will compare to appropriate RX (2 or 3)
       
       cdf[idx,'gamREG'] <- if(!is.na(gamREGS[iq])){gamREGS[iq]}else{last(gamREGS)}
       cdf[idx,'gamLAT'] <- breaksdf$lat_breaks

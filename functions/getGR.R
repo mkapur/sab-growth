@@ -18,10 +18,10 @@ getGR <- function(tempdf,breaksdf){
       if (is.na(blat)  & is.na(blon)){tempdf$gamREG[i] <- 'R1'; next()}
 
       if (is.na(blat)) {
-        if (tempdf[i, "Longitude_dd"] >= blon &  is.na(blat)) { tempdf$gamREG[i] <- 'R3' }
-        if (tempdf[i, "Longitude_dd"] < blon &is.na(blat)) { tempdf$gamREG[i] <- 'R1'}
+        if (tempdf[i, "Longitude_dd"] >= blon &  is.na(blat)) { tempdf$gamREG[i] <- 'R2' }
+        if (tempdf[i, "Longitude_dd"] < blon & is.na(blat)) { tempdf$gamREG[i] <- 'R1'}
       } else if (is.na(blon)) {
-        if (tempdf[i, "Latitude_dd"] >= blat &  is.na(blon)) { tempdf$gamREG[i] <- 'R3' }
+        if (tempdf[i, "Latitude_dd"] >= blat &  is.na(blon)) { tempdf$gamREG[i] <- 'R2' }
         if (tempdf[i, "Latitude_dd"] < blat &  is.na(blon)) {tempdf$gamREG[i] <- 'R1' }
       }
       

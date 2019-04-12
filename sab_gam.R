@@ -2,6 +2,8 @@
 ## kapurm spring 2019
 ## source from gist
 rm(list = ls())
+require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
+library(gridExtra); library(grid); library(lattice)
 compname <- c("Maia Kapur","mkapur")[1]
 
 source(paste0(getwd(),"/functions/Deriv.R"))

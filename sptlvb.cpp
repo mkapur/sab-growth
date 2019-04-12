@@ -38,7 +38,7 @@ Type objective_function<Type>::operator() ()
     ypreds(i) = yfit;
     obj_fun -= dnorm(Length_cm(i),yfit,Sigma,true);
     L1(DES(i)) =  Linf(DES(i))*(1-exp(-k(DES(i))*(0 - t0(DES(i)))));
-    L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(15 - t0(DES(i)))));
+    L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(30 - t0(DES(i)))));
   }
   
 

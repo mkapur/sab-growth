@@ -18,7 +18,10 @@ require(mgcv); require(dplyr); require(reshape); require(RColorBrewer); require(
 require(maps);require(mapdata); require(gridExtra)
 ## load data
 load(paste0("./input_data/gam_data_sab_0315.rda")) ## all_data -- made using gam_dataprep and 15k subsample
+load(paste0("./input_data/gam_data_sab_0415.rda")) ## full_data -- made using gam_dataprep NOT 15k subsample
+
 all_data$Longitude_dd[all_data$Longitude_dd > 0] <- all_data$Longitude_dd[all_data$Longitude_dd > 0]*-1
+full_data$Longitude_dd[full_data$Longitude_dd > 0] <- full_data$Longitude_dd[full_data$Longitude_dd > 0]*-1
 
 ## Fit GAMS to ID breakpoints ----
 # for(AA in c(4,6,30)){
@@ -146,10 +149,11 @@ all_data$Longitude_dd[all_data$Longitude_dd > 0] <- all_data$Longitude_dd[all_da
 
 
 ## now re-aggregate and do the fits on all data, based on model ----
-DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
 # breaksdf <- data.frame(yr_breaks = breaksdf[[1]], lat_breaks2 = breaksdf[[2]], lon_breaks2 = breaksdf[[1]])
 breaksdf <- data.frame(yr_breaks = 2010, lat_breaks2 = c(36,50), lon_breaks2 =c(-130,-145))
-dat <- getGR(tempdf = all_data, breaksdf)
+dat <- getGR(tempdf = full_data, breaksdf)
+DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
+
 ## sanity check
 dat %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
 dat %>% group_by(gamREG,REG) %>% summarise(n = n())

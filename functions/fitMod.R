@@ -33,8 +33,12 @@ fitMod <- function(data, parameters, modversion = "sptlschnute", map){
   rep0$REG <- gsub("_.*", "\\1", rep0$cREG)
   rep0$cREG <- gsub(".*._", "\\1", rep0$cREG)
   
-  rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf' )])
+  # rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf' )])
+  # rep0$sd[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$sd[rep0$variable %in% c('log_k','log_Linf')])
+  ## add in bias correction to estimates
+  rep0$value[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$value[rep0$variable %in% c('log_k','log_Linf' )]-(rep0$sd[rep0$variable %in% c('log_k','log_Linf')]^2)/2)
   rep0$sd[rep0$variable %in% c('log_k','log_Linf')] <- exp(rep0$sd[rep0$variable %in% c('log_k','log_Linf')])
+  
   rep0$variable <- factor(rep0$variable, levels = c("k","log_Ltwo","Linf","Sigma","t0","log_k","log_Linf","L1","L2")) ## enable new levels
   rep0$variable[rep0$variable == 'log_k'] <- 'k'
   rep0$variable[rep0$variable == 'log_Linf'] <- 'Linf'

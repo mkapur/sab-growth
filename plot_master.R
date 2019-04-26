@@ -6,6 +6,7 @@ require(ggplot2)
 require(gridExtra)
 require(RColorBrewer)
 library(ggpubr)
+require(DescTools)
 
 scenarios <- read.csv('./input_data/scenarios.csv',na.strings = 'NA') ## manual file
 age <- 6
@@ -149,7 +150,7 @@ a6df <- list.files("./IBM_output/datasets/", full.names = T) %>%
 
 dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
 
-## Plot proportion agreegments ----
+## Plot proportion agreegments from GAM ----
 cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv'))
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
                                                   "Low Contrast at 25 deg.", 
@@ -197,6 +198,55 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
 
 ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="bottom") %>%
   ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+
+## STARS propagg ----
+cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_',Sys.Date(),'.csv'))
+levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
+                          "Low Contrast at 25 deg.", 
+                          "Overlap 20-25 deg.","No Breaks",
+                          "Temporal Break at Year 50")
+# cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
+levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2' )
+cdfprop2 <- cdfprop %>% filter(!(variable %in% c('Both L1 and L2')))
+
+# cdfprop$variable <- factor(cdfprop$variable, levels=c('L1','L2','Both L1 and L2'))
+plist1 <- list()
+plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
+  theme_bw() +
+  theme(panel.grid = element_blank(), 
+        axis.text.x = element_blank(),
+        legend.position = c(0.9,0.75)) +
+  scale_fill_viridis_d()+
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = '',y = 'Coverage Probability', fill = 'Scenario', 
+       title = 'a) Coverage Probability for Endpoints of Growth Curve') +
+  geom_bar(stat = 'identity',width=0.6, position = position_dodge(width=0.7)) +
+  facet_wrap(~variable)
+# ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
+
+cdfaccu <- read.csv(paste0('./STARS_output/STARS_cdf_accu_',Sys.Date(),'.csv'))
+levels(cdfaccu$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
+                          "Low Contrast at 25 deg.", 
+                          "Overlap 20-25 deg.","No Breaks","Temporal Break at Year 50")
+# cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
+levels(cdfaccu$variable) <- c('Lat, Long and Year','Both Latitude and Longitude','Latitude', 'Longitude' ,'Year')
+# cdfaccu$variable <- factor(cdfaccu$variable, levels=c('L1','L2','Both L1 and L2'))
+
+cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude')))
+# cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfprop$prop  )])
+plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
+  theme_bw() +
+  theme(panel.grid = element_blank(), 
+        axis.text.x = element_blank(),
+        legend.position = 'none') +
+  scale_fill_viridis_d()+
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
+  geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +
+  facet_wrap(~variable, ncol = 3)
+
+ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="bottom") %>%
+  ggsave(plot = .,  file = paste0("./figures/STARS_cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 
 rbind(cdfprop, cdfaccu) %>% 
@@ -270,6 +320,7 @@ for(phase in c("phase1","phase2")){
     mutate(source = 'Estimated') %>%
     mutate(REG2 = gsub("_.*", "\\1", REG),
            REG3 = as.numeric(substr(REG,2,2)),
+           REG4 = sub('_([^_]*)$', '',REG),
            Sex = gsub(".*_", "\\1", REG),
            lwr = value - 1.96 * sd,
            upr = value + 1.96 * sd,
@@ -298,10 +349,12 @@ for(phase in c("phase1","phase2")){
   } ## end else phase2
   
   parest$matchcol <- parest$match != 'NO OVERLAP'
-  ggplot(parest, aes(x = REG, y = value, col = matchcol))+
+  parest$Sex <- factor(parest$Sex)
+  levels(parest$Sex) <- c('Females','Males')
+  ggplot(parest, aes(x = REG4, y = value, col = matchcol))+
     theme_bw() +
     theme(panel.grid = element_blank(),
-          legend.position = c(0.9,0.1),
+          legend.position = 'right',
           legend.background = element_blank(),
           axis.text = element_text(size = 10,angle = 45),
           axis.title = element_text(size = 10),
@@ -313,10 +366,10 @@ for(phase in c("phase1","phase2")){
     geom_errorbar(aes(ymin = value - 1.96*sd, ymax = value + 1.96*sd)) +
     labs(x = 'Spatiotemporal x Sex Stratum', y = "", 
          col = ifelse(phase == 'phase1', 'CI overlap within Region + Sex','CI Overlap Adjacent Region x Sex'),
-  title = paste0(phase," Linf Estimates")) +
-  facet_wrap(~variable)
+         title = paste0(phase," Linf Estimates")) +
+    facet_wrap(~Sex )
 
-ggsave(plot = last_plot(),  file = paste0("./figures/sab_parest_",phase,".png"), width = 10, height = 8, units = 'in', dpi = 480)
+ggsave(plot = last_plot(),  file = paste0("./figures/sab_parest_",Sys.Date(),"_",phase,".png"), width = 10, height = 8, units = 'in', dpi = 480)
 write.csv(parest, file = paste0("./GAM_output/overlap_",Sys.Date(),"_",phase,".csv"),row.names=F)
 
 ## fits
@@ -347,9 +400,11 @@ ggplot(ypreds, aes(x = Age, y = Predicted, col = REG )) +
   labs(y = 'Length (cm)', col = "Actual Data Source") +
   facet_wrap(~gamREG + Sex + Period, ncol = 4)
 ggsave(plot = last_plot(),  
-       file = paste0("./figures/sab_fits_",phase,".png"), 
+       file = paste0("./figures/sab_fits_",Sys.Date(),"_",phase,".png"), 
        width = 10, height = 12, units = 'in', dpi = 520)
+cat(phase," done \n")
 } ## end phase
+
 ## "no discernable pattern in spurious breaks"
 cdf %>% filter(scen %in% c('NoBreaks','tempvar_R1R2') & (LAT == FALSE  | LON == FALSE)) %>% group_by(scen, gamLAT,gamLON) %>% dplyr::summarise(n = n())
 ## what proportion of wrong ones are only one off?
@@ -363,5 +418,7 @@ cdf %>% filter(YEAR == FALSE) %>% group_by(scen, gamYR) %>% dplyr::summarise(n =
 cdf %>% filter(scen == 'F0LMW'& LAT == FALSE) %>% group_by(gamLAT) %>% dplyr::summarise(n = n())
 cdf %>% group_by(YEAR) %>% dplyr::summarise(n = n()) 
 
+
+all_data %>% filter(Age %in% c(4,6,30)) %>% group_by(Age,Sex,REG) %>% summarise(n = n())
 
    

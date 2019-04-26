@@ -71,6 +71,7 @@ for(l in 1:length(unique(ldfprop$scen))){
     cat("Fit TMB model ",paste(scen)," boot ",b," & saved outputs \n")
 
     ## check and save coverage ----
+    vars <- paste0('R',1:4,"_");   vis <- c("pooled",'early','late'); Rlevs <- c("R1", "R2","R3","R4",apply(expand.grid(vars, vis), 1, paste, collapse=""))
     source("./functions/compareBreaks.R")
     
   } ## end boots

@@ -25,9 +25,9 @@ for(l in testrows){
   ## if there's a spatial break
   if (!is.na(scenarios[l, 'SPATIAL'])){
     ## special VB params
-    source(paste0(getwd(),"./functions/vb_params_", scenarios[l, 'REG'], '.R')); source('system_presets.R') ## system functions 
+    source(paste0(getwd(),"/functions/vb_params_", scenarios[l, 'REG'], '.R')); source("./functions/IBM_system_presets.R") ## system functions 
   } else {
-    source(paste0(getwd(),"./functions/vb_params_R1.R")); source('/functions/IBM_system_presets.R') ## system functions
+    source("./functions/vb_params_R1.R"); source("./functions/IBM_system_presets.R") ## system functions
   }
   
   scenname <- paste0(getwd(),"/IBM_output/",scenarios[l,"DESC"]);   if(!exists(scenname)) {dir.create(scenname, showWarnings = F)}
@@ -221,7 +221,9 @@ for(l in testrows){
 ## Post Hoc -- Creation of temp var via stitching
 for(b in 1:nboot){
   p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 50)
-  for(n in c('F0L1S_25_',"F0L1S_R3_")){
+  # for(n in c('F0L1S_25_',"F0L1S_R3_")){
+    for(n in c('F0L1S_25_',"F0L1S_R3_")){
+      
     p2 <- read.csv(paste0(getwd(),"/IBM_output/datasets/",n,b,".csv")) %>% filter(Year >= 50 & REG != 'R1')
     tempreg <- unique(p2$REG)
     tempdf <- rbind(p1,p2)

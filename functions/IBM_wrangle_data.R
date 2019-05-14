@@ -40,42 +40,42 @@ build_simComp <- function(out_file, l=l, dat0 = NA){
 }
 
 
-plotComps <- function(dat1,dat2,datN, saveloc = NA, nboot = nboot.temp){
+# plotComps <- function(dat1,dat2,datN, saveloc = NA, nboot = nboot.temp){
+#   
+#   for(b in 1:nboot){
+#     
+#     ## plot ages
+#     p <- ggplot(dat1[[b]], aes(x = Age, y = freq, fill= Flev)) +
+#       theme_bw() +
+#       theme(panel.grid = element_blank())+
+#       geom_area(stat = 'identity', alpha = 0.5) +
+#       geom_line()+
+#       facet_wrap( ~ Year, ncol = 4) +
+#       # scale_x_continuous(limits = c(0,max(dat1[[b]]$Age))) +
+#       # scale_y_continuous(breaks = seq(0,0.4,0.2),labels = seq(0,0.4,0.2)) +
+#       # annotate("text", x = 9*max(dat1[[b]]$Age), y = 0.35, label = paste0("n = ",datN[[b]]$totN)) +
+#       labs(y = 'proportion', title = paste0("Age comps") )+
+#       scale_fill_brewer(palette = "Dark2", name = "F Level")
+#     
+#       ggsave(p, file = paste0(out_file,"/boot_",b,"/",b,"_ageComps.jpg"), dpi = 480, height = 10, width = 8, unit = 'in')
+# 
+#     
+#     ## plot lengths
+#     p <-  ggplot(dat2[[b]], aes(x = fish_size, y = freq, fill= Flev)) +
+#       theme_bw() +
+#       theme(panel.grid = element_blank())+
+#       geom_area(stat = 'identity', alpha = 0.5) +
+#       geom_line()+
+#       facet_wrap( ~ Year, ncol = 4) +
+#       scale_x_continuous(limits = c(50,250)) +
+#       labs(y = 'proportion', x= "Length (cm)", title = paste0('Length comps'))+
+#       scale_fill_brewer(palette = "Dark2", name = "F Level")
+#           ggsave(p, file = paste0(out_file,"/boot_",b,"/",b,"_lenComps.jpg"), dpi = 480, height = 10, width = 8, unit = 'in')
+# 
+#     
+#   }## end nboot
   
-  for(b in 1:nboot){
-    
-    ## plot ages
-    p <- ggplot(dat1[[b]], aes(x = Age, y = freq, fill= Flev)) +
-      theme_bw() +
-      theme(panel.grid = element_blank())+
-      geom_area(stat = 'identity', alpha = 0.5) +
-      geom_line()+
-      facet_wrap( ~ Year, ncol = 4) +
-      # scale_x_continuous(limits = c(0,max(dat1[[b]]$Age))) +
-      # scale_y_continuous(breaks = seq(0,0.4,0.2),labels = seq(0,0.4,0.2)) +
-      # annotate("text", x = 9*max(dat1[[b]]$Age), y = 0.35, label = paste0("n = ",datN[[b]]$totN)) +
-      labs(y = 'proportion', title = paste0("Age comps") )+
-      scale_fill_brewer(palette = "Dark2", name = "F Level")
-    
-      ggsave(p, file = paste0(out_file,"/boot_",b,"/",b,"_ageComps.jpg"), dpi = 480, height = 10, width = 8, unit = 'in')
-
-    
-    ## plot lengths
-    p <-  ggplot(dat2[[b]], aes(x = fish_size, y = freq, fill= Flev)) +
-      theme_bw() +
-      theme(panel.grid = element_blank())+
-      geom_area(stat = 'identity', alpha = 0.5) +
-      geom_line()+
-      facet_wrap( ~ Year, ncol = 4) +
-      scale_x_continuous(limits = c(50,250)) +
-      labs(y = 'proportion', x= "Length (cm)", title = paste0('Length comps'))+
-      scale_fill_brewer(palette = "Dark2", name = "F Level")
-          ggsave(p, file = paste0(out_file,"/boot_",b,"/",b,"_lenComps.jpg"), dpi = 480, height = 10, width = 8, unit = 'in')
-
-    
-  }## end nboot
-  
-} ## end function 
+# } ## end function 
 
 
 

@@ -9,45 +9,47 @@ scenarios <- read.csv("./input_data/scenarios.csv",na.strings = 'NA') ## manual 
 nboot <- 100
 
 ## Create STARS breakpoints (only need to run once) ----
-# source("./functions/runSTARS.R") ## slightly mod stars functionality
-# rm(breaksdf);  idx <- 1 ## storage coverage prob totals, rbind each scen
-# breaksdf <- data.frame()
-# Terms <- c("Year","Latitude_dd","Longitude_dd")
+source("./functions/runSTARS.R") ## slightly mod stars functionality
+rm(breaksdf);  idx <- 1 ## storage coverage prob totals, rbind each scen
+breaksdf <- data.frame()
+Terms <- c("Year","Latitude_dd","Longitude_dd")
 
-# for(l in 1:length(unique(scenarios$DESC))){ 
-#   scen <- unique(scenarios$DESC)[l]
-#   for(b in 1:nboot){
-#     cat(paste0(scen," boot ",b,"\n"))
-#     tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_",b,".csv")) %>% filter(Age == 6)
-#     if(scen == 'NoBreaks') tempdf$REG <- as.factor('R1')
-#     breaksdf[idx,'scen'] = scen; breaksdf[idx,'boot'] = b
-#     
-#     for(t in 1:length(Terms)){
-#       tempstar <- stars(y= tempdf$Length_cm, time  = tempdf[,Terms[t]], L=5, p=0.05, h=1,  AR1red="none", prewhitening = FALSE)
-#       
-#       if(is.na(tempstar)  ){ breaksdf[idx,Terms[t]] <- NA ; next()
-#       } else {
-#         tempstar$starsResult[which(tempstar$starsResult[,3]==0),3] = NA
-#         if(all(is.na(tempstar$starsResult[,3]))) { breaksdf[idx,Terms[t]] <- NA ; next()
-#         } else{ breaksdf[idx,Terms[t]] <- round(as.numeric(rownames(tempstar$starsResult)[which.max(abs(tempstar$starsResult[,3]))])) }
-#         # breaksdf[idx,Terms[t]] <- ifelse(is.na(tempstar),NA,which.max(abs(tempstar$starsResult[,3]))[1])
-#       }## end else
-#     } ## end loop terms
-#     idx <- idx+1 ## bump down for next boot
-#   } ## end boots
-# } ## end scen
-# write.csv(breaksdf, paste0("./GAM_output/STARS_breaksdf.csv"),row.names=F)
+for(l in 1:length(unique(scenarios$DESC))){
+  scen <- unique(scenarios$DESC)[l]
+  for(b in 1:nboot){
+    cat(paste0(scen," boot ",b,"\n"))
+    tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_",b,".csv")) %>% filter(Age == 6)
+    if(scen == 'NoBreaks') tempdf$REG <- as.factor('R1')
+    breaksdf[idx,'scen'] = scen; breaksdf[idx,'boot'] = b
+
+    for(t in 1:length(Terms)){
+      tempstar <- stars(y= tempdf$Length_cm, time  = tempdf[,Terms[t]], L=5, p=0.05, h=1,  AR1red="none", prewhitening = FALSE)
+
+      if(is.na(tempstar)  ){ breaksdf[idx,Terms[t]] <- NA ; next()
+      } else {
+        tempstar$starsResult[which(tempstar$starsResult[,3]==0),3] = NA
+        if(all(is.na(tempstar$starsResult[,3]))) { breaksdf[idx,Terms[t]] <- NA ; next()
+        } else{ breaksdf[idx,Terms[t]] <- round(as.numeric(rownames(tempstar$starsResult)[which.max(abs(tempstar$starsResult[,3]))])) }
+        # breaksdf[idx,Terms[t]] <- ifelse(is.na(tempstar),NA,which.max(abs(tempstar$starsResult[,3]))[1])
+      }## end else
+    } ## end loop terms
+    idx <- idx+1 ## bump down for next boot
+  } ## end boots
+} ## end scen
+write.csv(breaksdf, paste0("./stars_output/STARS_breaksdf_",Sys.Date(),".csv"),row.names=F)
 
 ## Read in and re-fit based on STARS breaks ----
-source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions/makematchdf.R")
+source("./functions/getGR.R");source("./functions/fitMod.R")
 cdf <- data.frame(); idx <-1 ## storage coverage prob totals, rbind each scen
 for(l in 1:length(unique(scenarios$DESC))){ 
   for(b in 1:nboot){
+    # for(b in sample(1:nboot,5)){
+      
     ## TMB FITTING ----
     scen <- unique(scenarios$DESC)[l]
     tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_",b,".csv")) #%>% filter(Age == 6)
     if(scen == 'NoBreaks') tempdf$REG <- as.factor('R1')
-    breaksdf <- read.csv("./GAM_output/STARS_breaksdf.csv") %>% filter(scen ==  unique(scenarios$DESC)[l] & boot == b)
+    breaksdf <- read.csv(paste0("./stars_output/STARS_breaksdf_",Sys.Date(),".csv")) %>% filter(scen ==  unique(scenarios$DESC)[l] & boot == b)
     names(breaksdf)[3:5] <- c("yr_breaks","lat_breaks2","lon_breaks2")
     dat<-getGR(tempdf,breaksdf);rm(tempdf)
     ## generate DES matrix of vectors and a KEY for later comparison
@@ -69,7 +71,8 @@ for(l in 1:length(unique(scenarios$DESC))){
         Length_cm = dat[,"Length_cm"],
         Age = dat[,"Age"],
         DES = as.vector(DES),
-        nStrata = nStrata
+        nStrata = nStrata,
+        a2 = 15
       )
     
     parameters <-
@@ -88,24 +91,26 @@ for(l in 1:length(unique(scenarios$DESC))){
     
     
     ## reformat outputs ----
-    write.csv(rep0, file = paste0("./output_data/STARS_",scen,"_parEst_gam_",b,"_",Sys.Date(),'.csv'),row.names = F)
+    write.csv(rep0, file = paste0("./output_data/",scen,"_parEst_STARS_",b,"_",Sys.Date(),'.csv'),row.names = F)
     ypreds0 <- data.frame(dat0); names(ypreds0)[1] <- c('Predicted')
     write.csv(ypreds0,  paste0("./output_data/STARS_",scen,"_predicts_",b,Sys.Date(),".csv"),row.names = F)
     
-    cat("Fit TMB model ",paste(scen)," boot ",b," & saved outputs \n")
+    cat("Fit TMB model ",paste(scen)," STARS boot ",b," & saved outputs \n")
     
     ## check and save coverage ----
     # vars <- paste0('R',1:4,"_");   vis <- c("pooled",'early','late');
     # Rlevs <- c("R1", "R2","R3","R4") #,apply(expand.grid(vars, vis), 1, paste, collapse=""))
     vars <- paste0('R',1:4,"_");   vis <- c("pooled",'early','late'); Rlevs <- c("R1", "R2","R3","R4",apply(expand.grid(vars, vis), 1, paste, collapse=""))
     source("./functions/compareBreaks2.R")
-    
+    cat("Tabulated Breaks ",paste(scen)," STARS boot ",b," CDF row ",idx," \n")
   } ## end boots
 } ## end ldfrows
  	
  	
 
-cdf %>% write.csv(.,file = paste0('./stars_output/STARS_cdf_',Sys.Date(),'.csv'),row.names = F)
+cdf %>%
+  mutate(method = "STARS") %>%
+  write.csv(.,file = paste0('./stars_output/STARS_cdf_',Sys.Date(),'.csv'),row.names = F)
 
 ## Get coverage probs -- for all params. 
 ## Note N varies because of varying # regions per boot. 
@@ -116,17 +121,19 @@ cdfprop <- cdf %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 
-  mutate(prop = round(n/denom,2))
+  mutate(prop = round(n/denom,2))%>%
+  mutate(method = "STARS")
 write.csv(cdfprop,file = paste0('./stars_output/STARS_cdf_prop_',Sys.Date(),'.csv'),row.names = F)
 
 ## When did regional designation go right? (original analysis)
 cdfaccu <- cdf %>% 
   select(scen, LAT, LON, YEAR) %>%
-  mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
+  # mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 
-  mutate(prop = round(n/denom,2))
+  mutate(prop = round(n/denom,2))%>%
+  mutate(method = "STARS")
 write.csv(cdfaccu,file = paste0('./stars_output/STARS_cdf_accu_',Sys.Date(),'.csv'),row.names = F)
 
 	

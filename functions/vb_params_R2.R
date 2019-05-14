@@ -5,15 +5,13 @@ lw_b = 3.4297
 
 # SS3 growth model (vonBert with L1&L2, SS3 3.34f mannual, Page 42)
 ## see https://www.nwfsc.noaa.gov/assets/25/6189_06162004_143158_tm43.pdf eq 46
-# L1 = 62.69
-# L2 = 216.72
-L1 = 50
-L2 = 350
+L1 = round(62*1.2)
+L2 = 215*1.2
 a1 = 0
 a2 = 15
 growth_lognormal_SD = 0.025
-# VBGF_K = 0.258
-VBGF_K = 0.45
+VBGF_K = 0.25
+# VBGF_K = 0.45
 
 ## convert raw function
 ## see https://www.nwfsc.noaa.gov/assets/25/6189_06162004_143158_tm43.pdf eq 46

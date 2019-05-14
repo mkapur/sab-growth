@@ -22,8 +22,8 @@ data0 <- bio %>% filter(
     Latitude_dd ,
     Longitude_dd
   ) %>%
-mutate(REG = "WC") %>%
-  sample_n(.,15000) 
+mutate(REG = "WC") #%>%
+  # sample_n(.,15000) 
   
 
 # data0 %>%  ggplot(., aes(x = Year)) + geom_histogram() + scale_x_continuous(limits = c(1980,2020),breaks = seq(1983,2020,2))
@@ -47,7 +47,7 @@ bcsurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/BC/LWMSO.
                  "slon" = "Longitude_dd",
                  "SPECIMEN_AGE" = "Age","Fork_Length" = "Length_cm","YEAR" = "Year")) %>%
   select(Year, Length_cm, Age, Sex, Latitude_dd, Longitude_dd) %>%
-  sample_n(.,15000) %>%
+  # sample_n(.,15000) %>%
   mutate(REG = "BC")
 
 # ## ALASKA ----
@@ -59,13 +59,14 @@ aksurv <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/raw_data/ak/AK_age
   select(YEAR, LENGTH, AGE, SEX, STARTLAT, STARTLONG) %>%
   plyr::rename(c('YEAR' = 'Year', 'SEX' = 'Sex','AGE' = 'Age',
                  'LENGTH' = 'Length_cm', "STARTLAT" = "Latitude_dd","STARTLONG" = "Longitude_dd")) %>%
-  sample_n(.,15000) %>%
+  # sample_n(.,15000) %>%
   mutate(REG = "AK")
 
 ## combine ---
 all_data <- rbind(wcsurv,bcsurv,aksurv)
-
-save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/input_data/gam_data_sab_0315.rda")
+full_data <- rbind(wcsurv,bcsurv,aksurv)
+# save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/input_data/gam_data_sab_0315.rda")
+# save(full_data, file = "C:/Users/Maia Kapur/Dropbox/UW/sab-growth/input_data/gam_data_sab_0415.rda")
 # save(all_data, file = "C:/Users/Maia Kapur/Dropbox/UW/coursework/STAT-554/project_code_data/all_data.csv", row.names = F)
 ## some exploratory plots ----
 

@@ -9,6 +9,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(Age);
   DATA_IVECTOR(DES); // make sure this knows it is an IVECTOR
   DATA_INTEGER(nStrata);
+  DATA_INTEGER(a2);
   
   // things to estimate (per stratum)
   PARAMETER_VECTOR(t0); // t0 can be negative
@@ -38,7 +39,7 @@ Type objective_function<Type>::operator() ()
     ypreds(i) = yfit;
     obj_fun -= dnorm(Length_cm(i),yfit,Sigma,true);
     L1(DES(i)) =  Linf(DES(i))*(1-exp(-k(DES(i))*(0 - t0(DES(i)))));
-    L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(30 - t0(DES(i)))));
+    L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(a2 - t0(DES(i)))));
   }
   
 

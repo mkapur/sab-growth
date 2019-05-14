@@ -14,11 +14,12 @@ compname <- c("Maia Kapur","mkapur")[1]
 scenarios <- read.csv("./input_data/scenarios.csv",na.strings = 'NA')## manual file
 age <- 6; nboot <- 100; testrows <- unique(scenarios$DESC)
 # source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x
-source("./functions/getGR.R");source("./functions/fitMod.R")
+source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions/missby.R")
 # now loop boots and fit VB to get coverage probs
 ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) 
 rm(cdf); cdf <- data.frame(); idx <-1 ## storage coverage prob totals, rbind each scen
-for(l in 1:length(unique(ldfprop$scen))){ 
+for(l in 1:length(unique(ldfprop$scen))){
+  # for(b in sample(1:nboot,5)){
   for(b in 1:nboot){
     ## TMB FITTING ----
     scen <- unique(ldfprop$scen)[l]
@@ -40,13 +41,13 @@ for(l in 1:length(unique(ldfprop$scen))){
     
     ## run TMB parest----
     nStrata <- length(unique(DES))
-
     data <-
       list(
         Length_cm = dat[,"Length_cm"],
         Age = dat[,"Age"],
         DES = as.vector(DES),
-        nStrata = nStrata
+        nStrata = nStrata,
+        a2 = 15
       )
 
     parameters <-
@@ -63,24 +64,24 @@ for(l in 1:length(unique(ldfprop$scen))){
     dat0 <- mod[[1]]
     rep0 <- mod[[2]]
     
-
    ## reformat outputs ----
     write.csv(rep0, file = paste0("./output_data/",scen,"_parEst_gam_",b,"_",Sys.Date(),'.csv'),row.names = F)
     ypreds0 <- data.frame(dat0); names(ypreds0)[1] <- c('Predicted')
     write.csv(ypreds0,  paste0("./output_data/",scen,"_predicts_",b,Sys.Date(),".csv"),row.names = F)
-    cat("Fit TMB model ",paste(scen)," boot ",b," & saved outputs \n")
+    cat("Fit TMB model ",paste(scen)," GAM boot ",b," & saved outputs \n")
 
     ## check and save coverage ----
+    parms <- c('L1','L2','k','Linf')[1:2]
     vars <- paste0('R',1:4,"_");   vis <- c("pooled",'early','late'); Rlevs <- c("R1", "R2","R3","R4",apply(expand.grid(vars, vis), 1, paste, collapse=""))
-    source("./functions/compareBreaks.R")
+    source("./functions/compareBreaks2.R")
+    cat("Tabulated Breaks ",paste(scen)," GAM boot ",b," CDF row ",idx," \n")
     
   } ## end boots
 } ## end ldfrows
 
-cdf %>% write.csv(.,file = paste0('./gam_output/cdf_',Sys.Date(),'.csv'),row.names = F)
-
-
-
+cdf %>%
+  mutate(method = "GAM") %>%
+  write.csv(.,file = paste0('./gam_output/cdf_',Sys.Date(),'.csv'),row.names = F)
 
 ## Get coverage probs -- for all params. 
 ## Note N varies because of varying # regions per boot. 
@@ -91,8 +92,9 @@ cdfprop <- cdf %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 
-  mutate(prop = round(n/denom,2))
-write.csv(cdfprop,file = paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv'),rsow.names = F)
+  mutate(prop = round(n/denom,2))%>%
+  mutate(method = "GAM")
+write.csv(cdfprop,file = paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv'),row.names = F)
 
 ## When did regional designation go right? (original analysis)
 cdfaccu <- cdf %>% 
@@ -101,5 +103,6 @@ cdfaccu <- cdf %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 
-  mutate(prop = round(n/denom,2))
+  mutate(prop = round(n/denom,2))%>%
+  mutate(method = "GAM")
 write.csv(cdfaccu,file = paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'),row.names = F)

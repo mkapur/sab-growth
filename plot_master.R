@@ -7,45 +7,45 @@ require(gridExtra)
 require(RColorBrewer)
 library(ggpubr)
 require(DescTools)
+require(mapdata)
+require(mgcv)
+scenarios <- read.csv('./input_data/scenarios.csv',na.strings = 'NA') %>% filter(DESC != 'F0L1S_R3')
 
-scenarios <- read.csv('./input_data/scenarios.csv',na.strings = 'NA') ## manual file
+## manual file
 age <- 6
-## average ## of age X fish per dataset
-
-#   a6df <- list.files("./IBM_output/datasets", full.names = T) %>%
-#   lapply(read.csv) %>%
-#   bind_rows() %>%
-#   filter(Age == 6)
-# dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
 
 ## how many NA years (should be most!!)
 ldf %>% group_by(scen) %>% summarise(naY = sum(is.na(yr_breaks)), n = n()) %>% mutate(naY/n)
 
-
+# "g) 20% Higher k, Break at 25 deg.""c) Scenario 3 20% Higher k, Break at 25 deg.",
 ## panel plot of one gendata for each scenario ---
+source("./functions/Deriv.R")
 scens <-  unique(scenarios$DESC)
 scens.title <- scens.title0 <- scens
-levels(scens.title) <-  c("g) Break at 25 deg.", "g) Break at 49 deg.",
-                           "g) Low Contrast at 25 deg.", "g) Overlap 20-25 deg.","g) No Breaks","f) Temporal Break Year 50")
-levels(scens.title0) <-  c("b) Break at 25 deg.", "e) Break at 49 deg.",
-                          "c) Low Contrast at 25 deg.", "d) Overlap 20-25 deg.","a) No Breaks","f) Temporal Break Year 50")
+levels(scens.title) <-  c("g) Scenario 2 Break at 25 deg.", "g) Scenario 4 Break at 49 deg.", NA,
+                          "g) Scenario 3 Overlap 20-25 deg.","g) Scenario 1 No Breaks",
+                          "g) Scenario 5 Temporal Break Year 50")
+levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Break at 49 deg.", NA,
+                           "c) Scenario 3 Overlap 20-25 deg.","a) Scenario 1 No Breaks",
+                          "e) Scenario 5 Temporal Break Year 50")
 
+# cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'F0L1S_R3')
+bootpicks <-c(1,27,19,83,10,4)
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){
   plist  <- list(); idx <- 1
   ## plot raw data
   scen <- scens[i]
-  tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_4.csv")) %>% filter(Age == 6)
+  tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_",bootpicks[i],".csv")) %>% filter(Age == 6)
 
-  breaksdf <- read.csv( paste0("./GAM_output/ldf_raw_a",age,".csv")) %>% filter(scen == scens[i] & boot == 4)
-  load(file = paste0("./GAM_output/mod_",scen,"_4.rds")) ## mod for boot 4
-  load(file = paste0("./GAM_output/m2d_",scen,"_4.rds")) ## m2.d for boot 4 (contains derivative info)
+  breaksdf <- read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) %>% filter(scen == scens[i] & boot == bootpicks[i])
+  load(file = paste0("./GAM_output/mod_",scen,"_",bootpicks[i],".rds")) ## mod for boot 4
+  load(file = paste0("./GAM_output/m2d_",scen,"_",bootpicks[i],".rds")) ## m2.d for boot 4 (contains derivative info)
   
   Terms <- c("Year","Latitude_dd","Longitude_dd")
   
   ## raw data save separately ----
   if(i < 6){ ## plot tempvar separately
-    
   plist0[[idx0]]  <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
     theme_classic() +
     theme(legend.position = 'none') +
@@ -55,9 +55,9 @@ for(i in 1:length(scens)){
     scale_size_continuous(range = c(1, 15)) +
     labs(x = 'Longitude',y = 'Latitude',
          fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
-         title = paste0(scens.title0[i], ' Raw Data')) +
-    geom_label(x = 10, y = 50, label = paste0('n = ',nrow(tempdf)), 
-               size = 4, fill = 'white')
+         title = paste0(scens.title0[i])) #+
+    # geom_label(x = 10, y = 50, label = paste0('n = ',nrow(tempdf)), 
+    #            size = 4, fill = 'white')
   idx0 <- idx0+1
   }
   
@@ -71,9 +71,9 @@ for(i in 1:length(scens)){
       scale_size_continuous(range = c(1, 15)) +
       labs(x = 'Year', y = 'Length of Age Six Fish (cm)',
            fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
-           title = paste0(scens.title0[i], ' Raw Data')) +
-      geom_label(x = 10, y = 400, label = paste0('n = ',nrow(tempdf)), 
-                 size = 4, fill = 'white')
+           title = paste0(scens.title0[i])) #+
+      # geom_label(x = 10, y = 400, label = paste0('n = ',nrow(tempdf)), 
+      #            size = 4, fill = 'white')
     idx0 <- idx0+1
   }
     ggsave(plot = last_plot(),  file = paste0("./figures/rawdat_",scen,".png"),
@@ -81,19 +81,39 @@ for(i in 1:length(scens)){
 
 
   ## map showing new breaks
-  plist[[idx]] <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
-    theme_classic() +
-    theme(legend.position = 'right') +
-    scale_y_continuous(limits = c(0,50), breaks = seq(0,50,10)) +
-    geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-    scale_fill_viridis_c(guide = "legend") +
-    scale_size_continuous(range = c(1, 15)) +
-    labs(x = 'Longitude',y = 'Latitude',
-         fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
-         title = paste0(scens.title[i], ' Data and GAM-detected breaks ')) +
-    geom_hline(yintercept = breaksdf$lat_breaks, lwd = 1.1, linetype = 'dashed', col = 'red') +
-    geom_vline(xintercept = breaksdf$lon_breaks, lwd = 1.1, linetype = 'dashed', col = 'red')
-  idx <- idx + 1
+  if(idx <6){
+    plist[[idx]] <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
+      theme_classic() +
+      theme(legend.position = 'right') +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,10)) +
+      geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
+      scale_fill_viridis_c(guide = "legend") +
+      scale_size_continuous(range = c(1, 15)) +
+      labs(x = 'Longitude',y = 'Latitude',
+           fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
+           title = paste0(scens.title[i], ' Data and GAM-detected breaks ')) +
+      geom_hline(yintercept = breaksdf$lat_breaks, lwd = 1.1, linetype = 'dashed', col = 'red') +
+      geom_vline(xintercept = breaksdf$lon_breaks, lwd = 1.1, linetype = 'dashed', col = 'red')
+    idx <- idx + 1
+    }
+    if(i == 6){ ## plot tempvar separately
+    
+      plist[[idx]] <-ggplot(tempdf, aes(x = Year, y = Length_cm)) +
+        theme_classic() +
+        theme(legend.position = 'right') +
+        scale_y_continuous(limits = c(125,450)) +
+        geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
+        scale_fill_viridis_c(guide = "legend") +
+        scale_size_continuous(range = c(1, 15)) +
+        labs(x = 'Year', y = 'Length of Age Six Fish (cm)',
+             fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
+             title = paste0(scens.title0[i])) +
+        # geom_label(x = 10, y = 400, label = paste0('n = ',nrow(tempdf)), 
+        #            size = 4, fill = 'white') +
+        geom_vline(xintercept = breaksdf$yr_breaks, lwd = 1.1, linetype = 'dashed', col = 'red')
+      idx <- idx + 1
+      
+      }
   # ## plot GAM smooth and deriv -- will have to be from single, sorta-representative boot
   for(t in 1:length(Terms)){
     pd <- plot(mod,   select = t, scheme  =2, lwd  =2, main = paste0(Terms[t],' Smoother'), cex.axis = 2, ylim = c(-10,ifelse(t != 3,10,500)))
@@ -134,8 +154,8 @@ for(i in 1:length(scens)){
                c(5,5,1,1,1),
                c(6,6,1,1,1),
                c(7,7,1,1,1))
-  grid.arrange(grobs = plist, layout_matrix = lay) %>%
-  ggsave(plot = .,  file = paste0("./figures/analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  grid.arrange(grobs = plist[1:7], layout_matrix = lay) %>%
+  ggsave(plot = .,  file = paste0("./figures/GAM_analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 }
 
@@ -150,15 +170,14 @@ a6df <- list.files("./IBM_output/datasets/", full.names = T) %>%
 
 dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
 
-## Plot proportion agreegments from GAM ----
-cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv'))
+## GAM propagg----
+cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv')) 
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
-                                                  "Low Contrast at 25 deg.", 
-                                  "Overlap 20-25 deg.","No Breaks",
-                          "Temporal Break at Year 50")
+                          "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
+
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2' )
-cdfprop2 <- cdfprop# %>% filter(!(variable %in% c('Both L1 and L2')))
+cdfprop2 <- cdfprop%>% filter(!(variable %in% c('Both L1 and L2')) & scen != "20% Higher k, Break at 25 deg.")
 
 # cdfprop$variable <- factor(cdfprop$variable, levels=c('L1','L2','Both L1 and L2'))
 plist1 <- list()
@@ -176,14 +195,13 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
 cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
-levels(cdfaccu$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
-                          "Low Contrast at 25 deg.", 
-                          "Overlap 20-25 deg.","No Breaks","Temporal Break at Year 50")
+levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
+                         "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfaccu$variable) <- c('Lat, Long and Year','Both Latitude and Longitude','Latitude', 'Longitude' ,'Year')
 # cdfaccu$variable <- factor(cdfaccu$variable, levels=c('L1','L2','Both L1 and L2'))
 
-cdfaccu2 <- cdfaccu# %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude')))
+cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude'))& scen != "20% Higher k, Break at 25 deg.")
 # cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfprop$prop  )])
 plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
   theme_bw() +
@@ -194,20 +212,18 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
   geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +
-  facet_wrap(~variable, nrow = 2)
+  facet_wrap(~variable, nrow = 1)
 
 ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="bottom") %>%
-  ggsave(plot = .,  file = paste0("./figures/cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  ggsave(plot = .,  file = paste0("./figures/GAM_cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 ## STARS propagg ----
 cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_',Sys.Date(),'.csv'))
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
-                          "Low Contrast at 25 deg.", 
-                          "Overlap 20-25 deg.","No Breaks",
-                          "Temporal Break at Year 50")
+                          "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2' )
-cdfprop2 <- cdfprop %>% filter(!(variable %in% c('Both L1 and L2')))
+cdfprop2 <- cdfprop %>% filter(!(variable %in% c('Both L1 and L2'))& scen != "20% Higher k, Break at 25 deg.")
 
 # cdfprop$variable <- factor(cdfprop$variable, levels=c('L1','L2','Both L1 and L2'))
 plist1 <- list()
@@ -216,7 +232,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   theme(panel.grid = element_blank(), 
         axis.text.x = element_blank(),
         legend.position = c(0.9,0.75)) +
-  scale_fill_viridis_d()+
+  scale_fill_grey() +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Coverage Probability', fill = 'Scenario', 
        title = 'a) Coverage Probability for Endpoints of Growth Curve') +
@@ -226,20 +242,20 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
 
 cdfaccu <- read.csv(paste0('./STARS_output/STARS_cdf_accu_',Sys.Date(),'.csv'))
 levels(cdfaccu$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
-                          "Low Contrast at 25 deg.", 
-                          "Overlap 20-25 deg.","No Breaks","Temporal Break at Year 50")
+                          "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-levels(cdfaccu$variable) <- c('Lat, Long and Year','Both Latitude and Longitude','Latitude', 'Longitude' ,'Year')
+levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year')
 # cdfaccu$variable <- factor(cdfaccu$variable, levels=c('L1','L2','Both L1 and L2'))
 
-cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude')))
+cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude'))& scen != "20% Higher k, Break at 25 deg.")
 # cdfaccu$scen  <- factor(cdfaccu$scen , levels = cdfaccu$scen [order(cdfprop$prop  )])
 plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
   theme_bw() +
   theme(panel.grid = element_blank(), 
         axis.text.x = element_blank(),
         legend.position = 'none') +
-  scale_fill_viridis_d()+
+  # scale_fill_viridis_d()+
+  scale_fill_grey() +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
   geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +
@@ -251,6 +267,7 @@ ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="botto
 
 rbind(cdfprop, cdfaccu) %>% 
   group_by(scen) %>%
+  
   summarise(mean(prop)) 
 ## Trajectories of individual fish from IBM ----
 L <- list.files("./IBM_output/", full.names = T, recursive = T)[grep("_55/IBM_SAA", list.files("./IBM_output/", full.names = T,recursive = T))]  
@@ -261,11 +278,12 @@ O = lapply(L, function(x) {
 df1 <- do.call(rbind, O)
 df1$REG[df1$REG == 'R0'] <- 'R1'
 df2 <- df1 %>% group_by(ID,Age,REG) %>% summarise(meanL = mean(fish_size))
-df2 <- subset(df1,  cohort = 44) %>% filter(!is.na(REG))
+df2 <- subset(df1,  cohort = 44) %>% 
+  filter(!is.na(REG) & REG != 'R3'  & ID == 'F0L1S_25')
   # group_by(ID, Age) %>% 
   # summarise(meanL = mean(fish_size), minL = min(fish_size), maxL = max(fish_size))
-
-ggplot(df2, aes(x = Age, y = fish_size, color = REG, group = cohort)) +
+df3 <- read.csv("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/datasets/F0L1S_25_44.csv") %>% filter( Length_cm < 275)
+ggplot(df3, aes(x = Age, y = Length_cm, color = REG)) +
   theme_classic()+
   theme(legend.position = c(0.9,0.1), 
         legend.text = element_text(size = 14), 
@@ -274,11 +292,13 @@ ggplot(df2, aes(x = Age, y = fish_size, color = REG, group = cohort)) +
         axis.title = element_text(size = 14)) +
   scale_color_viridis_d(guide = "legend") +
   geom_point(size = 3, alpha = 0.2) +
+  # geom_line() +
   labs(x = 'Age (years)', y = 'Length (cm)', color = "Growth Regime") 
 ggsave(plot = last_plot(),  file = paste0("./figures/ibm_growth.png"), width = 8, height = 6, units = 'in', dpi = 480)
 
 
-## combo SAB map for a6 and a10 breaks
+## Figure 8 SAB map for a6 and a10 breaks, likely redone by Elliot ----
+usa <- map_data("world")
   dat <- all_data %>% filter(Age == 30 & Sex == 'M')
     ggplot() + 
     geom_polygon(data = usa, aes(x = long, y = lat, group = group)) + 
@@ -315,7 +335,7 @@ df1 %>%
 ## predicts and parest for sab ----
 ## parest: see if actually different. PHASE 1 = pre-merge, PHASE 2- temporal merges
 for(phase in c("phase1","phase2")){
-  parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),"_",phase,'.csv')) %>% 
+  parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_2019-04-15_",phase,'.csv')) %>% 
     filter(variable ==  "Linf") %>% 
     mutate(source = 'Estimated') %>%
     mutate(REG2 = gsub("_.*", "\\1", REG),
@@ -372,8 +392,8 @@ for(phase in c("phase1","phase2")){
 ggsave(plot = last_plot(),  file = paste0("./figures/sab_parest_",Sys.Date(),"_",phase,".png"), width = 10, height = 8, units = 'in', dpi = 480)
 write.csv(parest, file = paste0("./GAM_output/overlap_",Sys.Date(),"_",phase,".csv"),row.names=F)
 
-## fits
-ypreds <- read.csv(paste0("./GAM_output/SAB_predicts_",Sys.Date(),"_",phase,".csv"))
+## Figure 9 SAB Fits ----
+ypreds <- read.csv(paste0("./GAM_output/SAB_predicts_2019-04-15_",phase,".csv"))
 
 ypreds$gamREG <- paste0('Region ',ypreds$gamREG)
 levels(ypreds$Sex) <- c('Females','Males')
@@ -383,7 +403,7 @@ for(i in 1:nrow(ypreds)){
                               'All Years', paste(ypreds$Period[i]))
 }
 
-ggplot(ypreds, aes(x = Age, y = Predicted, col = REG )) +
+ggplot(ypreds, aes(x = Age, y = Predicted, col = REG, linetype = Period )) +
   theme_classic() +
   theme(panel.grid = element_blank(),
         legend.position = 'right',
@@ -397,13 +417,161 @@ ggplot(ypreds, aes(x = Age, y = Predicted, col = REG )) +
   scale_color_brewer(palette =  'Accent')+
   geom_point(alpha = 0.5, aes(y = Length_cm)) +
   geom_line(lwd = 1.1, col = 'black')+
-  labs(y = 'Length (cm)', col = "Actual Data Source") +
-  facet_wrap(~gamREG + Sex + Period, ncol = 4)
+  labs(y = 'Length (cm)', x= 'Age (years)', col = "Actual Data Source") +
+  scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+  facet_wrap(~gamREG + Sex , ncol = 4)
+
 ggsave(plot = last_plot(),  
        file = paste0("./figures/sab_fits_",Sys.Date(),"_",phase,".png"), 
        width = 10, height = 12, units = 'in', dpi = 520)
 cat(phase," done \n")
 } ## end phase
+
+
+all_data %>% filter(Age %in% c(4,6,30)) %>% group_by(Age,Sex,REG) %>% summarise(n = n())
+
+## GAM Histogram of detected breaks----
+cdf_gam <- read.csv("GAM_output/cdf_2019-05-06.csv") %>% filter(scen != 'F0L1S_R3')
+ntrue <- read.csv("input_data/ntrue_a6.csv") %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
+levels(cdf_gam$scen) <- levels(ntrue$scen) <- c("Scenario 2", "Scenario 4", NA,
+                                                "Scenario 3","Scenario 1",
+                                                "Scenario 5")
+
+plist <- list(); idx = 1
+for(l in 1:length(unique(cdf_gam$scen))){
+  scentemp <- unique(cdf_gam$scen)[l]
+  # scen <- paste0(ldfprop$scen[ldfprop$scentemp == scentemp]) ## filenames
+  cat(l,idx,"\n")
+  tmp0 <- cdf_gam %>%  filter(scen == scentemp) %>% select(scen, gamLAT, gamLON, gamYR) %>% melt(id = c('scen'))
+  levels(tmp0$variable) <- c('Latitude','Longitude','Year')
+  tmp0$value <- factor(tmp0$value, levels=c(paste(1:100),NA))
+  
+  tmp <- tmp0 %>%
+    group_by(variable, value) %>%
+    dplyr::summarise(n = n()) %>%
+    mutate(freq = n / sum(n), scen = scentemp) 
+  
+  xmax <- ifelse(l==5, 55, 110)
+  plist[[idx]]  <- ggplot(tmp, aes(x = value, y = freq)) +
+    geom_bar(stat = 'identity') +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          axis.text = element_text(size = 6),
+          axis.title = element_text(size = 8),
+          legend.text = element_text(size = 6),
+          strip.text = element_text(size= 9))+
+    scale_y_continuous(limits = c(0,1)) +
+    scale_x_discrete(limits = c(paste(1:xmax),NA),
+                     breaks = c(paste(seq(0,xmax,10)),NA)) +
+    geom_rect(aes(xmin = ifelse(variable != 'Year', 20,-10),
+                  xmax = ifelse(variable != 'Year', 25,-10), ymin = 0, ymax = Inf), 
+              fill=ifelse(l == 3,"red",NA), alpha = 1E-2) +
+    facet_wrap(~scen+variable,ncol = 3) +
+    labs( y = 'frequency', x = 'detected break location', title = 'GAM-detected Breaks') +
+    geom_bar(data = subset(ntrue, scen == scentemp),
+               aes(x = trueb, y = value), col = 'red', stat = 'identity', alpha = 1E-2) 
+  # geom_vline(data = subset(ntrue, scen == scentemp),
+  #              aes(xintercept = trueb), col = 'red', linetype = 'dashed') 
+  idx <- idx +1
+}
+
+grid.arrange(grobs = plist, ncol = 2) %>%
+  ggsave(plot = .,   file = paste0("./figures/GAM_hist_breaks.png"), width = 10, height = 12, units = 'in', dpi = 480)
+
+
+## STARS Histogram of detected breaks----
+cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-06.csv"))
+ntrue <- read.csv("input_data/ntrue_a6.csv")
+levels(cdf_stars$scen) <- levels(ntrue$scen) <- c("Scenario 2 Break at 25 deg.", "Scenario 4 Break at 49 deg.", NA,
+                                                   "Scenario 3 Overlap 20-25 deg.","Scenario 1 No Breaks",
+                                                   "Scenario 5 Temporal Break Year 50")
+
+plist <- list(); idx = 1
+for(l in 1:length(unique(cdf_stars$scen))){
+  scentemp <- unique(cdf_stars$scen)[l]
+  # scen <- paste0(ldfprop$scen[ldfprop$scentemp == scentemp]) ## filenames
+  
+  tmp0 <- cdf_stars %>%  filter(scen == scentemp) %>% select(scen, gamLAT, gamLON, gamYR) %>% melt(id = c('scen'))
+  levels(tmp0$variable) <- c('Latitude','Longitude','Year')
+  tmp0$value <- factor(tmp0$value, levels=c(paste(1:100),NA))
+  
+  tmp <- tmp0 %>%
+    group_by(variable, value) %>%
+    dplyr::summarise(n = n()) %>%
+    mutate(freq = n / sum(n), scen = scentemp) 
+  
+  
+  plist[[idx]]  <- ggplot(tmp, aes(x = value, y = freq)) +
+    geom_bar(stat = 'identity') +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          legend.position = c(0.9,0.1),
+          axis.text = element_text(size = 8),
+          axis.title = element_text(size = 8),
+          legend.text = element_text(size = 8),
+          strip.text = element_text(size=10))+
+    scale_y_continuous(limits = c(0,1)) +
+    scale_x_discrete(limits = c(paste(1:55),NA),breaks = c(paste(seq(0,50,10)),NA)) +
+    # geom_rect(aes(xmin = ifelse(idx == 4 & variable != 'Year', 20,-10),
+    #               xmax = ifelse(idx == 4 & variable != 'Year', 25,-10), ymin = 0, ymax = Inf), fill="red", alpha = 1E-2) +
+    facet_wrap(~scen+variable,ncol = 3) +
+    labs( y = 'frequency', x = 'detected break location', title = 'STARS-detected Breaks') +
+    geom_vline(data = subset(ntrue, scen == scentemp), aes(xintercept =trueb), col = 'red', linetype = 'dashed') 
+  idx <- idx +1
+}
+
+grid.arrange(grobs = plist, ncol = 3) #%>%
+breaksdf <- read.csv(paste0("./stars_output/STARS_breaksdf_2019-04-29.csv")) 
+
+## average # of age 6 fish per dataset----
+a6df <- list.files("./IBM_output/datasets", full.names = T) %>%
+  lapply(read.csv) %>%
+  bind_rows() %>%
+  filter(Age == 6)
+dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
+
+## average # of age X SAB per sex in fulldat
+load(paste0("./input_data/gam_data_sab_0415.rda")) ## full_data -- made using gam_dataprep NOT 15k subsample
+full_data %>% filter(Age %in% c(4,6,10,30)) %>% 
+  group_by(Age, Sex) %>% summarise(n=n()) %>% write.csv(.,paste0("./output_data/n_sab_sex_age.csv"),row.names=F)
+
+## summarise MISSED proportions ----
+cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-05-06.csv"))
+cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-05-06.csv"))
+cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-06.csv"))
+
+cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-06.csv"))
+cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-05-06.csv"))
+cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-05-06.csv"))
+
+cdf_gam %>% 
+  filter(L1 == FALSE) %>%
+  group_by(scen) %>% 
+  summarise( meanL1 = mean(abs(L1_MISS)))
+
+cdf_gam %>% 
+  filter(L2 == FALSE) %>%
+  group_by(scen) %>% 
+  summarise( meanL2 = mean(abs(L2_MISS)))
+
+cdf_stars %>% 
+  filter(L1 == FALSE) %>%
+  group_by(scen) %>% 
+  summarise( meanL1 = mean(abs(L1_MISS)))
+
+cdf_stars %>% 
+  filter(L2 == FALSE) %>%
+  group_by(scen) %>% 
+  summarise( meanL2 = mean(abs(L2_MISS)))
+
+rbind(cdf_gam,cdf_stars) %>% group_by(method,scen, YEAR) %>% dplyr::summarise(n=n())
+cdf_gam %>% filter(YEAR == FALSE) %>% group_by(scen, gamYR) %>% dplyr::summarise(n=n()) %>% 
+  ggplot(., aes(x = gamYR, y = n)) + geom_histogram(stat='identity')
+
+
+cdf_gam %>% 
+  filter(scen == 'F0L1S_25' & LAT == FALSE) %>% 
+  group_by(gamLAT) %>% summarise(n=n())
 
 ## "no discernable pattern in spurious breaks"
 cdf %>% filter(scen %in% c('NoBreaks','tempvar_R1R2') & (LAT == FALSE  | LON == FALSE)) %>% group_by(scen, gamLAT,gamLON) %>% dplyr::summarise(n = n())
@@ -411,7 +579,7 @@ cdf %>% filter(scen %in% c('NoBreaks','tempvar_R1R2') & (LAT == FALSE  | LON == 
 cdf %>% filter(!(scen %in% c('NoBreaks','tempvar_R1R2')) & (LAT == FALSE  | LON == FALSE)) %>% 
   group_by(scen) %>% dplyr::summarise(n = n())
 
-cdf %>% filter(scen %in% c('F0L1S_25','F0L1S_R3') & (LAT == FALSE  | LON == FALSE)) %>% 
+cdf_gam %>% filter(scen %in% c('F0L1S_25','F0L1S_R3') & (LAT == FALSE  | LON == FALSE)) %>% 
   group_by(scen) %>% dplyr::summarise(n = n(), inbounds = sum(gamLAT %in% c(24,26)   |gamLON %in% c(24,26)  )) %>% mutate(inbounds/n) 
 
 cdf %>% filter(YEAR == FALSE) %>% group_by(scen, gamYR) %>% dplyr::summarise(n = n())
@@ -419,6 +587,12 @@ cdf %>% filter(scen == 'F0LMW'& LAT == FALSE) %>% group_by(gamLAT) %>% dplyr::su
 cdf %>% group_by(YEAR) %>% dplyr::summarise(n = n()) 
 
 
-all_data %>% filter(Age %in% c(4,6,30)) %>% group_by(Age,Sex,REG) %>% summarise(n = n())
 
-   
+
+## percent accuracy by cat
+cdfaccu_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% summarise(avg = mean(prop))
+cdfaccu_gam %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% summarise(avg = mean(prop))
+
+
+cdfprop_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% summarise(avg = mean(prop))
+cdfprop_gam %>%  filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>%group_by(variable) %>% summarise(avg = mean(prop))

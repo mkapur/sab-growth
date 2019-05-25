@@ -209,7 +209,7 @@ for(l in testrows){
   nboot.temp <- ifelse(scenarios[l,"DESC"] == 'NoBreaks',nboot*2,nboot)
   
   for(b in 1:nboot.temp){
-    cat(basename(scenname)," boot ",b, "\n")
+    cat(basename(scenname)," boot ",b, " MakeLat ", "\n")
     dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0("/",b,'_sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
       lapply(read.csv,sep=",",header=T) %>%
       reduce(bind_rows)

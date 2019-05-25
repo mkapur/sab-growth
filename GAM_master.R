@@ -13,7 +13,7 @@ compname <- c("Maia Kapur","mkapur")[1]
 ## Build mods, get breakpoints
 scenarios <- read.csv("./input_data/scenarios.csv",na.strings = 'NA')## manual file
 age <- 6; nboot <- 100; testrows <- unique(scenarios$DESC)
-# source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x
+source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x
 source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions/missby.R")
 # now loop boots and fit VB to get coverage probs
 ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) 

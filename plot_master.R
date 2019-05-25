@@ -45,7 +45,7 @@ for(i in 1:length(scens)){
   Terms <- c("Year","Latitude_dd","Longitude_dd")
   
   ## raw data save separately ----
-  if(i < 6){ ## plot tempvar separately
+  if(i < 5){ ## plot tempvar separately
   plist0[[idx0]]  <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
     theme_classic() +
     theme(legend.position = 'none') +
@@ -61,7 +61,7 @@ for(i in 1:length(scens)){
   idx0 <- idx0+1
   }
   
-  if(i == 6){ ## plot tempvar separately
+  if(i == 5){ ## plot tempvar separately
     plist0[[idx0]]  <- ggplot(tempdf, aes(x = Year, y = Length_cm)) +
       theme_classic() +
       theme(legend.position = 'right') +
@@ -76,12 +76,12 @@ for(i in 1:length(scens)){
       #            size = 4, fill = 'white')
     idx0 <- idx0+1
   }
-    ggsave(plot = last_plot(),  file = paste0("./figures/rawdat_",scen,".png"),
-  width = 5, height = 5, units = 'in', dpi = 480)
+  #   ggsave(plot = last_plot(),  file = paste0("./figures/rawdat_",scen,".png"),
+  # width = 5, height = 5, units = 'in', dpi = 480)
 
 
   ## map showing new breaks
-  if(idx <6){
+  if(idx <5){
     plist[[idx]] <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
       theme_classic() +
       theme(legend.position = 'right') +
@@ -96,7 +96,7 @@ for(i in 1:length(scens)){
       geom_vline(xintercept = breaksdf$lon_breaks, lwd = 1.1, linetype = 'dashed', col = 'red')
     idx <- idx + 1
     }
-    if(i == 6){ ## plot tempvar separately
+    if(i == 5){ ## plot tempvar separately
     
       plist[[idx]] <-ggplot(tempdf, aes(x = Year, y = Length_cm)) +
         theme_classic() +
@@ -148,14 +148,14 @@ for(i in 1:length(scens)){
   }
 
 
-  lay <- rbind(c(2,2,1,1,1),
-               c(3,3,1,1,1),
-               c(4,4,1,1,1),
-               c(5,5,1,1,1),
-               c(6,6,1,1,1),
-               c(7,7,1,1,1))
-  grid.arrange(grobs = plist[1:7], layout_matrix = lay) %>%
-  ggsave(plot = .,  file = paste0("./figures/GAM_analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  # lay <- rbind(c(2,2,1,1,1),
+  #              c(3,3,1,1,1),
+  #              c(4,4,1,1,1),
+  #              c(5,5,1,1,1),
+  #              c(6,6,1,1,1),
+  #              c(7,7,1,1,1))
+  # grid.arrange(grobs = plist[1:7], layout_matrix = lay) %>%
+  # ggsave(plot = .,  file = paste0("./figures/GAM_analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 }
 

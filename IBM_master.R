@@ -55,7 +55,9 @@ for(l in testrows){
     init_length[1] = L1*error
     
     for(g in 1:(a2)){
-      init_length[g+1] = (init_length[g]+growth_incre(init_length[g]))*error
+      # init_length[g+1] = (init_length[g]+growth_incre(init_length[g]))*error
+      init_length[g+1] = init_length[g]+growth_incre(init_length[g])*error
+      
     }
     # init_length=init_length[1:a2]
     
@@ -67,7 +69,7 @@ for(l in testrows){
     init_eggs = 1*init_weight^0
     # Calculate SSB per recruit
     SSB_per_recruit = sum(0.5*init_comp*init_weight*init_mat*init_eggs)
-    # initail SSB
+    # initial SSB
     SSB0 = SSB_per_recruit*R0_super
     
     # Lognormal recruitment deviation module
@@ -112,7 +114,9 @@ for(l in testrows){
         fish_sizes[1]=L1*ind_growth_error ## establish first size
         
         for(g in 1:(num_of_chance-1)){          # next mid year (interval 1 year)
-          fish_sizes[g+1] <- (fish_sizes[g]+growth_incre(fish_sizes[g]))*ind_growth_error
+          # fish_sizes[g+1] <- (fish_sizes[g]+growth_incre(fish_sizes[g]))*ind_growth_error
+          fish_sizes[g+1] <- fish_sizes[g]+growth_incre(fish_sizes[g])*ind_growth_error
+          
         }
         
         

@@ -53,7 +53,8 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
     pix <- !is.na(m2.dsig.zeros)
     
     vals <- m2.d$eval[[Term]][pix] ## what test vals did these correspond to
-    breaksdf[[t]] <- sort(c(unique(round(vals)))) ## get rounded unique
+    if(length(vals) > 1) cat('VALS > 1 NOTE')
+    breaksdf[[t]] <- sort(c(unique(round(vals))))[1] ## get rounded unique
   }
   
   # plot gam ----

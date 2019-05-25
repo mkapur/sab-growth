@@ -88,7 +88,7 @@ signifMK <- function(x, d, upper, lower, eval = 0, crit.eval){
   # want <- d > eval  | d < eval ## T/F if derivative is greater or less than 0
   # want <- d > eval & d > crit.eval[2]  | d < eval & d < crit.eval[1] ## T/F if derivative is greater or less than 0 and outside interval
   big <- which.max(c(abs(min(d)),abs(max(d))))
-  want <- d == c(min(d),max(d))[big]
+  want <- d == c(min(d),max(d))[big] ## return just one if equal
   rej[!want |miss] <- NA ## wherever equals zero or CI contains, input NA
   return(rej)
 }

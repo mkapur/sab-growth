@@ -10,6 +10,7 @@ nboot <- 100
 
 ## Create STARS breakpoints (only need to run once) ----
 source("./functions/runSTARS.R") ## slightly mod stars functionality
+source("./functions/missby.R")
 rm(breaksdf);  idx <- 1 ## storage coverage prob totals, rbind each scen
 breaksdf <- data.frame()
 Terms <- c("Year","Latitude_dd","Longitude_dd")

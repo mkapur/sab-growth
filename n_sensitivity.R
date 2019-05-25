@@ -164,9 +164,7 @@ for(size in c('half','threequ')){
 } ## end size loop 2
 
 for(size in c('half','threequ')){
-  
-  
-  
+
   ## plotmaster
   ## GAM propagg----
   cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),size,'.csv')) 

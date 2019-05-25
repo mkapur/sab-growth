@@ -9,7 +9,6 @@ library(ggpubr)
 require(DescTools)
 require(mapdata)
 require(mgcv)
-scenarios <- read.csv('./input_data/scenarios.csv',na.strings = 'NA') %>% filter(DESC != 'F0L1S_R3')
 
 ## manual file
 age <- 6
@@ -20,6 +19,7 @@ ldf %>% group_by(scen) %>% summarise(naY = sum(is.na(yr_breaks)), n = n()) %>% m
 # "g) 20% Higher k, Break at 25 deg.""c) Scenario 3 20% Higher k, Break at 25 deg.",
 ## panel plot of one gendata for each scenario ---
 source("./functions/Deriv.R")
+scenarios <- read.csv('./input_data/scenarios.csv',na.strings = 'NA') %>% filter(DESC != 'F0L1S_R3')
 scens <-  unique(scenarios$DESC)
 scens.title <- scens.title0 <- scens
 levels(scens.title) <-  c("g) Scenario 2 Break at 25 deg.", "g) Scenario 4 Break at 49 deg.", NA,
@@ -29,8 +29,8 @@ levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Brea
                            "c) Scenario 3 Overlap 20-25 deg.","a) Scenario 1 No Breaks",
                           "e) Scenario 5 Temporal Break Year 50")
 
-# cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'F0L1S_R3')
-bootpicks <-c(1,27,19,83,10,4)
+# cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'tempvar_R1R2')
+bootpicks <-c(5,27,19,83,2,2)
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){
   plist  <- list(); idx <- 1
@@ -44,15 +44,16 @@ for(i in 1:length(scens)){
   
   Terms <- c("Year","Latitude_dd","Longitude_dd")
   
-  ## raw data save separately ----
+## raw data save separately ----
   if(i < 5){ ## plot tempvar separately
   plist0[[idx0]]  <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
     theme_classic() +
-    theme(legend.position = 'none') +
+    # theme(legend.position = 'none') +
     scale_y_continuous(limits = c(-10,60), breaks = seq(0,50,10)) +
     geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-    scale_fill_viridis_c(guide = "legend") +
-    scale_size_continuous(range = c(1, 15)) +
+    scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
+                         high ="dodgerblue4", midpoint = 200, guide = 'legend') +
+    scale_size_continuous(range = c(10, 15), guide = 'legend') +
     labs(x = 'Longitude',y = 'Latitude',
          fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
          title = paste0(scens.title0[i])) #+
@@ -64,16 +65,15 @@ for(i in 1:length(scens)){
   if(i == 5){ ## plot tempvar separately
     plist0[[idx0]]  <- ggplot(tempdf, aes(x = Year, y = Length_cm)) +
       theme_classic() +
-      theme(legend.position = 'right') +
+      # theme(legend.position = 'right') +
       scale_y_continuous(limits = c(125,450)) +
       geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-      scale_fill_viridis_c(guide = "legend") +
-      scale_size_continuous(range = c(1, 15)) +
+      scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
+                           high ="dodgerblue4", midpoint = 200, guide = 'legend') +
+      scale_size_continuous(range = c(10, 15), guide = 'legend') +
       labs(x = 'Year', y = 'Length of Age Six Fish (cm)',
            fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
            title = paste0(scens.title0[i])) #+
-      # geom_label(x = 10, y = 400, label = paste0('n = ',nrow(tempdf)), 
-      #            size = 4, fill = 'white')
     idx0 <- idx0+1
   }
   #   ggsave(plot = last_plot(),  file = paste0("./figures/rawdat_",scen,".png"),
@@ -81,14 +81,15 @@ for(i in 1:length(scens)){
 
 
   ## map showing new breaks
-  if(idx <5){
+  if(idx < 5){
     plist[[idx]] <- ggplot(tempdf, aes(x = Latitude_dd, y = Longitude_dd)) +
       theme_classic() +
       theme(legend.position = 'right') +
-      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,10)) +
+       scale_y_continuous(limits = c(0,50), breaks = seq(0,50,10)) +
       geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-      scale_fill_viridis_c(guide = "legend") +
-      scale_size_continuous(range = c(1, 15)) +
+      scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
+                           high ="dodgerblue4", midpoint = 200, guide = 'legend') +
+      scale_size_continuous(range = c(10, 15), guide = 'legend') +
       labs(x = 'Longitude',y = 'Latitude',
            fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
            title = paste0(scens.title[i], ' Data and GAM-detected breaks ')) +
@@ -98,13 +99,14 @@ for(i in 1:length(scens)){
     }
     if(i == 5){ ## plot tempvar separately
     
-      plist[[idx]] <-ggplot(tempdf, aes(x = Year, y = Length_cm)) +
+      plist[[idx]] <- ggplot(tempdf, aes(x = Year, y = Length_cm)) +
         theme_classic() +
         theme(legend.position = 'right') +
         scale_y_continuous(limits = c(125,450)) +
         geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-        scale_fill_viridis_c(guide = "legend") +
-        scale_size_continuous(range = c(1, 15)) +
+        scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
+                             high ="dodgerblue4", midpoint = 200, guide = 'legend') +
+        scale_size_continuous(range = c(10, 15), guide = 'legend') +
         labs(x = 'Year', y = 'Length of Age Six Fish (cm)',
              fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
              title = paste0(scens.title0[i])) +
@@ -112,19 +114,22 @@ for(i in 1:length(scens)){
         #            size = 4, fill = 'white') +
         geom_vline(xintercept = breaksdf$yr_breaks, lwd = 1.1, linetype = 'dashed', col = 'red')
       idx <- idx + 1
-      
       }
   # ## plot GAM smooth and deriv -- will have to be from single, sorta-representative boot
   for(t in 1:length(Terms)){
     pd <- plot(mod,   select = t, scheme  =2, lwd  =2, main = paste0(Terms[t],' Smoother'), cex.axis = 2, ylim = c(-10,ifelse(t != 3,10,500)))
     temp0 <- pd[t] ## get this smoother
     temp <- data.frame(cbind(temp0[[1]]$x,temp0[[1]]$fit, temp0[[1]]$se)); names(temp) = c('x','fit','se')
-
+    if(t == 1){
+      xlims <- c(0,100)
+    } else{ xlims <- c(0,50)}
     ## plot smooth
     plist[[idx]] <-  ggplot(temp, aes(x = x, y = fit)) +
       theme_minimal() +
       theme(panel.grid = element_blank())+
       geom_line(lwd = 1.1) +
+      scale_x_continuous(limits = xlims) +
+      
       geom_line(aes(y= fit-se), linetype = 'dashed') +
       geom_line(aes(y= fit+se), linetype = 'dashed') +
       geom_rug(sides = 'b') +
@@ -134,26 +139,29 @@ for(i in 1:length(scens)){
     m2.dtemp <- data.frame(cbind(m2.d$eval[,Terms[t]], m2.d[[Terms[t]]]$deriv,
                                  CI[[1]]$upper, CI[[1]]$lower)); names(m2.dtemp) = c('x','deriv','upper','lower')
     ## plot deriv
+    # if(i < 5){
     plist[[idx]] <-  ggplot(m2.dtemp,aes(x = x, y = deriv))    +
       theme_minimal() +
       theme(panel.grid = element_blank())+
       geom_line(lwd = 1.1) +
-      geom_hline(yintercept = 0, col = 'grey22') +
+      scale_x_continuous(limits = xlims) +
+            geom_hline(yintercept = 0, col = 'grey22') +
       geom_line(aes(y= upper), linetype = 'dashed') +
       geom_line(aes(y= lower), linetype = 'dashed') +
       geom_vline(xintercept = breaksdf[,c('yr_breaks','lat_breaks','lon_breaks')[t]], 
                  col = 'red', lwd = 1.1, linetype = 'dashed') +
       labs(x = Terms[t], y = "f'(x)", title = paste0(letters[idx-1],") ",'First Derivative for ', Terms[t]))
     idx <- idx+1
-  }
+
+  } ## end Terms
 
 
-  # lay <- rbind(c(2,2,1,1,1),
-  #              c(3,3,1,1,1),
-  #              c(4,4,1,1,1),
-  #              c(5,5,1,1,1),
-  #              c(6,6,1,1,1),
-  #              c(7,7,1,1,1))
+  lay <- rbind(c(2,2,1,1,1),
+               c(3,3,1,1,1),
+               c(4,4,1,1,1),
+               c(5,5,1,1,1),
+               c(6,6,1,1,1),
+               c(7,7,1,1,1))
   # grid.arrange(grobs = plist[1:7], layout_matrix = lay) %>%
   # ggsave(plot = .,  file = paste0("./figures/GAM_analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
@@ -210,7 +218,7 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
         legend.position = 'none') +
   scale_fill_viridis_d()+
   scale_y_continuous(limits = c(0,1)) +
-  labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
+  labs(x = '',y = 'Proportion Detected Accurate Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
   geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +
   facet_wrap(~variable, nrow = 1)
 
@@ -257,7 +265,7 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
   # scale_fill_viridis_d()+
   scale_fill_grey() +
   scale_y_continuous(limits = c(0,1)) +
-  labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
+  labs(x = '',y = 'Proportion Detected Accurate Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
   geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +
   facet_wrap(~variable, ncol = 3)
 
@@ -431,7 +439,7 @@ cat(phase," done \n")
 all_data %>% filter(Age %in% c(4,6,30)) %>% group_by(Age,Sex,REG) %>% summarise(n = n())
 
 ## GAM Histogram of detected breaks----
-cdf_gam <- read.csv("GAM_output/cdf_2019-05-06.csv") %>% filter(scen != 'F0L1S_R3')
+cdf_gam <- read.csv("GAM_output/cdf_2019-05-25.csv") %>% filter(scen != 'F0L1S_R3')
 ntrue <- read.csv("input_data/ntrue_a6.csv") %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
 levels(cdf_gam$scen) <- levels(ntrue$scen) <- c("Scenario 2", "Scenario 4", NA,
                                                 "Scenario 3","Scenario 1",
@@ -536,13 +544,13 @@ full_data %>% filter(Age %in% c(4,6,10,30)) %>%
   group_by(Age, Sex) %>% summarise(n=n()) %>% write.csv(.,paste0("./output_data/n_sab_sex_age.csv"),row.names=F)
 
 ## summarise MISSED proportions ----
-cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-05-06.csv"))
-cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-05-06.csv"))
-cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-06.csv"))
+cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-05-25.csv"))
+cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-05-25.csv"))
+cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-25.csv"))
 
-cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-06.csv"))
-cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-05-06.csv"))
-cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-05-06.csv"))
+cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-25.csv"))
+cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-05-25.csv"))
+cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-05-25.csv"))
 
 cdf_gam %>% 
   filter(L1 == FALSE) %>%
@@ -572,6 +580,15 @@ cdf_gam %>% filter(YEAR == FALSE) %>% group_by(scen, gamYR) %>% dplyr::summarise
 cdf_gam %>% 
   filter(scen == 'F0L1S_25' & LAT == FALSE) %>% 
   group_by(gamLAT) %>% summarise(n=n())
+
+## all FALSEs were 50
+cdf_gam %>% 
+  filter(scen == 'F0L1S_49' & (LON == FALSE | LAT == FALSE)) %>% 
+  group_by(gamLAT,gamLON) %>% dplyr::summarise(n=n())
+# cdf_gam %>% 
+#   filter(scen == 'F0L1S_49' & LAT == TRUE) %>% 
+#   group_by(gamLAT) %>% dplyr::summarise(n=n())
+
 
 ## "no discernable pattern in spurious breaks"
 cdf %>% filter(scen %in% c('NoBreaks','tempvar_R1R2') & (LAT == FALSE  | LON == FALSE)) %>% group_by(scen, gamLAT,gamLON) %>% dplyr::summarise(n = n())

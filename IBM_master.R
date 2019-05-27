@@ -68,7 +68,13 @@ for(l in testrows){
     # Eggs-body mass relationship
     init_eggs = 1*init_weight^0
     # Calculate SSB per recruit
-    SSB_per_recruit = sum(0.5*init_comp*init_weight*init_mat*init_eggs)
+    ## bernoulli trial
+    r1 <- runif(length(tempMat), 0, 1)
+    mat01 <- (r1 <= tempMat) ## index where r1 is first less than probability of survival (incorporates change)
+    mat01[mat01 == TRUE] <- 1; mat01[mat01==FALSE] <- 0
+    # SSB_per_recruit = sum(0.5*init_comp*init_weight*init_mat*init_eggs)
+    
+    SSB_per_recruit = sum(0.5*init_comp*init_weight*mat01*init_eggs)
     # initial SSB
     SSB0 = SSB_per_recruit*R0_super
     
@@ -185,8 +191,15 @@ for(l in testrows){
         tempN = subset(tempSAA, Year == (ry + start_yr - 1)) ## extract PREVIOUS year
         tempW = lw(tempN$fish_size) ## calc weights
         tempMat = prob_mature(tempN$fish_size) ## calc prob of maturity at size
+
+        ## bernoulli trial
+        r1 <- runif(length(tempMat), 0, 1)
+        mat01 <- (r1 <= tempMat) ## index where r1 is first less than probability of survival (incorporates change)
+        mat01[mat01 == TRUE] <- 1; mat01[mat01==FALSE] <- 0
         tempE = 1 * tempW ^ 0 ## ! unsure
-        SSBy[ry] = sum(tempW * tempMat * tempE) / 2 ## SSB for this year (half step) is the sum of all biomasses & prob maturity
+        # SSBy[ry] = sum(tempW * tempMat * tempE) / 2 ## SSB for this year (half step) is the sum of all biomasses & prob maturity
+        SSBy[ry] = sum(tempW * mat01 * tempE) / 2 ## SSB for this year (half step) is the sum of all biomasses & prob maturity
+        
         RECRUITs[ry + 1] = round(BH_SR(SSBy[ry]) * exp(recruit_dev_adj[ry])) ## next year's recruits are the bev-holt or LFSR of the SSB with error
       } ## end of recruitment generation for that year
     } ## end of simu_year (ry)

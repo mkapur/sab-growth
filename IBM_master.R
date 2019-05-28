@@ -237,11 +237,11 @@ for(l in testrows){
 
 ## Post Hoc -- Creation of temp var via stitching
 for(b in 1:nboot){
-  p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 25)
+  p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 50)
   # for(n in c('F0L1S_25_',"F0L1S_R3_")){
     # for(n in c('F0L1S_25_',"F0L1S_R3_")){
       
-    p2 <- read.csv(paste0(getwd(),"/IBM_output/datasets/F0L1S_25_",b,".csv")) %>% filter(Year >= 25 & REG != 'R1')
+    p2 <- read.csv(paste0(getwd(),"/IBM_output/datasets/F0L1S_25_",b,".csv")) %>% filter(Year >= 50 & REG != 'R1')
     tempreg <- unique(p2$REG)
     tempdf <- rbind(p1,p2)
     for(i in 1:nrow(tempdf)){

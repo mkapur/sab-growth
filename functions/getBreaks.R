@@ -26,7 +26,7 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
   Terms <- c("Year","Latitude_dd","Longitude_dd")
   for(t in 1:length(Terms)){
     Term <- Terms[t]
-    newD <- data.frame(Year = seq(0,100,length = 100),
+    newD <- data.frame(Year = seq(1,100,length = 200),
                        Longitude_dd = seq(0,50,length = 100),
                        Latitude_dd = seq(0,50,length = 100))
     

@@ -69,14 +69,14 @@ for(l in testrows){
     init_eggs = 1*init_weight^0
     # Calculate SSB per recruit
     ## bernoulli trial
-    r1 <- runif(length(tempMat), 0, 1)
-    mat01 <- (r1 <= tempMat) ## index where r1 is first less than probability of survival (incorporates change)
+    r1 <- runif(length(init_mat), 0, 1)
+    mat01 <- (r1 <= init_mat) ## index where r1 is first less than probability of survival (incorporates change)
     mat01[mat01 == TRUE] <- 1; mat01[mat01==FALSE] <- 0
     # SSB_per_recruit = sum(0.5*init_comp*init_weight*init_mat*init_eggs)
     
     SSB_per_recruit = sum(0.5*init_comp*init_weight*mat01*init_eggs)
     # initial SSB
-    SSB0 = SSB_per_recruit*R0_super
+    SSB0 = SSB_per_recruit*R0_super; cat(SSB0,"\n")
     
     # Lognormal recruitment deviation module
     recruit_dev = rnorm(simu_year,0,sigma_R)
@@ -237,11 +237,11 @@ for(l in testrows){
 
 ## Post Hoc -- Creation of temp var via stitching
 for(b in 1:nboot){
-  p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 50)
+  p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 25)
   # for(n in c('F0L1S_25_',"F0L1S_R3_")){
-    for(n in c('F0L1S_25_',"F0L1S_R3_")){
+    # for(n in c('F0L1S_25_',"F0L1S_R3_")){
       
-    p2 <- read.csv(paste0(getwd(),"/IBM_output/datasets/",n,b,".csv")) %>% filter(Year >= 50 & REG != 'R1')
+    p2 <- read.csv(paste0(getwd(),"/IBM_output/datasets/F0L1S_25_",b,".csv")) %>% filter(Year >= 25 & REG != 'R1')
     tempreg <- unique(p2$REG)
     tempdf <- rbind(p1,p2)
     for(i in 1:nrow(tempdf)){
@@ -251,7 +251,7 @@ for(b in 1:nboot){
     levels(tempdf$REG) <- c('R0','R1','R2','R3')
     tempdf$REG[tempdf$REG == 'R0'] <- "R1"
     write.csv(tempdf, paste0(getwd(),"/IBM_output/datasets/tempvar_R1",tempreg,"_",b,".csv"), row.names=F)
-    cat(n," ",b,"\n")
-  } ## end R2/R3
+    # cat(n," ",b,"\n")
+  # } ## end R2/R3
 } ## end boots
 

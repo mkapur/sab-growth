@@ -30,7 +30,7 @@ levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Brea
                           "e) Scenario 5 Temporal Break Year 50")
 
 # cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'tempvar_R1R2')
-bootpicks <-c(5,27,19,83,2,2)
+bootpicks <-c(5,27,19,83,12,2)
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){
   plist  <- list(); idx <- 1
@@ -162,8 +162,8 @@ for(i in 1:length(scens)){
                c(5,5,1,1,1),
                c(6,6,1,1,1),
                c(7,7,1,1,1))
-  # grid.arrange(grobs = plist[1:7], layout_matrix = lay) %>%
-  # ggsave(plot = .,  file = paste0("./figures/GAM_analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  grid.arrange(grobs = plist[1:7], layout_matrix = lay) %>%
+  ggsave(plot = .,  file = paste0("./figures/GAM_analysis_",scen,".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 }
 
@@ -177,6 +177,7 @@ a6df <- list.files("./IBM_output/datasets/", full.names = T) %>%
     filter(Age == 6)
 
 dim(a6df)/(100*length(unique(scenarios$DESC))) ## 100 datasets times 5 simulations -- getting average per ds
+
 
 ## GAM propagg----
 cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv')) 
@@ -206,7 +207,7 @@ cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                          "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-levels(cdfaccu$variable) <- c('Lat, Long and Year','Both Latitude and Longitude','Latitude', 'Longitude' ,'Year')
+levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year','Lat, Long and Year','Both Latitude and Longitude')
 # cdfaccu$variable <- factor(cdfaccu$variable, levels=c('L1','L2','Both L1 and L2'))
 
 cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude'))& scen != "20% Higher k, Break at 25 deg.")
@@ -224,6 +225,7 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
 
 ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="bottom") %>%
   ggsave(plot = .,  file = paste0("./figures/GAM_cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+
 
 ## STARS propagg ----
 cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_',Sys.Date(),'.csv'))
@@ -439,7 +441,7 @@ cat(phase," done \n")
 all_data %>% filter(Age %in% c(4,6,30)) %>% group_by(Age,Sex,REG) %>% summarise(n = n())
 
 ## GAM Histogram of detected breaks----
-cdf_gam <- read.csv("GAM_output/cdf_2019-05-25.csv") %>% filter(scen != 'F0L1S_R3')
+cdf_gam <- read.csv("GAM_output/cdf_2019-05-27.csv") %>% filter(scen != 'F0L1S_R3')
 ntrue <- read.csv("input_data/ntrue_a6.csv") %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
 levels(cdf_gam$scen) <- levels(ntrue$scen) <- c("Scenario 2", "Scenario 4", NA,
                                                 "Scenario 3","Scenario 1",
@@ -488,7 +490,7 @@ grid.arrange(grobs = plist, ncol = 2) %>%
 
 
 ## STARS Histogram of detected breaks----
-cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-06.csv"))
+cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-27.csv"))
 ntrue <- read.csv("input_data/ntrue_a6.csv")
 levels(cdf_stars$scen) <- levels(ntrue$scen) <- c("Scenario 2 Break at 25 deg.", "Scenario 4 Break at 49 deg.", NA,
                                                    "Scenario 3 Overlap 20-25 deg.","Scenario 1 No Breaks",
@@ -529,7 +531,7 @@ for(l in 1:length(unique(cdf_stars$scen))){
 }
 
 grid.arrange(grobs = plist, ncol = 3) #%>%
-breaksdf <- read.csv(paste0("./stars_output/STARS_breaksdf_2019-04-29.csv")) 
+# breaksdf <- read.csv(paste0("./stars_output/STARS_breaksdf_2019-04-29.csv")) 
 
 ## average # of age 6 fish per dataset----
 a6df <- list.files("./IBM_output/datasets", full.names = T) %>%
@@ -603,6 +605,12 @@ cdf %>% filter(YEAR == FALSE) %>% group_by(scen, gamYR) %>% dplyr::summarise(n =
 cdf %>% filter(scen == 'F0LMW'& LAT == FALSE) %>% group_by(gamLAT) %>% dplyr::summarise(n = n())
 cdf %>% group_by(YEAR) %>% dplyr::summarise(n = n()) 
 
+
+## 188+16+96 is 75% correct for YEAR when relaxed
+cdf_gam %>% filter(scen == 'tempvar_R1R2') %>% group_by(YEAR) %>% dplyr::summarise(n = n())
+cdf_gam %>% filter(scen == 'tempvar_R1R2' & YEAR == FALSE & gamYR %in% c(49,52)) %>% group_by(gamYR) %>% dplyr::summarise(n = n())
+
+cdf_gam %>% filter(scen == 'tempvar_R1R2' & YEAR == FALSE ) %>% group_by(gamYR) %>% dplyr::summarise(n = n())
 
 
 

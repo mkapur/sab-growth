@@ -1,6 +1,6 @@
 ## sensitivity to sample size
 ## just...run the whole simulation again with 3/4 and half samples
-
+require(ggarrange)
 require(mgcv)
 ## wrapper function for getBreaks and makeMod, given Age
 source("./functions/getBreaks.R")
@@ -141,7 +141,7 @@ for(size in c('half','threequ')){
   cdfprop <- cdf %>%
     filter(!is.na(scen) & !is.na(L2))  %>% 
     select(scen, L1, L2) %>% 
-    mutate(both = (L1 == T & L2 == T)) %>%
+    # mutate(both = (L1 == T & L2 == T)) %>%
     melt(id = c('scen')) %>%
     group_by(scen,variable) %>%
     dplyr::summarise(denom = n(), n = sum(value)) %>% 
@@ -152,7 +152,7 @@ for(size in c('half','threequ')){
   ## When did regional designation go right? (original analysis)
   cdfaccu <- cdf %>% 
     select(scen, LAT, LON, YEAR) %>%
-    mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
+    # mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
     melt(id = c('scen')) %>%
     group_by(scen,variable) %>%
     dplyr::summarise(denom = n(), n = sum(value)) %>% 
@@ -172,7 +172,7 @@ for(size in c('half','threequ')){
                             "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
   
   # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-  levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2' )
+  levels(cdfprop$variable) <- c('L1','L2' )
   cdfprop2 <- cdfprop %>% filter(!(variable %in% c('Both L1 and L2')) & scen != "20% Higher k, Break at 25 deg.")
   
   # cdfprop$variable <- factor(cdfprop$variable, levels=c('L1','L2','Both L1 and L2'))
@@ -194,7 +194,7 @@ for(size in c('half','threequ')){
   levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                            "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
   # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-  levels(cdfaccu$variable) <- c('Lat, Long and Year','Both Latitude and Longitude','Latitude', 'Longitude' ,'Year')
+  levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year')
   # cdfaccu$variable <- factor(cdfaccu$variable, levels=c('L1','L2','Both L1 and L2'))
   
   cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude'))& scen != "20% Higher k, Break at 25 deg.")

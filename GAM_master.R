@@ -88,7 +88,7 @@ cdf %>%
 cdfprop <- cdf %>%
   filter(!is.na(scen) & !is.na(L2))  %>% 
   select(scen, L1, L2) %>% 
-  mutate(both = (L1 == T & L2 == T)) %>%
+  # mutate(both = (L1 == T & L2 == T)) %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 
@@ -99,10 +99,10 @@ write.csv(cdfprop,file = paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv'),row.
 ## When did regional designation go right? (original analysis)
 cdfaccu <- cdf %>% 
   select(scen, LAT, LON, YEAR) %>%
-  mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
+  # mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
   melt(id = c('scen')) %>%
   group_by(scen,variable) %>%
   dplyr::summarise(denom = n(), n = sum(value)) %>% 
-  mutate(prop = round(n/denom,2))%>%
+  mutate(prop = round(n/denom,2)) %>%
   mutate(method = "GAM")
 write.csv(cdfaccu,file = paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'),row.names = F)

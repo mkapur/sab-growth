@@ -185,7 +185,7 @@ levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
                           "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2' )
+levels(cdfprop$variable) <- c('L1','L2' )
 cdfprop2 <- cdfprop%>% filter(!(variable %in% c('Both L1 and L2')) & scen != "20% Higher k, Break at 25 deg.")
 
 # cdfprop$variable <- factor(cdfprop$variable, levels=c('L1','L2','Both L1 and L2'))
@@ -194,7 +194,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   theme_bw() +
   theme(panel.grid = element_blank(), 
         axis.text.x = element_blank(),
-        legend.position = c(0.9,0.75)) +
+        legend.position = c(0.6,0.9)) +
   scale_fill_viridis_d()+
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Coverage Probability', fill = 'Scenario', 
@@ -207,7 +207,7 @@ cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 49 deg.",
                          "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year','Lat, Long and Year','Both Latitude and Longitude')
+levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year')
 # cdfaccu$variable <- factor(cdfaccu$variable, levels=c('L1','L2','Both L1 and L2'))
 
 cdfaccu2 <- cdfaccu %>% filter(!(variable %in% c('Lat, Long and Year','Both Latitude and Longitude'))& scen != "20% Higher k, Break at 25 deg.")
@@ -228,11 +228,11 @@ ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="botto
 
 
 ## STARS propagg ----
-cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_',Sys.Date(),'.csv'))
+cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_2019-05-27.csv'))
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
                           "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
-levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2' )
+levels(cdfprop$variable) <- c('L1','L2','Both L1 and L2')
 cdfprop2 <- cdfprop %>% filter(!(variable %in% c('Both L1 and L2'))& scen != "20% Higher k, Break at 25 deg.")
 
 # cdfprop$variable <- factor(cdfprop$variable, levels=c('L1','L2','Both L1 and L2'))
@@ -241,7 +241,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   theme_bw() +
   theme(panel.grid = element_blank(), 
         axis.text.x = element_blank(),
-        legend.position = c(0.9,0.75)) +
+        legend.position = c(0.6,0.9)) +
   scale_fill_grey() +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = '',y = 'Coverage Probability', fill = 'Scenario', 
@@ -250,7 +250,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   facet_wrap(~variable)
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
-cdfaccu <- read.csv(paste0('./STARS_output/STARS_cdf_accu_',Sys.Date(),'.csv'))
+cdfaccu <- read.csv(paste0('./STARS_output/STARS_cdf_accu_2019-05-27.csv'))
 levels(cdfaccu$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
                           "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
@@ -441,8 +441,8 @@ cat(phase," done \n")
 all_data %>% filter(Age %in% c(4,6,30)) %>% group_by(Age,Sex,REG) %>% summarise(n = n())
 
 ## GAM Histogram of detected breaks----
-cdf_gam <- read.csv("GAM_output/cdf_2019-05-27.csv") %>% filter(scen != 'F0L1S_R3')
-ntrue <- read.csv("input_data/ntrue_a6.csv") %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
+cdf_gam <- read.csv("GAM_output/cdf_2019-05-28.csv") %>% filter(scen != 'F0L1S_R3')
+ntrue <- read.csv("input_data/ntrue_a6.csv", na.strings = 'NA') %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
 levels(cdf_gam$scen) <- levels(ntrue$scen) <- c("Scenario 2", "Scenario 4", NA,
                                                 "Scenario 3","Scenario 1",
                                                 "Scenario 5")
@@ -461,8 +461,8 @@ for(l in 1:length(unique(cdf_gam$scen))){
     dplyr::summarise(n = n()) %>%
     mutate(freq = n / sum(n), scen = scentemp) 
   
-  xmax <- ifelse(l==5, 55, 110)
-  plist[[idx]]  <- ggplot(tmp, aes(x = value, y = freq)) +
+  ## plot lat long first, then year
+  plist[[idx]]  <- ggplot(subset(tmp, variable != 'Year'), aes(x = value, y = freq)) +
     geom_bar(stat = 'identity') +
     theme_bw() +
     theme(panel.grid = element_blank(),
@@ -471,26 +471,44 @@ for(l in 1:length(unique(cdf_gam$scen))){
           legend.text = element_text(size = 6),
           strip.text = element_text(size= 9))+
     scale_y_continuous(limits = c(0,1)) +
-    scale_x_discrete(limits = c(paste(1:xmax),NA),
-                     breaks = c(paste(seq(0,xmax,10)),NA)) +
+    scale_x_discrete(limits = c(paste(1:51),NA),
+                     breaks = c(paste(seq(0,51,10)),NA)) +
+    geom_rect(aes(xmin = ifelse(variable != 'Year', 20,-10),
+                  xmax = ifelse(variable != 'Year', 25,-10), ymin = 0, ymax = Inf),
+              fill=ifelse(l == 3,"red",NA), alpha = 1E-2) +
+    facet_wrap(~scen+variable,ncol = 2,drop=TRUE) +
+    labs( y = 'frequency', x = 'detected break location', title = '') +
+    geom_bar(data = subset(ntrue, scen == scentemp & variable != 'Year'),
+               aes(x = factor(trueb), y = value), col = 'red', stat = 'identity', alpha = 0.5) 
+  idx <- idx +1
+  
+  plist[[idx]]  <- ggplot(subset(tmp, variable == 'Year'), aes(x = value, y = freq)) +
+    geom_bar(stat = 'identity') +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          axis.text = element_text(size = 6),
+          axis.title = element_text(size = 8),
+          legend.text = element_text(size = 6),
+          strip.text = element_text(size= 9))+
+    scale_y_continuous(limits = c(0,1)) +
+    scale_x_discrete(limits = c(paste(1:101),NA),
+                     breaks = c(paste(seq(0,101,10)),NA)) +
     geom_rect(aes(xmin = ifelse(variable != 'Year', 20,-10),
                   xmax = ifelse(variable != 'Year', 25,-10), ymin = 0, ymax = Inf), 
               fill=ifelse(l == 3,"red",NA), alpha = 1E-2) +
     facet_wrap(~scen+variable,ncol = 3) +
-    labs( y = 'frequency', x = 'detected break location', title = 'GAM-detected Breaks') +
-    geom_bar(data = subset(ntrue, scen == scentemp),
-               aes(x = trueb, y = value), col = 'red', stat = 'identity', alpha = 1E-2) 
-  # geom_vline(data = subset(ntrue, scen == scentemp),
-  #              aes(xintercept = trueb), col = 'red', linetype = 'dashed') 
+    labs( y = 'frequency', x = 'detected break location', title = '') +
+    geom_bar(data =  subset(ntrue, scen == scentemp & variable == 'Year'),
+             aes(x = factor(trueb), y = value), col = 'red', stat = 'identity', alpha = 0.5) 
   idx <- idx +1
 }
 
-grid.arrange(grobs = plist, ncol = 2) %>%
+grid.arrange(grobs = plist, ncol = 4) %>%
   ggsave(plot = .,   file = paste0("./figures/GAM_hist_breaks.png"), width = 10, height = 12, units = 'in', dpi = 480)
 
 
 ## STARS Histogram of detected breaks----
-cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-27.csv"))
+cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-28.csv"))
 ntrue <- read.csv("input_data/ntrue_a6.csv")
 levels(cdf_stars$scen) <- levels(ntrue$scen) <- c("Scenario 2 Break at 25 deg.", "Scenario 4 Break at 49 deg.", NA,
                                                    "Scenario 3 Overlap 20-25 deg.","Scenario 1 No Breaks",
@@ -546,13 +564,13 @@ full_data %>% filter(Age %in% c(4,6,10,30)) %>%
   group_by(Age, Sex) %>% summarise(n=n()) %>% write.csv(.,paste0("./output_data/n_sab_sex_age.csv"),row.names=F)
 
 ## summarise MISSED proportions ----
-cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-05-25.csv"))
-cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-05-25.csv"))
-cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-25.csv"))
+cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-05-28.csv"))
+cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-05-28.csv"))
+cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-28.csv"))
 
-cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-25.csv"))
-cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-05-25.csv"))
-cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-05-25.csv"))
+cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_2019-05-27.csv"))
+cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-05-27.csv"))
+cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-05-27.csv"))
 
 cdf_gam %>% 
   filter(L1 == FALSE) %>%
@@ -606,18 +624,18 @@ cdf %>% filter(scen == 'F0LMW'& LAT == FALSE) %>% group_by(gamLAT) %>% dplyr::su
 cdf %>% group_by(YEAR) %>% dplyr::summarise(n = n()) 
 
 
-## 188+16+96 is 75% correct for YEAR when relaxed
+## 184+16+96 /396 is 75% correct for YEAR when relaxed
 cdf_gam %>% filter(scen == 'tempvar_R1R2') %>% group_by(YEAR) %>% dplyr::summarise(n = n())
-cdf_gam %>% filter(scen == 'tempvar_R1R2' & YEAR == FALSE & gamYR %in% c(49,52)) %>% group_by(gamYR) %>% dplyr::summarise(n = n())
+cdf_gam %>% filter(scen == 'tempvar_R1R2' & YEAR == FALSE & gamYR %in% c(49,51)) %>% group_by(gamYR) %>% dplyr::summarise(n = n())
 
 cdf_gam %>% filter(scen == 'tempvar_R1R2' & YEAR == FALSE ) %>% group_by(gamYR) %>% dplyr::summarise(n = n())
 
 
 
 ## percent accuracy by cat
-cdfaccu_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% summarise(avg = mean(prop))
-cdfaccu_gam %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% summarise(avg = mean(prop))
+cdfaccu_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>%  dplyr::summarise(avg = mean(prop))
+cdfaccu_gam %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>%  dplyr::summarise(avg = mean(prop))
 
 
-cdfprop_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% summarise(avg = mean(prop))
-cdfprop_gam %>%  filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>%group_by(variable) %>% summarise(avg = mean(prop))
+cdfprop_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>% dplyr::summarise(avg = mean(prop))
+cdfprop_gam %>%  filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>%group_by(variable) %>%  dplyr::summarise(avg = mean(prop))

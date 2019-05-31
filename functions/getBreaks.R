@@ -53,8 +53,9 @@ getBreaks <- function(gammod = mod, dat, scenario = scen ){
     pix <- !is.na(m2.dsig.zeros)
     
     vals <- m2.d$eval[[Term]][pix] ## what test vals did these correspond to
-    if(length(vals) > 1) cat('VALS > 1 NOTE')
+    if(length(vals) > 1 & t == 1) cat(paste0(vals, " ",Terms[t],' NOTE MORE THAN ONE VAL',"\n")) ## will always throw double for spatial cause duplicate eval
     breaksdf[[t]] <- sort(c(unique(round(vals))))[1] ## get rounded unique
+    # if(t == 1) {cat(paste0(breaksdf[[t]] ,"\n"))}
   }
   
   # plot gam ----

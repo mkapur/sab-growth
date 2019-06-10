@@ -218,7 +218,7 @@ for(l in testrows){
   regID <- ifelse(!is.na(scenarios[l,"REG"]),paste(scenarios[l,"REG"]),"")
   out_file <-  paste0(scenname,"/",regID)
   
-  # if(fLevs[l,'CAT'] %in% c('NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
+  # if(fLevs[l,'CAT'] %in% c('l = 6NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
   nboot.temp <- ifelse(scenarios[l,"DESC"] == 'NoBreaks',nboot*2,nboot)
   
   for(b in 1:nboot.temp){

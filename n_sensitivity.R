@@ -1,11 +1,10 @@
 ## sensitivity to sample size
 ## just...run the whole simulation again with 3/4 and half samples
-require(ggarrange)
-require(mgcv)
+
 ## wrapper function for getBreaks and makeMod, given Age
 source("./functions/getBreaks.R")
 require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
-library(gridExtra); library(grid); library(lattice)
+library(gridExtra); library(grid); library(lattice); require(ggpubr)
 
 compile("sptlvb.cpp") ## will throw 'incomplete line' msg, ignore
 dyn.load(dynlib("sptlvb"))

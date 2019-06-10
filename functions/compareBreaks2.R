@@ -9,8 +9,8 @@ compareNA <- function(v1,v2) { ## ADD RELAXED CRITERA plus/minus one
 ## tabulate whether the detection & estimation methods were accurate.
 parms <- c('L1','L2','k','Linf')[1:2]
 
-matchdf <- read.csv('./input_data/matchdf3.csv')
-
+matchdf <- read.csv('./input_data/matchdf3.csv') %>% filter(nscen != 'F0L1S_R3')
+levels(matchdf$nscen)[3] <- NA
 parest <-  rep0 %>% 
   filter(variable %in% parms) %>% 
   mutate(source = 'Estimated')

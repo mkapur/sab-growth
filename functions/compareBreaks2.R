@@ -36,10 +36,10 @@ for(n in unique(parest$REG)){
     cdf[idx,"LAT"] <- compareNA(cdf[idx,"gamLAT"],scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1])
     cdf[idx,"LON"] <- compareNA(cdf[idx,"gamLON"],scenarios$SPATIAL[scenarios$DESC == cdf[idx,'scen']][1])
     
-    # if(scen == "F0LMW")  { # won't match "overlap"
-    #   cdf[idx,"LAT"] <- cdf[idx,"gamLAT"] >= 20 & cdf[idx,"gamLAT"] <= 25
-    #   cdf[idx,"LON"] <- cdf[idx,"gamLON"] >= 20 & cdf[idx,"gamLON"] <= 25
-    # }
+    if(scen == "F0L1S_49")  { # won't match "overlap"
+      cdf[idx,"LAT"] <- compareNA(cdf[idx,"gamLAT"],NA)
+      cdf[idx,"LON"] <- compareNA(cdf[idx,"gamLON"],48)
+    }
     if(scen == "F0LMW")  { # won't match "overlap"
       cdf[idx,"LAT"] <-  ifelse(!is.na(cdf[idx,'gamLAT']), cdf[idx,"gamLAT"] >= 20 & cdf[idx,"gamLAT"] <= 25,FALSE)
       cdf[idx,"LON"] <-  ifelse(!is.na(cdf[idx,'gamLON']), cdf[idx,"gamLON"] >= 20 & cdf[idx,"gamLON"] <= 25,FALSE)

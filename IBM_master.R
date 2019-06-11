@@ -229,8 +229,6 @@ for(l in testrows){
     makeLat(dat) %>%
       write.csv(.,  paste0(getwd(),"/IBM_output/datasets/",basename(scenname),"_",b,".csv"),
                 row.names = F)
-    
-    
   }
 } ## end testrows
 

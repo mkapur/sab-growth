@@ -1,7 +1,7 @@
 ## Code to test GAM method on datasets generated via iPopSim (IBM)
 ## This will fit a gam for each replicate, identify break points, fit new life history params
 ## and plot comparisons
-## Maia Sosa Kapur kapurm@uw.edu WiSp 2019
+## Maia Sosa Kapur kapurm@uw.edu Forever... 2019
 
 require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
 library(gridExtra); library(grid); library(lattice)

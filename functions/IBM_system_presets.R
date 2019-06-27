@@ -41,7 +41,7 @@ lw  = function(fish_size){
 ## RECRUITMENT/REPRO MODULE ----
 # Maturity ogive
 r = -0.1034
-L50 = 143.68
+L50 = 75 #143.68
 
 # Maturity ogive FUNCTION
 prob_mature = function(fish_size){
@@ -50,7 +50,7 @@ prob_mature = function(fish_size){
 }
 
 # num of super individuals - max recruits per year
-R0_super = 12
+R0_super = 22
 # R0_super = 300
 
 ## Beverton-Holt SRR 

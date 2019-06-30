@@ -18,7 +18,7 @@ source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions
 
 
 # Fit VB and calc coverage ----
-ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) 
+ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) ## dataframe of detected breaks made above○
 rm(cdf); cdf <- data.frame(); idx <-1 ## storage coverage prob totals, rbind each scen
 for(l in 1:length(unique(ldfprop$scen))){
   # for(b in sample(1:nboot,5)){

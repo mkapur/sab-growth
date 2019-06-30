@@ -6,17 +6,16 @@ source("./functions/getBreaks.R")
 ldf <- data.frame()
   
   ## loop through boots, build GAMS and ID Breakpoints ----
-  for(l in 1:length(testrows)){
+  for(l in 1:length(unique(scenarios$DESC))){
     
-    scen0 <- testrows[l]
+    scen0 <-  unique(scenarios$DESC)[l] #testrows[l]
     scen <- scen0
-    outdir0 <-  paste0("C:/users/",compname,"/dropbox/uw/sab-growth/gam/plots/", 
-                       scen)
+    outdir0 <-  paste0("C:/users/",compname,"/dropbox/uw/sab-growth/gam/plots/", scen)
     if(!exists(outdir0)) dir.create(outdir0)
     
     for(b in 1:nboot){ ## loop boots
       dat <- read.csv(paste0("./IBM_output/datasets/",scen,"_",b,'.csv'))  %>% filter(Age == age)
-      cat( testrows[l],' boot ',b,' Age ',age,'\n')
+      cat( paste0(scen,' build GAM boot ',b,' Age ',age,'\n'))
 
       mod <- gam(Length_cm ~ s(Year, bs = "cc") + s(Latitude_dd) + s(Longitude_dd), data = dat) 
       save(mod, file = paste0("./GAM_output/mod_",scen,"_",b,".rds")) ## save on the fly

@@ -73,8 +73,7 @@ for(l in testrows){
     mat01 <- (r1 <= init_mat) ## index where r1 is first less than probability of survival (incorporates change)
     mat01[mat01 == TRUE] <- 1; mat01[mat01==FALSE] <- 0
     # SSB_per_recruit = sum(0.5*init_comp*init_weight*init_mat*init_eggs)
-    
-    SSB_per_recruit = sum(0.5*init_comp*init_weight*mat01*init_eggs)
+    SSB_per_recruit = sum(0.5*init_weight*mat01) ## sum weight * maturity * sex ratio
     # initial SSB
     SSB0 = SSB_per_recruit*R0_super; cat(SSB0,"\n")
     
@@ -91,10 +90,10 @@ for(l in testrows){
     Inst_F_vector <- rep(0.000,simu_year+1) ## to make them longer.
     
     ## save simulated F
-    fdf <- rbind(fdf, data.frame(cbind(Inst_F_vector,
-                                       1:101, 
-                                       rep(idx, 101), 
-                                       rep(boot_number,101))))
+    # fdf <- rbind(fdf, data.frame(cbind(Inst_F_vector,
+    #                                    1:101, 
+    #                                    rep(idx, 101), 
+    #                                    rep(boot_number,101))))
     
     for(ry in 1:simu_year){ ## iterate sim years
       if(RECRUITs[ry] < 1){ ## fail if less than one recruit
@@ -134,9 +133,10 @@ for(l in testrows){
         inst_Z_vector = inst_Z_vector[1:a2]
 
         # random number r1 - bernoulli trial
-        r1 = runif(length(inst_Z_vector), 0, 1)
-        Zdeath = which.max(r1 <= (1 - exp(-inst_Z_vector))) ## index where r1 is first less than probability of survival (incorporates change)
+        r1 = runif(length(inst_Z_vector), 0, 1) ## bernoulli trial for each ind/yr/age
+        Zdeath = which.max(r1 <= (1 - exp(-inst_Z_vector))) ## index where r1 is first less than probability of survival -- first death
         fish_sizes = fish_sizes[1:Zdeath] ## trim fish_sizes to time at death
+        ## as whichever age the random number exceeds e^-m, survivorship goes to zero ()
         if(length(fish_sizes) >a2){print('length fish size > a2 line 179')}
         
         ## SIZE-AT-TIME BOOKKEEPING 
@@ -163,8 +163,8 @@ for(l in testrows){
         
         ## MORTALITY MODULE:
         # seperate inst_total mortality into F and M
-        M_dead_por = (1 - exp(-Inst_M)) / (1 - exp(-inst_Z_vector[Zdeath])) ## nat survivorship over overall survivorship. Will be 1 for years with only nat mort in effect.
-        r2 = runif(1, 0, 1) ## bernoulli trial
+        # M_dead_por = (1 - exp(-Inst_M)) / (1 - exp(-inst_Z_vector[Zdeath])) ## nat survivorship over overall survivorship. Will be 1 for years with only nat mort in effect.
+        # r2 = runif(1, 0, 1) ## bernoulli trial for survivorship
         true_age = Zdeath - 1
         AgeE = rnorm(1, mean_age_true_age[true_age + 1], mean_SD_age_true_age[true_age +
                                                                                 1])
@@ -185,22 +185,35 @@ for(l in testrows){
       ## STOCK-RECRUITMENT MODULE
       # Update number of recruits by B-H stock recruitment relationship
       # Recruitment derived from B-H S-R start from the second year of fishing mortality
-      
+      xIY <-  NULL; idx = 1
       if (ry > M_only_yr & ry <= (simu_year - 1)) { ## only perform SRR for years after M only and before last year
+  
         tempSAA = read.table(paste0(path_name, "/IBM_SAA_MATRIX.txt"),header = T, sep = ',') ## read current size-at-age-table
-        tempN = subset(tempSAA, Year == (ry + start_yr - 1)) ## extract PREVIOUS year
-        tempW = lw(tempN$fish_size) ## calc weights
-        tempMat = prob_mature(tempN$fish_size) ## calc prob of maturity at size
-
-        ## bernoulli trial
-        r1 <- runif(length(tempMat), 0, 1)
-        mat01 <- (r1 <= tempMat) ## index where r1 is first less than probability of survival (incorporates change)
-        mat01[mat01 == TRUE] <- 1; mat01[mat01==FALSE] <- 0
-        tempE = 1 * tempW ^ 0 ## ! unsure
-        # SSBy[ry] = sum(tempW * tempMat * tempE) / 2 ## SSB for this year (half step) is the sum of all biomasses & prob maturity
-        SSBy[ry] = sum(tempW * mat01 * tempE) / 2 ## SSB for this year (half step) is the sum of all biomasses & prob maturity
+        tempN_prev = subset(tempSAA, Year == (ry + start_yr - 1)) ## extract PREVIOUS year
+        tempN_curr = subset(tempSAA, Year == (ry + start_yr )) ## extract CURRENT year
         
-        RECRUITs[ry + 1] = round(BH_SR(SSBy[ry]) * exp(recruit_dev_adj[ry])) ## next year's recruits are the bev-holt or LFSR of the SSB with error
+        tempW = lw(tempN_curr$fish_size) ## calc weights
+        for(i in unique(tempN_curr$uni_ind)){
+          tempN_prev_i <- subset(tempN_prev, uni_ind == i); if(nrow(tempN_prev_i) == 0) next(); ## skip if it died last year
+          tempN_curr_i <- subset(tempN_curr, uni_ind == i)
+          
+          tempMat_prev = prob_mature(tempN_prev_i$fish_size) 
+          tempMat_curr = prob_mature(tempN_curr_i$fish_size) ## calc prob of maturity at size, year for individual
+          # r1 <- runif(1,0,1)
+          # mat01_prev <- ifelse(tempMat_prev > r1,1,0)
+          # mat01_curr <- ifelse(tempMat_curr > r1,1,0)
+          xIY[idx] <-       (tempMat_curr - tempMat_prev)/(1-tempMat_prev); idx = idx+1 ## this is the prob mat for each individual in this year
+        }
+
+        
+        ## bernoulli trial for maturity
+        # r1 <- runif(length(tempMat), 0, 1)
+        # mat01 <- (r1 <= tempMat) ## index where r1 is first less than probability of survival (incorporates change)
+        # mat01[mat01 == TRUE] <- 1; mat01[mat01==FALSE] <- 0
+        # tempE = 1 * tempW ^ 0 ## ! unsure..this is supposed to be eggs
+        # SSBy[ry] = sum(tempW * tempMat * tempE) / 2 ## SSB for this year (half step) is the sum of all biomasses & prob maturity
+        SSBy[ry] = sum(tempW * xIY ) / 2 ## SSB for this year is the sum of all biomasses & prob maturity
+        RECRUITs[ry + 1] = round(BH_SR(SSBy[ry]) * exp(recruit_dev_adj[ry])) ## next year's recruits are the bev-holt of the SSB with error
       } ## end of recruitment generation for that year
     } ## end of simu_year (ry)
   } ## end of boots

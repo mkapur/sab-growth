@@ -35,7 +35,7 @@ levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Brea
                           "e) Scenario 5 Temporal Break Year 50")
 
 # cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'F0L1S_49')
-bootpicks <-c(5,27,19,83,12,2)
+bootpicks <-c(5,33,3,83,12,2)
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){
   plist  <- list(); idx <- 1
@@ -183,7 +183,7 @@ ggarrange(plotlist = plist0, ncol=2, nrow=3, common.legend = TRUE, legend="botto
 
 
 ## GAM propagg----
-cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),'.csv')) 
+cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date()-2,'.csv')) 
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 48 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
@@ -205,7 +205,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   facet_wrap(~variable)
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
-cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'))
+cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_',Sys.Date()-2,'.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 48 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year')
@@ -225,7 +225,7 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
   facet_wrap(~variable, nrow = 1)
 
 ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="bottom") %>%
-  ggsave(plot = .,  file = paste0("./figures/GAM_cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  ggsave(plot = .,  file = paste0("./figures/GAM_cdfprob_",Sys.Date()-2,".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 
 ## STARS propagg ----
@@ -271,7 +271,7 @@ plist1[[2]] <- ggplot(cdfaccu2, aes(x = scen, y = prop, fill = scen)) +
   facet_wrap(~variable, ncol = 3)
 
 ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="bottom") %>%
-  ggsave(plot = .,  file = paste0("./figures/STARS_cdfprob_",Sys.Date(),".png"), width = 11, height = 8, units = 'in', dpi = 480)
+  ggsave(plot = .,  file = paste0("./figures/STARS_cdfprob_",Sys.Date()-2,".png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 
 rbind(cdfprop, cdfaccu) %>% 
@@ -441,20 +441,20 @@ breaksdf <- read.csv(paste0("./stars_output/STARS_breaksdf_2019-04-29.csv"))
 #   # geom_line() +
 #   labs(x = 'Age (years)', y = 'Length (cm)', color = "Growth Regime") 
 # ggsave(plot = last_plot(),  file = paste0("./figures/ibm_growth.png"), width = 8, height = 6, units = 'in', dpi = 480)
-
+a=
 
 ## Make Appendix Table A2 ----
 
 ## read stuff
-cdf_gam <- read.csv(paste0("GAM_output/cdf_",Sys.Date(),".csv"))
-cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_",Sys.Date(),".csv"))
-cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_",Sys.Date(),".csv"))
+cdf_gam <- read.csv(paste0("GAM_output/cdf_",Sys.Date()-2,".csv"))
+cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_",Sys.Date()-2,".csv"))
+cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_",Sys.Date()-2,".csv"))
 
-cdfaccu_threeq <- read.csv(paste0("GAM_output/cdf_accu_",Sys.Date(),"threequ",".csv"))
-cdfaccu_half <- read.csv(paste0("GAM_output/cdf_accu_",Sys.Date(),"half",".csv"))
+cdfaccu_threeq <- read.csv(paste0("GAM_output/cdf_accu_",Sys.Date()-2,"threequ",".csv"))
+cdfaccu_half <- read.csv(paste0("GAM_output/cdf_accu_",Sys.Date()-2,"half",".csv"))
 
-cdfprop_threeq <-read.csv(paste0("GAM_output/cdf_prop_",Sys.Date(),"threequ",".csv"))
-cdfprop_half <-read.csv(paste0("GAM_output/cdf_prop_",Sys.Date(),"half",".csv"))
+cdfprop_threeq <-read.csv(paste0("GAM_output/cdf_prop_",Sys.Date()-2,"threequ",".csv"))
+cdfprop_half <-read.csv(paste0("GAM_output/cdf_prop_",Sys.Date()-2,"half",".csv"))
 
 TA2 <- data.frame()
 for(i in 1:length(unique(cdfaccu_gam$scen))){
@@ -479,10 +479,10 @@ for(i in 1:length(unique(cdfaccu_gam$scen))){
   TA2[i,"latlonyr_3q"] <- paste(tmp_accu$prop, collapse = ", ")
 }
 TA2$ORD <- c(2,4,3,1,5)
-TA2[order(TA2$ORD),] %>% select(-ORD) %>% write.csv(paste0("figures/table_a2_",Sys.Date(),".csv"), row.names = F)
-# cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_",Sys.Date(),".csv"))
-# cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_",Sys.Date(),".csv"))
-# cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_",Sys.Date(),".csv"))
+TA2[order(TA2$ORD),] %>% select(-ORD) %>% write.csv(paste0("figures/table_a2_",Sys.Date()-2,".csv"), row.names = F)
+# cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_",Sys.Date()-2,".csv"))
+# cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_",Sys.Date()-2,".csv"))
+# cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_",Sys.Date()-2,".csv"))
 
 
 
@@ -491,7 +491,7 @@ TA2[order(TA2$ORD),] %>% select(-ORD) %>% write.csv(paste0("figures/table_a2_",S
 # cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-05-28.csv"))
 # cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-28.csv"))
 # 
-# cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_",Sys.Date(),".csv"))
+# cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_",Sys.Date()-2,".csv"))
 cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-06-10.csv"))
 cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-06-10.csv"))
 # 
@@ -672,8 +672,8 @@ cdfprop_gam %>%  filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>%group_by(var
 #          title = paste0(phase," Linf Estimates")) +
 #     facet_wrap(~Sex )
 # 
-# ggsave(plot = last_plot(),  file = paste0("./figures/sab_parest_",Sys.Date(),"_",phase,".png"), width = 10, height = 8, units = 'in', dpi = 480)
-# write.csv(parest, file = paste0("./GAM_output/overlap_",Sys.Date(),"_",phase,".csv"),row.names=F)
+# ggsave(plot = last_plot(),  file = paste0("./figures/sab_parest_",Sys.Date()-2,"_",phase,".png"), width = 10, height = 8, units = 'in', dpi = 480)
+# write.csv(parest, file = paste0("./GAM_output/overlap_",Sys.Date()-2,"_",phase,".csv"),row.names=F)
 
 
 ## Figure 9 SAB Fits ----
@@ -706,7 +706,7 @@ cdfprop_gam %>%  filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>%group_by(var
 #   facet_wrap(~gamREG + Sex , ncol = 4)
 # 
 # ggsave(plot = last_plot(),  
-#        file = paste0("./figures/sab_fits_",Sys.Date(),"_",phase,".png"), 
+#        file = paste0("./figures/sab_fits_",Sys.Date()-2,"_",phase,".png"), 
 #        width = 10, height = 12, units = 'in', dpi = 520)
 # cat(phase," done \n")
 # } ## end phase

@@ -17,11 +17,10 @@ options(warn = -1)
 nboot <- 100
 scenarios <- read.csv('./input_data/scenarios.csv',na.strings = 'NA') ## manual file
 source('./functions/IBM_wrangle_data.R')
-testrows <- 1:nrow(scenarios)
 # fdf <- data.frame(); idx <- 1
 p <- proc.time() ## set timer
 
-for(l in testrows){
+for(l in 1:(nrow(scenarios)-1)){
   
   ## if there's a spatial break
   if (!is.na(scenarios[l, 'SPATIAL'])){
@@ -141,7 +140,7 @@ for(l in testrows){
         NIBM[idx + 1, 'Weight'] <-  lw( NIBM[II,'Length_cm'])
         # Mature this year?
         if (is.na(NIBM[II,'Mature'])){NIBM[II,'Mature'] <- 0} ## replace NAs
-        if (NIBM[II,'Mature'] == 1){NIBM[II,'Mature'] <- 1} ## cannot un-mature
+        if (NIBM[II,'Mature'] == 1){NIBM[idx + 1,'Mature'] <- 1} ## cannot un-mature
         if(MyAge < 15 & NIBM[II,'Mature'] == 0){
           NIBM[idx + 1,'Mature'] <- ifelse(runif(1,0,1) < P[MyAge+1],1,0)
         } else if(MyAge >= 15 & NIBM[II,'Mature'] == 0){
@@ -163,10 +162,12 @@ for(l in testrows){
         idx <- idx + 1
       } ## end adding recruits
       
-      NIBM <- NIBM %>% filter(Age != -1 ) # To speed up remove all Age -1 animals at each time-step. idx is invalid now.
-      # cat(scenarios[l,"DESC"]," year ",ry,"  boot ",boot_number,"\n")
+      NIBM <- NIBM %>% filter(Age != -1) # To speed up remove all Age -1 animals at each time-step. idx is invalid now.
     } ## end simu_year
     ## save NIBM
+    NIBM <- NIBM %>% filter(Age != -1 &  Year > 24) # To speed up remove all Age -1 animals at each time-step. idx is invalid now.
+    NIBM$Year <- NIBM$Year - 25 ## remove burn in
+    
     write.csv(NIBM %>% mutate('boot' = boot_number, 
                               'REG' = as.factor(scenarios[l, "REG"])),
               paste0(out_file,"/",boot_number,"_sim_Comp.csv"),row.names = F)
@@ -174,23 +175,32 @@ for(l in testrows){
     
     
   } ## end of boots
-  
-  
-  
-  
-  # list.files(out_file, pattern = '*.csv',recursive = F,full.names = T) %>%
-  #   lapply(., read.csv) %>% 
-  #   bind_rows() %>%
-  #   # filter(Year != 0) %>%
-  #   group_by(Year, boot) %>%
-  #   dplyr::summarise(n = n()) %>%
-  #   ggplot(.,aes(x = Year, y = n, group = boot, color = factor(boot))) +
-  #   geom_line() +
-  #   labs(y = '# Individuals', color = 'replicate')
-  # genDat <- build_simComp(out_file,l=l)
-  # rm(genDat)
-  
-} ## end make NIBM 
+  } ## end make NIBM
+
+#   out_file <- paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/tempvar_R1R2")
+#   # out_file <- paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/NoBreaks")
+ 
+# ## check length vs time -- should be no swoops
+#   list.files(out_file, pattern = "*.csv",recursive = F,full.names = T) %>%
+#     lapply(., read.csv) %>%
+#     bind_rows() %>%
+#     filter(Age == 6) %>%
+#     group_by(boot) %>%
+#     # dplyr::summarise(n = n()) %>%
+#     ggplot(.,aes(x = Year, y = Length_cm, group = boot, color = factor(boot))) +
+#     geom_point() +
+#     labs(y = 'Length_cm', color = 'replicate')
+#   ## check n individuals vs time -- should be no swoops
+#   list.files(out_file, pattern = '*.csv',recursive = F,full.names = T) %>%
+#     lapply(., read.csv) %>%
+#     bind_rows() %>%
+#     # filter(Year != 0) %>%
+#     group_by(Year, boot) %>%
+#     dplyr::summarise(n = n()) %>%
+#     ggplot(.,aes(x = Year, y = n, group = boot, color = factor(boot))) +
+#     geom_line() +
+#     labs(y = '# Individuals', color = 'replicate')
+
 
 ## now make latitude
 # sptl <- scenarios[l,"SPATIAL"]
@@ -206,25 +216,31 @@ for(l in testrows){
 #             row.names = F)
 
 ## Add in Spatial - needs to happen once R1 and R2 are built for this scenario ----
+source("./functions/makeLat.R")
+
 for(l in 1:(length(unique(scenarios$DESC)))){
-  sptl <- scenarios[scenarios$DESC == unique(scenarios$DESC)[l],"SPATIAL"]
-  scenname <- paste0(getwd(),"/IBM_output/",scenarios[l,"DESC"])
-  regID <- ifelse(!is.na(scenarios[l,"REG"]),paste(scenarios[l,"REG"]),"")
-  out_file <-  paste0(scenname,"/",regID)
+  sptl <- subset(scenarios, DESC == unique(scenarios$DESC)[l])$SPATIAL[1] 
+  scenname <- paste0(getwd(),"/IBM_output/",unique(scenarios$DESC)[l])
+  # regID <- ifelse(!is.na(subset(scenarios, DESC == unique(scenarios$DESC)[l])$REG[1] ),
+  #                 paste(subset(scenarios, DESC == unique(scenarios$DESC)[l])$REG[1]),"")
+  # # out_file <-  paste0(scenname,"/",regID)
   
   # if(fLevs[l,'CAT'] %in% c('l = 6NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
   # nboot.temp <- ifelse(scenarios[l,"DESC"] == 'NoBreaks',nboot*2,nboot)
   
   for(b in 1:nboot){
-    cat(paste0("Making Spatial Breaks for ",unique(scenarios$DESC)[l]," boot ",boot_number,"\n"))
+    cat(paste0("Making Spatial Breaks for ",unique(scenarios$DESC)[l]," boot ",b,"\n"))
     
     # cat(basename(scenname)," boot ",b, " MakeLat ", "\n")
-    dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0("/",b,'_sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
+    dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0("/",b,'_sim_Comp'),
+                                                                   list.files(scenname, full.names = T, recursive = T))] %>%
       lapply(read.csv,sep=",",header=T) %>%
       reduce(bind_rows)
     makeLat(dat) %>%
       write.csv(.,  paste0(getwd(),"/IBM_output/datasets/",basename(scenname),"_",b,".csv"),
                 row.names = F)
+    
+    
   }
 } ## end testrows
 
@@ -235,7 +251,7 @@ for(l in 1:(length(unique(scenarios$DESC)))){
 
 ## Post Hoc -- Creation of temp var via stitching
 for(b in 1:nboot){
-  cat(paste0("Making temporal Breaks for ", boot ," boot_number","\n"))
+  cat(paste0("Making temporal Breaks boot ", b,"\n"))
   
   p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 50)
   # for(n in c('F0L1S_25_',"F0L1S_R3_")){

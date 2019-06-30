@@ -17,7 +17,7 @@ M_only_yr = 50
 # Fishing mortality starting year
 F_start_yr = 50
 
-simu_year = M_only_yr+F_start_yr
+simu_year = 125 #M_only_yr+F_start_yr
 
 ## GROWTH MODULE, MOVED TO REGION SPECIFIC FILE----
 
@@ -50,7 +50,7 @@ prob_mature = function(fish_size){
 }
 
 # num of super individuals - max recruits per year
-R0_super = 22
+R0_super = 12
 # R0_super = 300
 
 ## Beverton-Holt SRR 
@@ -198,24 +198,3 @@ maketables = function(path_name){
   write.table(EXP_info[-1,],paste0(path_name,"/IBM_EXP_MATRIX.txt"),append = TRUE,
               row.names = FALSE,col.names = TRUE,sep=",")
 } ## end of function
-
-makeLat<-function(dat){
-  for(i in 1:nrow(dat)){  
-    if(is.na(sptl)){
-      dat$Latitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R1' ## uniform range
-      dat$Longitude_dd[i] <- runif(1, 0.0, 50.0); dat$REG[i] <- 'R1' ## uniform range
-    } else if(sptl == 25){ ## 25 is shorthand for single uniform break
-      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-      dat$Longitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,25.00001,50.0))
-    } else if(sptl == 48){ 
-      dat$Latitude_dd[i] <- runif(1, 0.0, 50.0)#; dat$REG[i] <- 'R1' ## uniform range
-       # dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,49.0), runif(1,49.00001,50.0))
-      dat$Longitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,47.9999), runif(1,48.0,50.0))
-    } else if(sptl == "overlap"){ ## 20 is shorthand for overlapping zones
-      dat$Latitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
-      dat$Longitude_dd[i] <-  ifelse(dat$REG[i] == 'R1', runif(1,0.0,25.0), runif(1,20.0,50.0))
-    } ## end else
-  } ## end nrow
-  return(dat)
-}
-

@@ -81,7 +81,7 @@ for(l in 1:(nrow(scenarios)-1)){
         NIBM[Ipnt,4] <- lw( NIBM[Ipnt,2])
         NIBM[Ipnt,5] <- 0
         NIBM[Ipnt,6] <- Ipnt
-
+        
       }  
     }  
     Ipnt0 <- Ipnt
@@ -164,56 +164,15 @@ for(l in 1:(nrow(scenarios)-1)){
       
       NIBM <- NIBM %>% filter(Age != -1) # To speed up remove all Age -1 animals at each time-step. idx is invalid now.
     } ## end simu_year
-    ## save NIBM
-    NIBM <- NIBM %>% filter(Age != -1 &  Year > 24) # To speed up remove all Age -1 animals at each time-step. idx is invalid now.
-    NIBM$Year <- NIBM$Year - 25 ## remove burn in
-    
-    write.csv(NIBM %>% mutate('boot' = boot_number, 
-                              'REG' = as.factor(scenarios[l, "REG"])),
+    ## rm burn in and save NIBM
+    write.csv(NIBM %>% filter(Year > 24) %>% mutate(Year = Year - 25, 'boot' = boot_number, 
+                                                    'REG' = as.factor(scenarios[l, "REG"])) ,
               paste0(out_file,"/",boot_number,"_sim_Comp.csv"),row.names = F)
     
     
     
   } ## end of boots
-  } ## end make NIBM
-
-#   out_file <- paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/tempvar_R1R2")
-#   # out_file <- paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/NoBreaks")
- 
-# ## check length vs time -- should be no swoops
-#   list.files(out_file, pattern = "*.csv",recursive = F,full.names = T) %>%
-#     lapply(., read.csv) %>%
-#     bind_rows() %>%
-#     filter(Age == 6) %>%
-#     group_by(boot) %>%
-#     # dplyr::summarise(n = n()) %>%
-#     ggplot(.,aes(x = Year, y = Length_cm, group = boot, color = factor(boot))) +
-#     geom_point() +
-#     labs(y = 'Length_cm', color = 'replicate')
-#   ## check n individuals vs time -- should be no swoops
-#   list.files(out_file, pattern = '*.csv',recursive = F,full.names = T) %>%
-#     lapply(., read.csv) %>%
-#     bind_rows() %>%
-#     # filter(Year != 0) %>%
-#     group_by(Year, boot) %>%
-#     dplyr::summarise(n = n()) %>%
-#     ggplot(.,aes(x = Year, y = n, group = boot, color = factor(boot))) +
-#     geom_line() +
-#     labs(y = '# Individuals', color = 'replicate')
-
-
-## now make latitude
-# sptl <- scenarios[l,"SPATIAL"]
-# scenname <- paste0(getwd(),"/IBM_output/",scenarios[l,"DESC"])
-# regID <- ifelse(!is.na(scenarios[l,"REG"]),paste(scenarios[l,"REG"]),"")
-# out_file <-  paste0(scenname,"/",regID)
-# 
-# dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0("/",boot_number,'_sim_Comp'),list.files(scenname, full.names = T, recursive = T))] %>%
-#   lapply(read.csv,sep=",",header=T) %>%
-#   reduce(bind_rows)
-# makeLat(dat) %>%
-#   write.csv(.,  paste0(getwd(),"/IBM_output/datasets/",basename(scenname),"_",boot_number,".csv"),
-#             row.names = F)
+} ## end make NIBM
 
 ## Add in Spatial - needs to happen once R1 and R2 are built for this scenario ----
 source("./functions/makeLat.R")
@@ -221,17 +180,8 @@ source("./functions/makeLat.R")
 for(l in 1:(length(unique(scenarios$DESC)))){
   sptl <- subset(scenarios, DESC == unique(scenarios$DESC)[l])$SPATIAL[1] 
   scenname <- paste0(getwd(),"/IBM_output/",unique(scenarios$DESC)[l])
-  # regID <- ifelse(!is.na(subset(scenarios, DESC == unique(scenarios$DESC)[l])$REG[1] ),
-  #                 paste(subset(scenarios, DESC == unique(scenarios$DESC)[l])$REG[1]),"")
-  # # out_file <-  paste0(scenname,"/",regID)
-  
-  # if(fLevs[l,'CAT'] %in% c('l = 6NONE','SPATIAL')){ ## if spatial only, aggregate all and split regionally
-  # nboot.temp <- ifelse(scenarios[l,"DESC"] == 'NoBreaks',nboot*2,nboot)
-  
   for(b in 1:nboot){
     cat(paste0("Making Spatial Breaks for ",unique(scenarios$DESC)[l]," boot ",b,"\n"))
-    
-    # cat(basename(scenname)," boot ",b, " MakeLat ", "\n")
     dat <- list.files(scenname, full.names = T,recursive = T)[grep(paste0("/",b,'_sim_Comp'),
                                                                    list.files(scenname, full.names = T, recursive = T))] %>%
       lapply(read.csv,sep=",",header=T) %>%
@@ -242,21 +192,18 @@ for(l in 1:(length(unique(scenarios$DESC)))){
     
     
   }
-} ## end testrows
+} ## end make spatial
 
 
 # tt <- read_csv("IBM_output/datasets/F0L1S_25_1.csv")
 # unique(tt$REG)
 # with(tt, plot(Length_cm~ Latitude_dd))
 
-## Post Hoc -- Creation of temp var via stitching
+## Create tempvar_R1R2 via stitching ----
 for(b in 1:nboot){
   cat(paste0("Making temporal Breaks boot ", b,"\n"))
   
   p1 <- read.csv(paste0(getwd(),"/IBM_output/datasets/NoBreaks_",b,".csv")) %>% filter(Year < 50)
-  # for(n in c('F0L1S_25_',"F0L1S_R3_")){
-  # for(n in c('F0L1S_25_',"F0L1S_R3_")){
-
   p2 <- read.csv(paste0(getwd(),"/IBM_output/datasets/F0L1S_25_",b,".csv")) %>% filter(Year >= 50 & REG != 'R1')
   tempreg <- unique(p2$REG)
   tempdf <- rbind(p1,p2)
@@ -272,3 +219,38 @@ for(b in 1:nboot){
 } ## end boots
 (proc.time() - p)[1] / 60 ## minutes
 
+
+
+# ## quick plots to check datasets ----
+# out_file0 <- paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/datasets")
+# out_file <-list.files(out_file0,full.names = T)[grep('tempvar_R1R2',list.files(out_file0,full.names = T))]
+# 
+# ## check length vs time -- should be no swoops except for R1R2
+# out_file %>%
+#     lapply(., read.csv) %>%
+#     bind_rows() %>%
+#     filter(Age == 6) %>%
+#     group_by(boot) %>%
+#     # dplyr::summarise(n = n()) %>%
+#     ggplot(.,aes(x = Year, y = Length_cm, group = boot, color = factor(boot))) +
+#     geom_point() + theme(legend.position = 'none')+
+#     labs(y = 'Length_cm', color = 'replicate')
+#   ## check n individuals vs time -- should be no swoops
+# out_file %>%    lapply(., read.csv) %>%
+#     bind_rows() %>%
+#     # filter(Year != 0) %>%
+#     group_by(Year, boot) %>%
+#     dplyr::summarise(n = n()) %>%
+#     ggplot(.,aes(x = Year, y = n, group = boot, color = factor(boot))) +
+#     geom_line() + theme(legend.position = 'none')+
+#     labs(y = '# Individuals', color = 'replicate')
+# ## check length vs LON
+# out_file %>% 
+#   lapply(., read.csv) %>%
+#     bind_rows() %>%
+#     filter(Age == 6) %>%
+#     group_by(boot) %>% 
+#     # dplyr::summarise(n = n()) %>%
+#     ggplot(.,aes(x = Longitude_dd, y = Length_cm, group = boot, color = factor(boot))) +
+#     geom_point() + theme(legend.position = 'none')+
+#     labs(y = 'Length_cm', color = 'replicate')

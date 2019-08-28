@@ -4,12 +4,47 @@ require(kaputils)
 require(dplyr)
 source("C:/Users/mkapur/Dropbox/kaputils/R/theme_black.R")
 
+## blank black map -- three regions
+usa <- map_data("world") 
+
+xlims <- list(c(-180,-140),c(-133,-125),c(-140,-115))
+ylims <- list(c(50,70),c(45,55),c(30,50))
+plist <- list();idx <- 1
+for(i in 1:3){
+# plist[[idx]] <-
+  ggplot() +
+  geom_polygon(data = usa, 
+               aes(x = long, y = lat, group = group),
+               fill = 'grey66') +
+  coord_quickmap() +
+  scale_x_continuous(expand = c(0,0), limits = xlims[[i]], 
+                     breaks = seq(xlims[[i]][1],xlims[[i]][2],10),
+                     labels = paste(seq(xlims[[i]][1],xlims[[i]][2],10), "°W")) +
+  scale_y_continuous(expand = c(0,0), 
+                     limits = c(ylims[[i]][1],ylims[[i]][2]), 
+                     breaks =  seq(ylims[[i]][1],ylims[[i]][2],10), 
+                     labels =  paste(seq(ylims[[i]][1],ylims[[i]][2],10), "°N"))  +
+  theme_black(base_size = 20) +
+  theme(panel.grid.major = element_blank(),
+        axis.title =element_blank(),
+        legend.position = c(0.1,0.2),
+        legend.key.size = unit(0.75, "cm"),
+        legend.text = element_text(size = 12))
+# idx <- idx+1
+ggsave(plot = last_plot(),
+       file = paste0("./figures/BLACK_zone",i,".png"),
+       width = 10, height = 10, units = 'in', dpi = 480)
+
+}
+lay <- cbind(1,2,3)
+grid.arrange(grobs = plist, layout_matrix = lay)  %>%
+
 
 ## black map w breaks (not currents)
 usa <- map_data("world") 
   dat <- all_data %>% filter(Age == 30 & Sex == 'M')
     ggplot() +
-    geom_polygon(data = usa, aes(x = long, y = lat, group = group)) +
+    geom_polygon(data = usa, aes(x = long, y = lat, group = group), fill = 'grey66') +
     coord_quickmap() +
     scale_x_continuous(expand = c(0,0), limits = c(-180,-110), breaks = seq(-180,-120,10), labels = paste(seq(-180,-120,10), "°W")) +
     scale_y_continuous(expand = c(0,0), limits = c(30,75), breaks = seq(30,75,10), labels =  paste(seq(30,75,10), "°N"))  +
@@ -252,3 +287,48 @@ for(AA in c(4,6,30)){
       ggsave(plot = .,  file = paste0("./figures/BLACK_sab_smooth_map_",AA,SS,".png"), width = 12, height = 15, units = 'in', dpi = 480)
   } ## end SS
 } ## end AA
+
+## fake age/length/weight plot for illustration
+Linf <- 64
+t0 <- -2
+k <- 0.4
+len <- len2  <- wt <- wt2<- NULL
+wa <-1.3528e-2
+wb <- 3.42971
+for(a in 1:30){
+  len[a] <- Linf*(1-exp(-k*(a-t0)))
+  len2[a] <- Linf*0.97*(1-exp(-k*0.75*(a-t0*1.2)))
+  
+  wt[a] <- wa*len[a]*wb
+  wt2[a] <- wa*len2[a]*wb
+  
+}
+
+df<- data.frame(cbind(len,len2,wt,wt2, 'age' = 1:30)) %>%
+  melt(id = c('age'))
+df2 <- data.frame(cbind(len,len2,wt,wt2, 'age' = 1:30)) %>%
+  melt(id = c('len'))
+plist <- list()
+plist[[1]] <- ggplot(subset(df, variable == 'len'  | variable == 'len2'), 
+                     aes(x = age, y = value, col = variable, group= variable)) +
+  theme_black(base_size = 20) +
+  geom_line(lwd = 1.1) +
+  labs(y = 'length') +
+  scale_color_brewer(palette =  'Accent')+
+  scale_y_continuous(limits = c(50,65))+
+  theme(legend.position = 'none')
+plist[[2]] <- ggplot(subset(df2, variable == 'wt'| variable == 'wt2'),
+                     aes(x = len, y = value*10, col = variable, group= variable)) +
+  theme_black(base_size = 20) +
+  geom_line(lwd = 1.1) +
+  labs(y = 'weight', x = 'length') +
+  scale_color_brewer(palette =  'Accent')+
+  # scale_x_continuous(limits = c(10,75))+
+  scale_y_continuous(limits = c(15,30))+
+  
+  theme(legend.position = 'none')
+
+lay <- rbind(c(1,2))
+grid.arrange(grobs = plist, layout_matrix = lay)  %>%
+  ggsave(plot = .,  file = paste0("./figures/BLACK_lenweightage.png"),
+  width = 10, height = 7, units = 'in', dpi = 480)

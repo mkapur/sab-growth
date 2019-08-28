@@ -41,7 +41,7 @@ png("./figures/BLACK_Figure5.png",height = 10, width = 8, unit = 'in', res = 520
 lon <- c (-180, -110)
 lat <- c (26, 74)
 # figure ( width =9.75, height =5.28)
-plotmap ( lon=lon ,  lat=lat , main ="Northeast Pacific", grid = F, col.bg = 'black', col.land = 'grey44',
+plotmap ( lon=lon ,  lat=lat , main ="Northeast Pacific", grid = F, col.bg = 'black', col.land = 'grey66',
           cex.lab  = 2, cex.ticks = 1)
 # grid()
 segments(lon[1], 50, x1 = lon[2], y1 = 50, col = 'red', lty = 'dashed', lwd = 3)

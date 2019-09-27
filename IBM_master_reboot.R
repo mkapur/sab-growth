@@ -224,8 +224,8 @@ for(b in 1:nboot){
 # ## quick plots to check datasets ----
 # out_file0 <- paste0("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/IBM_output/datasets")
 # out_file <-list.files(out_file0,full.names = T)[grep('tempvar_R1R2',list.files(out_file0,full.names = T))]
-# 
-# ## check length vs time -- should be no swoops except for R1R2
+# # 
+# # ## check length vs time -- should be no swoops except for R1R2
 # out_file %>%
 #     lapply(., read.csv) %>%
 #     bind_rows() %>%
@@ -236,7 +236,7 @@ for(b in 1:nboot){
 #     geom_point() + theme(legend.position = 'none')+
 #     labs(y = 'Length_cm', color = 'replicate')
 #   ## check n individuals vs time -- should be no swoops
-# out_file %>%    lapply(., read.csv) %>%
+# # out_file %>%    lapply(., read.csv) %>%
 #     bind_rows() %>%
 #     # filter(Year != 0) %>%
 #     group_by(Year, boot) %>%

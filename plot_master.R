@@ -9,7 +9,8 @@ library(ggpubr)
 require(DescTools)
 require(mapdata)
 require(mgcv)
-
+cbbPalette <- c("#000000", "#009E73", "#e79f00", "#9ad0f3", "#0072B2", "#D55E00", 
+                "#CC79A7", "#F0E442")
 
 
 
@@ -34,7 +35,9 @@ levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Brea
                            "c) Scenario 3 Overlap 20-25 deg.","a) Scenario 1 No Breaks",
                           "e) Scenario 5 Temporal Break Year 50")
 
+## use this to determine bootpicks for plotting
 cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'tempvar_R1R2') %>% head()
+
 bootpicks <-c(1,1,1,6,1)
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){

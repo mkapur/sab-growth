@@ -15,8 +15,8 @@ parest <-  rep0 %>%
   filter(variable %in% parms) %>% 
   mutate(source = 'Estimated')
 
-parest$lwr <- parest$value - 1.96*parest$sd
-parest$upr <- parest$value + 1.96*parest$sd
+parest$lwr <- parest$value - 1.96*parest$sd #exp(parest$sd)
+parest$upr <- parest$value + 1.96*parest$sd #exp(parest$sd)
 
 ## subset & compare based on match.df
 for(n in unique(parest$REG)){

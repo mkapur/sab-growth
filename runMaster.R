@@ -8,8 +8,9 @@ cat("################################# \n
 
 source("GAM_master.R")
 cat("################################# \n 
-    GAM COMPLETE \n
+    GAM Fitting COMPLETE \n
     ################################## \n")
+
 
 source("STARS_master.R")
 cat("################################# \n 

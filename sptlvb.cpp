@@ -9,15 +9,15 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(Age);
   DATA_IVECTOR(DES); // make sure this knows it is an IVECTOR
   DATA_INTEGER(nStrata);
-  DATA_INTEGER(a1);
-  DATA_INTEGER(a2);
+  DATA_INTEGER(a1);// fixed, for reporing L1/L2
+  DATA_INTEGER(a2); // fixed, for reporing L1/L2
   
   // things to estimate (per stratum)
   PARAMETER_VECTOR(t0); // t0 can be negative
   PARAMETER_VECTOR(log_k);
   PARAMETER_VECTOR(log_Linf);
   PARAMETER(log_Sigma);
-  Type Sigma = exp(log_Sigma);
+  Type Sigma = exp(log_Sigma); // use exponentiated here
   
   // exponentiate params
   vector<Type> k(nStrata);

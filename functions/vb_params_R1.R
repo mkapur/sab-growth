@@ -8,7 +8,7 @@ L1 = 10
 L2 = 70
 a1 = 3
 a2 = 30
-growth_lognormal_SD = 0.025
+growth_lognormal_SD = 0.1 #0.025
 VBGF_K = 0.3
 # 
 # source("C:/Users/Maia Kapur/Dropbox/UW/sab-growth/misc/Predict_Length_Fn.R")

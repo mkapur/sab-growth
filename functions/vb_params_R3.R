@@ -8,7 +8,7 @@ L1 = 10
 L2 = 70
 a1 = 3
 a2 = 30
-growth_lognormal_SD = 0.025
+growth_lognormal_SD = 0.1 #0.025
 VBGF_K = 0.25*1.2
 
 L1+((L2-L1))/(1-exp(-VBGF_K*(a2-a1)))

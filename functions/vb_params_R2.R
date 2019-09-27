@@ -9,7 +9,7 @@ L1 = round(10*1.2)
 L2 = 70*1.2
 a1 = 3
 a2 = 30
-growth_lognormal_SD = 0.025
+growth_lognormal_SD = 0.1 #0.025
 VBGF_K = 0.3
 # VBGF_K = 0.45
 

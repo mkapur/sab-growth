@@ -41,7 +41,7 @@ lw  = function(fish_size){
 ## RECRUITMENT/REPRO MODULE ----
 # Maturity ogive
 r = -0.1034
-L50 = 75 #143.68
+L50 =  44 #75 #143.68
 
 # Maturity ogive FUNCTION
 prob_mature = function(fish_size){
@@ -85,7 +85,7 @@ Inst_M = 0.25
 # catch data sampling rate
 #catch_sampling_rate = 0.9 
 
-# selectivity ogive
+# selectivity ogive NA BECAUSE NOT USING
 SEL_50 = 147
 SEL_95 = 176
 ## ages -- eyeballed from plot!

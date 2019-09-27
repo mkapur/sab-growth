@@ -13,7 +13,7 @@ compname <- c("Maia Kapur","mkapur")[1]
 ## Build GAMS, get breakpoints ----
 scenarios <- read.csv("./input_data/scenarios.csv",na.strings = 'NA')## manual file
 age <- 6; nboot <- 100; #testrows <- unique(scenarios$DESC)
-# source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x
+# source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x, but yes if re-gen IBM
 source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions/missby.R")
 
 
@@ -49,15 +49,16 @@ for(l in 1:length(unique(ldfprop$scen))){
         Age = dat[,"Age"],
         DES = as.vector(DES),
         nStrata = nStrata,
-        a2 = 15
+        a1 = 3,
+        a2 = 30
       )
 
     parameters <-
       list(
-        log_Linf = rep(log(150), nStrata),
+        log_Linf = rep(log(75), nStrata),
         log_k = rep(log(0.3), nStrata),
-        t0 = rep(0.1, nStrata),
-        log_Sigma = 0
+        t0 = rep(3, nStrata),
+        log_Sigma = 0.1
       )
 
     # Now estimate everything

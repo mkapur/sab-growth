@@ -23,7 +23,7 @@ simu_year = 125 #M_only_yr+F_start_yr
 
 # # SS3 growth model (vonBert with L1&L2, SS3 3.34f mannual, Page 42)
 ## check out page 9 equation A.1.5 of methot & wetzel appx
-Linf = L1+(L2-L1)/(1-exp(-VBGF_K*(a2-a1))) 
+Linf <- L1+(L2-L1)/(1-exp(-VBGF_K*(a2-a1))) 
 
 ## Growth increment FUNCTION, NON TV: FROM V7
 

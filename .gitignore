@@ -10,10 +10,6 @@
 *forSS
 *deprecated
 *.Rhistory
-sptlvb.dll
-sptlvb.o
-sptlvb.dll
-sptlvb.o
 *contents
 .Rhistory
 mapdata/Commercial_Groundfish_Registration_Areas.zip

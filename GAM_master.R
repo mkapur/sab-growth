@@ -53,11 +53,12 @@ for(l in 1:length(unique(ldfprop$scen))){
         a2 = 30
       )
 
+    ## dont confuse t0 (age at length 0, could be neg) with L1/a1 (young reference age, both als pos)
     parameters <-
       list(
         log_Linf = rep(log(75), nStrata),
         log_k = rep(log(0.3), nStrata),
-        t0 = rep(3, nStrata),
+        t0 = rep(1, nStrata),
         log_Sigma = 0.1
       )
 

@@ -36,9 +36,9 @@ levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Brea
                           "e) Scenario 5 Temporal Break Year 50")
 
 ## use this to determine bootpicks for plotting
-cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'tempvar_R1R2') %>% head()
+cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE & scen == 'F0L1S_49') %>% head()
 
-bootpicks <-c(1,1,1,6,1)
+bootpicks <-c(1,2,1,1,4) ##25, 48, FLMW, NOB, TEMP
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){
   plist  <- list(); idx <- 1
@@ -58,9 +58,9 @@ for(i in 1:length(scens)){
     # theme(legend.position = 'none') +
     scale_y_continuous(limits = c(-10,60), breaks = seq(0,50,10)) +
     geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-    scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
-                         high ="dodgerblue4", midpoint = 200, guide = 'legend') +
-    scale_size_continuous(range = c(10, 15), guide = 'legend') +
+    scale_fill_gradient2(low = 'black', mid = "grey44",
+                         high ="grey77", midpoint = 65, guide = 'legend') +
+    scale_size_continuous(range = c(2, 15), guide = 'legend') +
     labs(x = 'Longitude',y = 'Latitude',
          fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
          title = paste0(scens.title0[i])) #+
@@ -72,12 +72,11 @@ for(i in 1:length(scens)){
   if(i == 5){ ## plot tempvar separately
     plist0[[5]]  <- ggplot(tempdf, aes(x = Year, y = Length_cm)) +
       theme_classic() +
-      # theme(legend.position = 'right') +
-      scale_y_continuous(limits = c(125,450)) +
+      scale_y_continuous(limits = c(58,75)) +
       geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-      scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
-                           high ="dodgerblue4", midpoint = 200, guide = 'legend') +
-      scale_size_continuous(range = c(10, 15), guide = 'legend') +
+      scale_fill_gradient2(low = 'black', mid = "grey44",
+                           high ="grey77", midpoint = 65, guide = 'legend') +
+      scale_size_continuous(range = c(2, 15), guide = 'legend') +
       labs(x = 'Year', y = 'Length of Age Six Fish (cm)',
            fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
            title = paste0(scens.title0[i])) #+
@@ -91,11 +90,11 @@ for(i in 1:length(scens)){
     plist[[idx]] <- ggplot(tempdf, aes(y = Latitude_dd, x = Longitude_dd)) +
       theme_classic() +
       theme(legend.position = 'right') +
-       scale_y_continuous(limits = c(0,50), breaks = seq(0,50,10)) +
+      scale_y_continuous(limits = c(0,50), breaks = seq(0,50,10)) +
       geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-      scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
-                           high ="dodgerblue4", midpoint = 200, guide = 'legend') +
-      scale_size_continuous(range = c(10, 15), guide = 'legend') +
+      scale_fill_gradient2(low = 'black', mid = "grey44",
+                           high ="grey77", midpoint = 65, guide = 'legend') +
+      scale_size_continuous(range = c(2, 15), guide = 'legend') +
       labs(x = 'Longitude',y = 'Latitude',
            fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
            title = paste0(scens.title[i], ' Data and GAM-detected breaks ')) +
@@ -108,11 +107,10 @@ for(i in 1:length(scens)){
       plist[[idx]] <- ggplot(tempdf, aes(x = Year, y = Length_cm)) +
         theme_classic() +
         theme(legend.position = 'right') +
-        scale_y_continuous(limits = c(125,450)) +
         geom_point(aes(size = Length_cm, fill = Length_cm), shape = 21, alpha = 0.7) +
-        scale_fill_gradient2(low = 'dodgerblue2', mid = "dodgerblue3",
-                             high ="dodgerblue4", midpoint = 200, guide = 'legend') +
-        scale_size_continuous(range = c(10, 15), guide = 'legend') +
+        scale_fill_gradient2(low = 'black', mid = "grey44",
+                             high ="grey77", midpoint = 65, guide = 'legend') +
+        scale_size_continuous(range = c(2, 15), guide = 'legend') +
         labs(x = 'Year', y = 'Length of Age Six Fish (cm)',
              fill = "Length of Age-6 Fish (cm)",size  = "Length of Age-6 Fish (cm)",
              title = paste0(scens.title0[i])) +
@@ -186,7 +184,7 @@ ggarrange(plotlist = plist0, ncol=2, nrow=3, common.legend = TRUE, legend="botto
 
 
 ## GAM propagg----
-cdfprop <- read.csv(paste0('./gam_output/cdf_prop_2019-06-29.csv')) 
+cdfprop <- read.csv(paste0('./gam_output/cdf_prop_2019-09-27.csv')) 
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 48 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
@@ -209,7 +207,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   facet_wrap(~variable)
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
-cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_2019-06-29.csv'))
+cdfaccu <- read.csv(paste0('./gam_output/cdf_accu_2019-09-27.csv'))
 levels(cdfaccu$scen) <-c("Break at 25 deg.", "Break at 48 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year')
@@ -233,7 +231,7 @@ ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="botto
 
 
 # ## STARS propagg ----
-cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_2019-06-29.csv'))
+cdfprop <- read.csv(paste0('./stars_output/STARS_cdf_prop_2019-09-27.csv'))
 levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 48 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfprop$variable) <- c('Both L1 and L2','L1','L2')
@@ -254,7 +252,7 @@ plist1[[1]] <- ggplot(cdfprop2, aes(x = scen, y = prop, fill = scen)) +
   facet_wrap(~variable)
 # ggsave(plot = last_plot(),  file = paste0("./figures/cdfprop.png"), width = 9, height = 6, units = 'in', dpi = 480)
 
-cdfaccu <- read.csv(paste0('./STARS_output/STARS_cdf_accu_2019-06-29.csv'))
+cdfaccu <- read.csv(paste0('./STARS_output/STARS_cdf_accu_2019-09-27.csv'))
 levels(cdfaccu$scen) <- c("Break at 25 deg.", "Break at 48 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
 # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
 levels(cdfaccu$variable) <- c('Latitude', 'Longitude' ,'Year')
@@ -286,7 +284,7 @@ ggarrange(plotlist = plist1, ncol=1, nrow=2, common.legend = TRUE, legend="botto
 
 
 ## GAM Histogram of detected breaks----
-cdf_gam <- read.csv("GAM_output/cdf_2019-06-29.csv") %>% filter(scen != 'F0L1S_R3')
+cdf_gam <- read.csv("GAM_output/cdf_2019-09-27.csv") %>% filter(scen != 'F0L1S_R3')
 ntrue <- read.csv("input_data/ntrue_a6.csv", na.strings = 'NA') %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
 levels(cdf_gam$scen) <- levels(ntrue$scen) <- c("Scenario 2", "Scenario 4", 
                                                 "Scenario 3","Scenario 1",
@@ -353,7 +351,7 @@ grid.arrange(grobs = plist, ncol = 4) %>%
 
 
 ## STARS Histogram of detected breaks----
-# cdf_stars <- read.csv("STARS_output/STARS_cdf_2019-06-29.csv") %>% filter(scen != 'F0L1S_R3')
+# cdf_stars <- read.csv("STARS_output/STARS_cdf_2019-09-27.csv") %>% filter(scen != 'F0L1S_R3')
 # ntrue <- read.csv("input_data/ntrue_a6.csv", na.strings = 'NA') %>% filter(scen != 'F0L1S_R3') %>% mutate(value = 1)
 # levels(cdf_stars$scen) <- levels(ntrue$scen) <- c("Scenario 2", "Scenario 4", 
 #                                                 "Scenario 3","Scenario 1",
@@ -450,16 +448,16 @@ breaksdf <- read.csv(paste0("./stars_output/STARS_breaksdf_2019-04-29.csv"))
 ## Make Appendix Table A2 ----
 
 ## read stuff
-cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-06-29.csv"))
+cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-09-27.csv"))
 # cdf_prev <-  read.csv(paste0("GAM_output/pre_aep_0627/cdf_2019-06-10.csv"))
-cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-06-29.csv"))
-cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-06-29.csv"))
+cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-09-27.csv"))
+cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-09-27.csv"))
 
-cdfaccu_threeq <- read.csv(paste0("GAM_output/cdf_accu_2019-06-29threequ",".csv"))
-cdfaccu_half <- read.csv(paste0("GAM_output/cdf_accu_2019-06-29half",".csv"))
+cdfaccu_threeq <- read.csv(paste0("GAM_output/cdf_accu_2019-09-27threequ",".csv"))
+cdfaccu_half <- read.csv(paste0("GAM_output/cdf_accu_2019-09-27half",".csv"))
 
-cdfprop_threeq <-read.csv(paste0("GAM_output/cdf_prop_2019-06-29threequ",".csv"))
-cdfprop_half <-read.csv(paste0("GAM_output/cdf_prop_2019-06-29half",".csv"))
+cdfprop_threeq <-read.csv(paste0("GAM_output/cdf_prop_2019-09-27threequ",".csv"))
+cdfprop_half <-read.csv(paste0("GAM_output/cdf_prop_2019-09-27half",".csv"))
 
 TA2 <- data.frame()
 for(i in 1:length(unique(cdfaccu_gam$scen))){
@@ -492,13 +490,13 @@ TA2[order(TA2$ORD),] %>% select(-ORD) %>% write.csv(paste0("figures/table_a2_",S
 
 
 ## GAM/STARS summarise MISSED proportions ----
-cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-06-29.csv"))
-cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-06-29.csv"))
+cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-09-27.csv"))
+cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-09-27.csv"))
 # cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-28.csv"))
 # 
 # cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_",Sys.Date()-2,".csv"))
-cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-06-29.csv"))
-cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-06-29.csv"))
+cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-09-27.csv"))
+cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-09-27.csv"))
 # 
 cdf_gam %>%
   filter(L1 == FALSE) %>%
@@ -518,12 +516,12 @@ cdf_prev %>%
   dplyr::group_by(scen) %>%
   dplyr::summarise( meanL2 = mean(abs(L2_MISS)))
 
-read.csv(paste0("GAM_output/cdf_2019-06-29threequ.csv")) %>%
+read.csv(paste0("GAM_output/cdf_2019-09-27threequ.csv")) %>%
   filter(L2 == FALSE) %>%
   dplyr::group_by(scen) %>%
   dplyr::summarise( meanL2 = mean(abs(L2_MISS)))
 
-read.csv(paste0("GAM_output/cdf_2019-06-29half.csv")) %>%
+read.csv(paste0("GAM_output/cdf_2019-09-27half.csv")) %>%
   filter(L2 == FALSE) %>%
   dplyr::group_by(scen) %>%
   dplyr::summarise( meanL2 = mean(abs(L2_MISS)))

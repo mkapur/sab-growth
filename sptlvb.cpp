@@ -39,7 +39,7 @@ Type objective_function<Type>::operator() ()
     yfit = Linf(DES(i))*(1-exp(-k(DES(i))*(Age(i) - t0(DES(i)))));
     ypreds(i) = yfit;
     obj_fun -= dnorm(Length_cm(i),yfit,Sigma,true);
-    L1(DES(i)) =  Linf(DES(i))*(1-exp(-k(DES(i))*(0 - t0(DES(i))))); 
+    L1(DES(i)) =  Linf(DES(i))*(1-exp(-k(DES(i))*(0 - t0(DES(i))))); // input as zero
     L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(a2 - t0(DES(i)))));
   }
   

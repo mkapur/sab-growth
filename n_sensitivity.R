@@ -167,8 +167,7 @@ for(size in c('half','threequ')){
   ## plotmaster
   ## GAM propagg----
   cdfprop <- read.csv(paste0('./gam_output/cdf_prop_',Sys.Date(),size,'.csv')) 
-  levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.",
-                            "20% Higher k, Break at 25 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
+  levels(cdfprop$scen) <- c("Break at 25 deg.", "Break at 49 deg.", "Overlap 20-25 deg.","No Breaks","Temporal Break Year 50")
   
   # cdfprop$scen  <- factor(cdfprop$scen , levels = cdfprop$scen [order(cdfprop$prop )])
   levels(cdfprop$variable) <- c('L1','L2' )
@@ -182,6 +181,8 @@ for(size in c('half','threequ')){
           axis.text.x = element_blank(),
           legend.position = c(0.9,0.75)) +
     scale_fill_brewer(palette = ifelse(size == 'half','Blues','Reds'))+
+    scale_x_discrete(breaks = c("No Breaks","Break at 25 deg.","Overlap 20-25 deg.","Break at 48 deg.",
+                                "Temporal Break Year 50"))+
     scale_y_continuous(limits = c(0,1)) +
     labs(x = '',y = 'Coverage Probability', fill = 'Scenario', 
          title = 'a) Coverage Probability for Endpoints of Growth Curve') +
@@ -204,6 +205,8 @@ for(size in c('half','threequ')){
           axis.text.x = element_blank(),
           legend.position = 'none') +
     scale_fill_brewer(palette = ifelse(size == 'half','Blues','Reds'))+
+    scale_x_discrete(breaks = c("No Breaks","Break at 25 deg.","Overlap 20-25 deg.","Break at 48 deg.",
+                                "Temporal Break Year 50"))+
     scale_y_continuous(limits = c(0,1)) +
     labs(x = '',y = 'Proportion Detected Accurate Spatial Breaks', fill = 'Scenario', title = 'b) Proportion Detected Accurate Breaks') +
     geom_bar(stat = 'identity',width=0.5, position = position_dodge(width=0.5)) +

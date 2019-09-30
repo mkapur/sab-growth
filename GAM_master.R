@@ -13,7 +13,7 @@ compname <- c("Maia Kapur","mkapur")[1]
 ## Build GAMS, get breakpoints ----
 scenarios <- read.csv("./input_data/scenarios.csv",na.strings = 'NA')## manual file
 age <- 6; nboot <- 100; #testrows <- unique(scenarios$DESC)
-# source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x, but yes if re-gen IBM
+source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x, but yes if re-gen IBM
 source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions/missby.R")
 
 
@@ -49,14 +49,14 @@ for(l in 1:length(unique(ldfprop$scen))){
         Age = dat[,"Age"],
         DES = as.vector(DES),
         nStrata = nStrata,
-        a1 = 3,
+        # a1 = 3,
         a2 = 30
       )
 
     ## dont confuse t0 (age at length 0, could be neg) with L1/a1 (young reference age, both als pos)
     parameters <-
       list(
-        log_Linf = rep(log(75), nStrata),
+        log_Linf = rep(log(80), nStrata),
         log_k = rep(log(0.3), nStrata),
         t0 = rep(1, nStrata),
         log_Sigma = 0.1
@@ -82,6 +82,46 @@ for(l in 1:length(unique(ldfprop$scen))){
     
   } ## end boots
 } ## end ldfrows
+
+## S2 Request: add figures showing accuracy if 'relaxed' for +/- 2 degrees.
+
+for(i in 1:nrow(cdf)){
+  cat(i,'\n')
+  ## first cut -- fill with compare NAs (did it match perfectly?)
+  cdf[i,"LAT_RELAXED"] <- compareNA(cdf[i,"gamLAT"],scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1])
+  cdf[i,"LON_RELAXED"] <- compareNA(cdf[i,"gamLON"],scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1])
+  cdf[i,"YEAR_RELAXED"] <- compareNA(cdf[i,"gamYR"],scenarios$TEMPORAL[scenarios$DESC == cdf[i,'scen']][1])
+  
+  ## if it failed the above,
+  ## and  the TRUTH is not NA, see if the guessed # is within +- 2. 
+  ## If the truth is NA just stick with what was determined above (can't be within 2 of NA)
+  if(cdf[i,"LAT_RELAXED"] == F  | cdf[i,"LON_RELAXED"]  == F ){
+    cdf[i,"LAT_RELAXED"] <- ifelse(!is.na(scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1]),
+                                   cdf[i,"gamLAT"] >= 23 & #(scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1]-2) &
+                                     cdf[i,"gamLAT"] <= 27,cdf[i,"LAT_RELAXED"])
+                                   #(scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1]+2),  cdf[i,"LAT_RELAXED"])
+    cdf[i,"LON_RELAXED"] <- ifelse(!is.na(scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1]),
+                                   cdf[i,"gamLAT"] >= 23 & #(scenarios$SPATIAL[scenarios$DESC == cdf[i,'scen']][1]-2) &
+                                     cdf[i,"gamLAT"] <= 27,cdf[i,"LAT_RELAXED"])
+    # cdf[i,"YEAR_RELAXED"] <- ifelse(!is.na(scenarios$TEMPORAL[scenarios$DESC == cdf[i,'scen']][1]),
+    #                                 cdf[i,"gamYR"] >= scenarios$TEMPORAL[scenarios$DESC == cdf[i,'scen']][1]-2 &
+    #                                   cdf[i,"gamYR"] <= scenarios$TEMPORAL[scenarios$DESC == cdf[i,'scen']][1]+2,
+    #                                 cdf[i,"YEAR_RELAXED"])
+  }
+  
+  if( cdf[i,"scen"] == "F0L1S_49")  { # won't match "overlap"
+    cdf[i,"LAT_RELAXED"] <-  compareNA(cdf[i,"gamLAT"],NA)
+    cdf[i,"LON_RELAXED"] <-  ifelse(!is.na(cdf[i,'gamLON']), cdf[i,"gamLON"] >= 46 & cdf[i,"gamLON"] <= 50,FALSE) 
+  }
+  if( cdf[i,"scen"] == "F0LMW")  { # won't match "overlap"
+    cdf[i,"LAT_RELAXED"] <-  ifelse(!is.na(cdf[i,'gamLAT']), cdf[i,"gamLAT"] >= 18 & cdf[i,"gamLAT"] <= 27,FALSE)
+    cdf[i,"LON_RELAXED"] <-  ifelse(!is.na(cdf[i,'gamLON']), cdf[i,"gamLON"] >= 18 & cdf[i,"gamLON"] <= 27,FALSE)
+  }
+  if( cdf[i,"scen"] == "tempvar_R1R2")  { # won't match "overlap"
+    cdf[i,"YEAR_RELAXED"] <-  ifelse(!is.na(cdf[i,'gamYR']), cdf[i,"gamYR"] >= 48 & cdf[i,"gamYR"] <= 52,FALSE)
+  }
+} ##end adding relaxation
+
 
 cdf %>%
   mutate(method = "GAM") %>%
@@ -110,3 +150,15 @@ cdfaccu <- cdf %>%
   mutate(prop = round(n/denom,2)) %>%
   mutate(method = "GAM")
 write.csv(cdfaccu,file = paste0('./gam_output/cdf_accu_',Sys.Date(),'.csv'),row.names = F)
+
+## When did regional designation go right? with relaxation
+cdf %>% 
+  select(scen, LAT_RELAXED, LON_RELAXED, YEAR_RELAXED) %>%
+  # mutate(both = (LAT == T & LON == T), all = (both == T & YEAR == T)) %>%
+  melt(id = c('scen')) %>%
+  group_by(scen,variable) %>%
+  dplyr::summarise(denom = n(), n = sum(value)) %>% 
+  mutate(prop = round(n/denom,2)) %>%
+  mutate(method = "GAM") %>%
+write.csv(.,file = paste0('./gam_output/relaxed_cdf_accu_',Sys.Date(),'.csv'),row.names = F)
+

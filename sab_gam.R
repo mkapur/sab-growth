@@ -7,8 +7,11 @@ library(gridExtra); library(grid); library(lattice)
 compname <- c("Maia Kapur","mkapur")[1]
 
 source(paste0(getwd(),"/functions/Deriv.R")); source("./functions/getGR.R")
-compile("sptlvbSel.cpp") ## will throw 'incomplete line' msg, ignore
-dyn.load(dynlib("sptlvbSel"))
+# compile("sptlvbSel.cpp") ## will throw 'incomplete line' msg, ignore
+# dyn.load(dynlib("sptlvbSel"))
+compile("it10.cpp") ## will throw 'incomplete line' msg, ignore
+dyn.load(dynlib("it10"))
+
 usa <- map_data("world") 
 
 
@@ -176,6 +179,7 @@ for(phase in c("phase1","phase2")){
   # dat$Sel <- ifelse(dat$Sel == 0, 1E-5, dat$Sel) ## to avoid div by zero
   
   DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
+  cat(phase," Built Dat \n")
   
   ## sanity check
   dat %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
@@ -202,6 +206,10 @@ for(phase in c("phase1","phase2")){
     length(unique(dat$cREG)) ## 12
   }
   
+  ## MK START HERE
+  # load("./sabdat_Oct2019_formatted.Rda") ## loads as "dat" saved up to this point since getGR is slow.
+  # dat <- sample_n(dat, nrow(dat)*0.25)
+  DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
   DES <- ifelse(!is.na(dat$cREG), as.numeric(as.factor(dat$cREG)),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
   # KEY <- paste("sab",DES,sep = "_")
   temp <- data.frame(DES = as.numeric(as.character(DES)), cREG = dat$cREG); temp <- unique(temp)
@@ -209,6 +217,8 @@ for(phase in c("phase1","phase2")){
   
   dat0 <- rep0 <- NULL ## later storage
   nStrata <- length(unique(DES))
+  
+
   
   ## this will assign a unique DES depending on period X sex X region -- whatever is in DES
   data <-
@@ -219,7 +229,7 @@ for(phase in c("phase1","phase2")){
       selType = dat[,'selType'],
       Sel = dat[,'Sel'],
       nStrata = nStrata,
-      a2 = 15
+      a2 = 30 ## wtf is this supposed to be
     )
   
   parameters <-
@@ -232,7 +242,7 @@ for(phase in c("phase1","phase2")){
   
   # Now estimate everything
   map <- NULL
-  model <- MakeADFun(data, parameters,  DLL="sptlvbSel",silent=T,map=map)
+  model <- MakeADFun(data, parameters,  DLL="it10",silent=T,map=map)
   fit <- nlminb(
     model$par,
     model$fn,
@@ -244,12 +254,13 @@ for(phase in c("phase1","phase2")){
     )
   )
   # for (k in 1:3)  fit <- nlminb(model$env$last.par.best, model$fn, model$gr) ## start at last-best call, for stability
-  
+  model$report()$denominator
   best <- model$env$last.par.best
   
   # rep <- sdreport(model, bias.correct = TRUE)
   rep <- sdreport(model)
   
+  dat0 <- rep0 <- NULL ##  storage
   dat0 <- c(dat0, model$report()$ypreds %>% data.frame()) 
   rep0 <- bind_rows(rep0,
                     bind_cols(

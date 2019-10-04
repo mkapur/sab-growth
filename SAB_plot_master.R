@@ -2,8 +2,8 @@ library(DescTools)
 ## SAB STUFF ## ----
 ## average # of age X SAB per sex in fulldat
 load(paste0("./input_data/gam_data_sab_0415.rda")) ## full_data -- made using gam_dataprep NOT 15k subsample
-full_data %>% filter(Age %in% c(4,6,10,30)) %>%
-  group_by(Age, Sex) %>% summarise(n=n()) %>% write.csv(.,paste0("./output_data/n_sab_sex_age.csv"),row.names=F)
+# full_data %>% filter(Age %in% c(4,6,10,30)) %>%
+#   group_by(Age, Sex) %>% summarise(n=n()) %>% write.csv(.,paste0("./output_data/n_sab_sex_age.csv"),row.names=F)
 cbbPalette <- c("#000000", "#009E73", "#e79f00", "#9ad0f3", "#0072B2", "#D55E00", 
                 "#CC79A7", "#F0E442")
 
@@ -45,6 +45,10 @@ cbbPalette <- c("#000000", "#009E73", "#e79f00", "#9ad0f3", "#0072B2", "#D55E00"
 ## predicts and parest for sab ----
 ## parest: see if actually different. PHASE 1 = pre-merge, PHASE 2- temporal merges
 usedate <- Sys.Date() ## USE TODAY
+
+cbbPalette <- c("#000000", "#009E73", "#e79f00", "#9ad0f3", "#0072B2", "#D55E00", 
+                "#CC79A7", "#F0E442")
+
 for(phase in c("phase1","phase2")){
   parest <- read.csv(paste0("./GAM_output/SAB_parEst_gam_",usedate,"_",phase,'.csv')) %>%
     filter(variable ==  "Linf") %>%

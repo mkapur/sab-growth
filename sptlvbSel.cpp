@@ -39,6 +39,10 @@ Type objective_function<Type>::operator() ()
   vector<Type> L1(nStrata);
   vector<Type> L2(nStrata);
   
+  // first loop over all available length and generate lookup table
+  // of integrals at each possible length
+  // this will be given by 
+  
   
   for(int i = 0; i < Age.rows(); i++){ // loop rows
     yfit = Linf(DES(i))*(1-exp(-k(DES(i))*(Age(i) - t0(DES(i))))); 
@@ -50,7 +54,8 @@ Type objective_function<Type>::operator() ()
       selPred = 1.0; // coerce to 1.0 for non DFO regions
     }
     unif_obj_fun = Sel(i)*dnorm(Length_cm(i),yfit,Sigma,true); // traditional dnorm; Sel(i) is 1.0 for non-DFO regions 
-    trunc_fun = selPred*pnorm(Length_cm(i),yfit,Sigma); // penalize by likelihood of seeing it
+    
+    // trunc_fun = selPred*pnorm(Length_cm(i),yfit,Sigma); // penalize by likelihood of seeing it
 
     obj_fun -= unif_obj_fun - trunc_fun; // logged already so subtract
     ypreds(i) = yfit; // store estimated length 

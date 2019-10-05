@@ -38,9 +38,13 @@ levels(scens.title0) <-  c("b) Scenario 2 Break at 25 deg.", "d) Scenario 4 Brea
 ## use this to determine bootpicks for plotting
 cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-09-27.csv"))
 
-cdf_gam %>% filter(LAT == TRUE & LON == TRUE & YEAR == TRUE) %>% group_by(scen) %>% dplyr::summarise(min(boot))
+cdf_gam %>% 
+  filter(LAT == TRUE & LON == TRUE & YEAR == TRUE) %>% 
+  group_by(scen) %>% 
+  dplyr::summarise(min(boot))
 
-bootpicks <-c(1,11,1,1,1) ##25, 48, FLMW, NOB, TEMP
+bootpicks <-c(1,3,1,15,2) ##NOB, 25,FLMW, 48,   TEMP
+
 plist0 <- list(); idx0 <- 1
 for(i in 1:length(scens)){
   plist  <- list(); idx <- 1
@@ -48,7 +52,12 @@ for(i in 1:length(scens)){
   scen <- scens[i]
   tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_",bootpicks[i],".csv")) %>% filter(Age == 6)
 
-  breaksdf <- read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) %>% filter(scen == scens[i] & boot == bootpicks[i])
+  breaksdf <- cdf_gam %>% 
+    filter(scen == scens[i] & boot == bootpicks[i]) %>%
+    select(scen, boot,lat_breaks = gamLAT, lon_breaks = gamLON,yr_breaks = gamYR )
+    
+  # breaksdf <-read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) %>% filter(scen == scens[i] & boot == bootpicks[i])
+  
   load(file = paste0("./GAM_output/mod_",scen,"_",bootpicks[i],".rds")) ## mod for boot 4
   load(file = paste0("./GAM_output/m2d_",scen,"_",bootpicks[i],".rds")) ## m2.d for boot 4 (contains derivative info)
   
@@ -175,7 +184,7 @@ for(i in 1:length(scens)){
 
 }
 
-ggarrange(plotlist = plist0, ncol=2, nrow=3, common.legend = TRUE, legend="bottom") %>%
+aggarrange(plotlist = plist0, ncol=2, nrow=3, common.legend = TRUE, legend="bottom") %>%
   ggsave(plot = .,  file = paste0("./figures/rawdata_compile.png"), width = 11, height = 8, units = 'in', dpi = 480)
 
 
@@ -533,24 +542,31 @@ TA2[order(TA2$ORD),] %>% select(-ORD) %>% write.csv(paste0("figures/table_a2_",S
 ## GAM/STARS summarise MISSED proportions ----
 cdf_gam <- read.csv(paste0("GAM_output/cdf_2019-09-27.csv"))
 cdfaccu_gam <- read.csv(paste0("GAM_output/cdf_accu_2019-09-27.csv"))
-# cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-05-28.csv"))
+cdfprop_gam <- read.csv(paste0("GAM_output/cdf_prop_2019-09-27.csv"))
 # 
 # cdf_stars <- read.csv(paste0("STARS_output/STARS_cdf_",Sys.Date()-2,".csv"))
 cdfaccu_stars <- read.csv(paste0("STARS_output/STARS_cdf_accu_2019-09-27.csv"))
 cdfprop_stars <- read.csv(paste0("STARS_output/STARS_cdf_prop_2019-09-27.csv"))
 # 
+
+
+## appendix table A4 mean abs error in L2 
+cdf_gam %>%
+  filter(L2 == FALSE) %>%
+  # dplyr::group_by(scen) %>%
+  
+  dplyr::group_by(scen, YEAR) %>%
+  dplyr::summarise( meanL2 = mean(abs(L2_MISS))) %>%
+write.csv(., './figures/tableA4.csv', row.names =F)
+
+
+
 cdf_gam %>%
   filter(L1 == FALSE) %>%
   dplyr::group_by(scen) %>%
   dplyr::summarise( meanL1 = mean(abs(L1_MISS)))
 # 
-cdf_gam %>%
-  filter(L2 == FALSE) %>%
-  dplyr::group_by(scen) %>%
-  
-  # dplyr::group_by(scen, YEAR) %>%
-  dplyr::summarise( meanL2 = mean(abs(L2_MISS))) #%>%
-  write.csv(., './figures/tableAX.csv', row.names =F)
+
 
 cdf_prev %>%
   filter(L2 == FALSE) %>%
@@ -578,7 +594,7 @@ read.csv(paste0("GAM_output/cdf_2019-09-27half.csv")) %>%
 #   group_by(scen) %>% 
 #   summarise( meanL2 = mean(abs(L2_MISS)))
 # 
-# rbind(cdf_gam,cdf_stars) %>% group_by(method,scen, YEAR) %>% dplyr::summarise(n=n())
+rbind(cdf_gam,cdf_stars) %>% group_by(method,scen, YEAR) %>% dplyr::summarise(n=n())
 # cdf_gam %>% filter(YEAR == FALSE) %>% group_by(scen, gamYR) %>% dplyr::summarise(n=n()) %>% 
 #   ggplot(., aes(x = gamYR, y = n)) + geom_histogram(stat='identity')
 # 
@@ -624,7 +640,7 @@ cdf_gam %>% filter(scen == 'tempvar_R1R2' & gamYR %in% c(49,50,51)) %>% group_by
 # 
 # 
 # 
-# ## percent accuracy by cat
+# ## percent accuracy by cat ffor "comparison to STARS method"
 cdfaccu_stars %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>%  dplyr::summarise(avg = mean(prop))
 cdfaccu_gam %>% filter(scen != 'F0L1S_R3' & scen != 'F0L1S_49') %>% group_by(variable) %>%  dplyr::summarise(avg = mean(prop))
 

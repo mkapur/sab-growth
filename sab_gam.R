@@ -164,7 +164,7 @@ full_data$Longitude_dd[full_data$Longitude_dd > 0] <- full_data$Longitude_dd[ful
 
 ## now re-aggregate and do the fits on all data, based on model ----
 # breaksdf <- data.frame(yr_breaks = breaksdf[[1]], lat_breaks2 = breaksdf[[2]], lon_breaks2 = breaksdf[[1]])
-for(phase in c("phase1","phase2")){
+for(phase in c("phase1","phase2")[2]){
 
   breaksdf <- data.frame(yr_breaks = 2010, lat_breaks2 = c(36,50), lon_breaks2 =c(-130,-145)) ## auto
   dat <- getGR(tempdf = full_data, breaksdf) ## assign breakpoints
@@ -182,8 +182,8 @@ for(phase in c("phase1","phase2")){
   cat(phase," Built Dat \n")
   
   ## sanity check
-  dat %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
-  dat %>% group_by(gamREG,REG) %>% summarise(n = n())
+  # dat %>% group_by(gamREG) %>% summarise(mnlat = mean(Latitude_dd), mnlon = mean(Longitude_dd))
+  # dat %>% group_by(gamREG,REG) %>% summarise(n = n())
   
   dat$cREG <- paste0(dat$gamREG,"_",dat$Period,"_",dat$Sex)
   
@@ -195,10 +195,10 @@ for(phase in c("phase1","phase2")){
     dat$cREG[dat$cREG == "R2_early_M"  | dat$cREG == "R2_late_M" ] <- "R2_pool_M"
     ## both sexes r3/R4//r5
     dat$cREG[dat$cREG == "R3_early_M"  | dat$cREG == "R3_late_M" ] <- "R3_pool_M"
-    dat$cREG[dat$cREG == "R3_early_F"  | dat$cREG == "R3_late_F" ] <- "R3_pool_F"
+    # dat$cREG[dat$cREG == "R3_early_F"  | dat$cREG == "R3_late_F" ] <- "R3_pool_F"
     
     dat$cREG[dat$cREG == "R4_early_M"  | dat$cREG == "R4_late_M" ] <- "R4_pool_M"
-    dat$cREG[dat$cREG == "R4_early_F"  | dat$cREG == "R4_late_F" ] <- "R4_pool_F"
+    # dat$cREG[dat$cREG == "R4_early_F"  | dat$cREG == "R4_late_F" ] <- "R4_pool_F"
     
     dat$cREG[dat$cREG == "R5_early_M"  | dat$cREG == "R5_late_M" ] <- "R5_pool_M"
     dat$cREG[dat$cREG == "R5_early_F"  | dat$cREG == "R5_late_F" ] <- "R5_pool_F"
@@ -207,14 +207,15 @@ for(phase in c("phase1","phase2")){
   }
   
   ## MK START HERE
-  # load("./sabdat_Oct2019_formatted.Rda") ## loads as "dat" saved up to this point since getGR is slow.
-  # dat <- sample_n(dat, nrow(dat)*0.25)
-  DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
+  # load("./sabdat_Oct2019_formatted.Rda") 
+  ## loads as "dat" saved up to this point since getGR is slow.
+  # dat <- sample_n(dat, nrow(dat)*0.25)  %>% filter(selType == 2) ## testing denom
+  DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat))
   DES <- ifelse(!is.na(dat$cREG), as.numeric(as.factor(dat$cREG)),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
   # KEY <- paste("sab",DES,sep = "_")
   temp <- data.frame(DES = as.numeric(as.character(DES)), cREG = dat$cREG); temp <- unique(temp)
   keybase <- paste(as.factor(temp[order(temp$DES),'cREG']))
-  
+
   dat0 <- rep0 <- NULL ## later storage
   nStrata <- length(unique(DES))
   
@@ -254,10 +255,8 @@ for(phase in c("phase1","phase2")){
     )
   )
   # for (k in 1:3)  fit <- nlminb(model$env$last.par.best, model$fn, model$gr) ## start at last-best call, for stability
-  model$report()$denominator
+  model$report()$denominator ## if we only ran seltype 2 points, this should NOT be 1.0
   best <- model$env$last.par.best
-  
-  # rep <- sdreport(model, bias.correct = TRUE)
   rep <- sdreport(model)
   
   dat0 <- rep0 <- NULL ##  storage
@@ -279,3 +278,5 @@ for(phase in c("phase1","phase2")){
   
   cat(phase," Fit TMB model  & saved outputs \n")
 }
+
+# rep0 %>% filter(REG == 'R4_early_F')

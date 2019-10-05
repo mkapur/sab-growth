@@ -13,12 +13,12 @@ compname <- c("Maia Kapur","mkapur")[1]
 ## Build GAMS, get breakpoints ----
 scenarios <- read.csv("./input_data/scenarios.csv",na.strings = 'NA')## manual file
 age <- 6; nboot <- 100; #testrows <- unique(scenarios$DESC)
-source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x, but yes if re-gen IBM
+# source("./functions/bootBreaks.R") ## about 10 mins -- don't need to do this >1x, but yes if re-gen IBM
 source("./functions/getGR.R");source("./functions/fitMod.R");source("./functions/missby.R")
 
 
 # Fit VB and calc coverage ----
-ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6.csv")) ## dataframe of detected breaks made above○
+ldfprop <-  read.csv( paste0("./GAM_output/ldf_raw_a6_",Sys.Date(),".csv")) ## dataframe of detected breaks made above○
 rm(cdf); cdf <- data.frame(); idx <-1 ## storage coverage prob totals, rbind each scen
 for(l in 1:length(unique(ldfprop$scen))){
   # for(b in sample(1:nboot,5)){
@@ -27,7 +27,7 @@ for(l in 1:length(unique(ldfprop$scen))){
     scen <- unique(ldfprop$scen)[l]
     tempdf <- read.csv(paste0("./IBM_output/datasets/",scen,"_",b,".csv")) #%>% filter(Age == 6)
     if(scen == 'NoBreaks') tempdf$REG <- as.factor('R1')
-    breaksdf <- read.csv( paste0("./GAM_output/ldf_raw_a",age,".csv")) %>% filter(scen ==  unique(ldfprop$scen)[l] & boot == b)
+    breaksdf <- ldfprop %>% filter(scen ==  unique(ldfprop$scen)[l] & boot == b)
     dat<-getGR(tempdf,breaksdf);rm(tempdf)
     
     ## generate DES matrix of vectors and a KEY for later comparison

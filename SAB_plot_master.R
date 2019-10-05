@@ -196,7 +196,14 @@ cat(phase," done \n")
 
 
 ## Make T3 to avoid copypaste problems
-sabpe <- read.csv("./GAM_output/SAB_parEst_gam_2019-09-30_phase2.csv")
+## Right now the L1/L2 is reported using age 4, but consider re-doing for 0.5
+
+LR <- function(Linf, k, t0, AREF){
+  lreg <- Linf*(1-exp(-k*(AREF - t0)))
+  return(lreg)
+}
+
+sabpe <- read.csv("./GAM_output/SAB_parEst_gam_2019-10-04_phase2.csv")
 sabpe %>%
   mutate(REG = as.character(REG)) %>%
   select(-sd) %>%
@@ -204,8 +211,11 @@ sabpe %>%
   mutate(sampN = NA,
          Region = substr(REG,1,2),
          Period =  sapply(strsplit(REG, "_"), function(x) x[2]),
-         Sex = sub('(^[^_]+_[^_]+)_(.*)$', '\\2', REG)) %>%
+         Sex = sub('(^[^_]+_[^_]+)_(.*
+                   )$', '\\2', REG) ) %>%
   tidyr::spread(key = variable, value = value) %>%
+  mutate(   L1_0.5 = round(LR(Linf, k, t0, AREF = 0.5),2)) %>%
+  mutate(L1 = ifelse(L1_0.5 <0, L1, L1_0.5)) %>%
   select(Region, Sex, Period, sampN, Linf, k, t0, L1, L2) %>%
   write.csv(., file = paste0("./figures/table3_",Sys.Date(),".csv"),row.names = F)
-  
+

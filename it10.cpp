@@ -12,7 +12,7 @@ template<class Type>
       Type selPred = 0;
       Type ans = 0;
       yfit = Linf*(1-exp(-k*(Age - t0))); // generate predicted length
-      selPred = selex(yfit);
+      selPred = selex(yfit); //1.0 for testing
       // ans = selPred * exp(-(yfit - u)/(2*pow(Sigma*Age,2.0))); // u is what is plugged a and b
       ans = selPred * dnorm(yfit,u,Sigma,false); // just hardcode the individuals
       return ans;
@@ -75,12 +75,12 @@ template<class Type>
     
     if(selType(i) != 2){
       selObs = 1.0; // coerce to 1.0 for non DFO regions
-      numerator = selObs*dnorm(Length_cm(i),yfit,Sigma,true); // typical dnorm, sel obs is 1
+      numerator = selObs*dnorm(Length_cm(i),yfit,Sigma,false) ; // typical dnorm, sel obs is 1
       denominator = 1.0;
     }
     if(selType(i) == 2){
       selObs = selex(Length_cm(i)); // selex of OBSERVED value
-      numerator = selObs*dnorm(Length_cm(i),yfit,Sigma,true); // typical dnorm, sel obs is 1
+      numerator = selObs*dnorm(Length_cm(i),yfit,Sigma,false); // typical dnorm, sel obs is 1
       
       vector<Type> input(5);
       input << Linf(DES(i)), k(DES(i)), Age(DES(i)), t0(DES(i)), Sigma; // bundle the current estimates
@@ -88,12 +88,14 @@ template<class Type>
       
       // ans -= log( mydenom(input)[0] + tiny );
     }
-    ans -= numerator-denominator;
+    ans -= log(numerator + 1e-5)-log(denominator + 1e-5); // will just be numerator for denom = 1
     ypreds(i) = yfit; // store estimated length 
     
-    // for reporting endpoints
-    L1(DES(i)) =  Linf(DES(i))*(1-exp(-k(DES(i))*(0.5 - t0(DES(i))))); // change 0, 0.5
+
+    L1(DES(i)) =  Linf(DES(i))*(1-exp(-k(DES(i))*(4.0 - t0(DES(i))))); // change 0, 0.5
     L2(DES(i))  =  Linf(DES(i))*(1-exp(-k(DES(i))*(a2 - t0(DES(i)))));
+    
+    
   } // end rows
   
   REPORT(ypreds);

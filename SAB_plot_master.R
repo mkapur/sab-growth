@@ -44,7 +44,7 @@ cbbPalette <- c("#000000", "#009E73", "#e79f00", "#9ad0f3", "#0072B2", "#D55E00"
 
 ## predicts and parest for sab ----
 ## parest: see if actually different. PHASE 1 = pre-merge, PHASE 2- temporal merges
-usedate <- Sys.Date() ## USE TODAY
+usedate <- "2019-10-04" #Sys.Date() ## USE TODAY
 
 cbbPalette <- c("#000000", "#009E73", "#e79f00", "#9ad0f3", "#0072B2", "#D55E00", 
                 "#CC79A7", "#F0E442")
@@ -202,13 +202,17 @@ LR <- function(Linf, k, t0, AREF){
   lreg <- Linf*(1-exp(-k*(AREF - t0)))
   return(lreg)
 }
+## Get numbers by category for final phase.
+ypreds <- read.csv(paste0("./GAM_output/SAB_predicts_",usedate,"_phase2.csv"))
+samplesize <- ypreds %>% group_by(cREG) %>% summarise(N = n()) %>% select(N) %>% as.vector()
+
 
 sabpe <- read.csv("./GAM_output/SAB_parEst_gam_2019-10-04_phase2.csv")
-sabpe %>%
+sabpe <- sabpe %>%
   mutate(REG = as.character(REG)) %>%
   select(-sd) %>%
   filter(variable != 'Sigma') %>%
-  mutate(sampN = NA,
+  mutate(
          Region = substr(REG,1,2),
          Period =  sapply(strsplit(REG, "_"), function(x) x[2]),
          Sex = sub('(^[^_]+_[^_]+)_(.*
@@ -216,6 +220,10 @@ sabpe %>%
   tidyr::spread(key = variable, value = value) %>%
   mutate(   L1_0.5 = round(LR(Linf, k, t0, AREF = 0.5),2)) %>%
   mutate(L1 = ifelse(L1_0.5 <0, L1, L1_0.5)) %>%
-  select(Region, Sex, Period, sampN, Linf, k, t0, L1, L2) %>%
-  write.csv(., file = paste0("./figures/table3_",Sys.Date(),".csv"),row.names = F)
+  select(Region, Sex, Period, Linf, k, t0, L1, L2) 
+
+cbind(sabpe, ypreds %>% group_by(cREG) %>% summarise(N = n()) %>% select(N)) %>% 
+  select(Region, Sex, Period, N, Linf, k, t0, L1, L2) %>%
+
+write.csv(., file = paste0("./figures/table3_",Sys.Date(),".csv"),row.names = F)
 

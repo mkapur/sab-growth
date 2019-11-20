@@ -1,8 +1,136 @@
-## rebooting some manuscript figures in theme_black
+## rebooting some manuscript figures in theme_black, and also for GSS
+
 require(ggplot2)
 require(kaputils)
 require(dplyr)
 source("C:/Users/mkapur/Dropbox/kaputils/R/theme_black.R")
+
+## map with residual fits for global VB
+rm(list = ls())
+require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
+library(gridExtra); library(grid); library(lattice)
+compname <- c("Maia Kapur","mkapur")[1]
+
+source(paste0(getwd(),"/functions/Deriv.R")); source("./functions/getGR.R")
+# compile("sptlvbSel.cpp") ## will throw 'incomplete line' msg, ignore
+# dyn.load(dynlib("sptlvbSel"))
+compile("it10.cpp") ## will throw 'incomplete line' msg, ignore
+dyn.load(dynlib("it10"))
+load(paste0("./input_data/gam_data_sab_0415.rda")) ## full_data -- made using gam_dataprep NOT 15k subsample
+full_data$Longitude_dd[full_data$Longitude_dd > 0] <- full_data$Longitude_dd[full_data$Longitude_dd > 0]*-1
+dat <- full_data
+dat$gamREG <- 'All'
+dat$selType <- ifelse(dat$REG == 'BC', 2, 1) ## 2 does truncation, 1 leaves as-is
+
+## add in selex for BC data, using DFO values
+selectivity <- function(Length){
+  selex <- 1/(1+exp( 52.976 - Length)) ## email from Sam Johnson/
+  return(selex)
+}
+dat$Sel <- ifelse(dat$REG == 'BC', selectivity(dat$Length_cm), 1)
+# dat$Sel <- ifelse(dat$Sel == 0, 1E-5, dat$Sel) ## to avoid div by zero
+
+DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat)) 
+
+dat$cREG <- paste0(dat$gamREG,"_",dat$Period,"_",dat$Sex)
+DES <- ifelse(!is.na(dat$cREG), as.numeric(as.factor(dat$cREG)),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
+# KEY <- paste("sab",DES,sep = "_")
+temp <- data.frame(DES = as.numeric(as.character(DES)), cREG = dat$cREG); temp <- unique(temp)
+keybase <- paste(as.factor(temp[order(temp$DES),'cREG']))
+
+dat0 <- rep0 <- NULL ## later storage
+nStrata <- length(unique(DES)) ## should just be two (sexes)
+data <-
+  list(
+    Length_cm = dat[,"Length_cm"],
+    Age = dat[,"Age"],
+    DES = as.vector(DES), ## keep this for master iterations
+    selType = dat[,'selType'],
+    Sel = dat[,'Sel'],
+    nStrata = nStrata,
+    a2 = 30 ## wtf is this supposed to be
+  )
+
+parameters <-
+  list(
+    log_Linf = rep(log(70), nStrata),
+    log_k = rep(log(0.5), nStrata),
+    t0 = rep(0.1, nStrata),
+    log_Sigma = 0.1
+  )
+
+# Now estimate everything
+map <- NULL
+model <- MakeADFun(data, parameters,  DLL="it10",silent=T,map=map)
+fit <- nlminb(
+  model$par,
+  model$fn,
+  model$gr,
+  control = list(
+    rel.tol = 1e-12,
+    eval.max = 100000,
+    iter.max = 10000
+  )
+)
+# for (k in 1:3)  fit <- nlminb(model$env$last.par.best, model$fn, model$gr) ## start at last-best call, for stability
+model$report()$denominator ## if we only ran seltype 2 points, this should NOT be 1.0
+best <- model$env$last.par.best
+rep <- sdreport(model)
+
+dat0 <- rep0 <- NULL ##  storage
+dat0 <- c(dat0, model$report()$ypreds %>% data.frame()) 
+rep0 <- bind_rows(rep0,
+                  bind_cols(
+                    data.frame(names(rep$value)),
+                    data.frame(rep$value),
+                    data.frame(rep$sd),
+                    data.frame(c(rep(keybase, 5), rep("ALL", 1)))))
+
+## reformat outputs ----
+names(rep0) <- c('variable', 'value','sd', 'REG')
+write.csv(rep0, file = paste0("./GAM_output/ONEREG_SAB_parEst_gam_",Sys.Date(),'.csv'),row.names = F)
+
+ypreds0 <- cbind(dat0,dat) %>% data.frame()  
+names(ypreds0)[1] <- c('Predicted')
+## calc residuals for all values and map'em
+ypreds0$Residual <- with(ypreds0, Length_cm - Predicted)
+
+ypreds0 <- ypreds0 %>%
+  group_by(Sex) %>%
+  mutate(Residual_scaled = Residual/mean(Residual))
+
+
+write.csv(ypreds0,  paste0("./GAM_output/ONEREG_SAB_predicts_",Sys.Date(),".csv"),row.names = F)
+
+usa <- map_data("world") 
+ggplot() +
+  geom_polygon(data = usa, aes(x = long, y = lat, group = group), fill = 'grey66') +
+  coord_quickmap() +
+  scale_x_continuous(expand = c(0,0), limits = c(-180,-110), breaks = seq(-180,-120,10), labels = paste(seq(-180,-120,10), "°W")) +
+  scale_y_continuous(expand = c(0,0), limits = c(30,75), breaks = seq(30,75,10), labels =  paste(seq(30,75,10), "°N"))  +
+  theme_black(base_size = 18) +
+  theme(panel.grid.major = element_blank(),
+        axis.title =element_blank(),
+        legend.position = c(0.2,0.2),
+        legend.key.size = unit(0.75, "cm"),
+        legend.text = element_text(size = 12)) +
+  geom_rect(fill = 'black', aes(xmin = -180, xmax = -130.1,
+                                ymin = 30, ymax = 49.9)) +
+  geom_point(data = sample_n(subset(ypreds0, Sex == 'F'),5000), 
+             aes(x = Longitude_dd, y = Latitude_dd,
+                 fill = Residual),
+             shape = 21, alpha = 0.7, size = 10) +
+  scale_fill_viridis_c(guide = "legend", limits = c(-20,20)) +
+  # scale_fill_gradientn(colors = brewer.pal(9,'Reds'))+
+  # scale_size_identity(guide = "legend", limits = c(-10,10)) +
+  
+  # scale_size_manual(guide = 'none')+
+  labs(fill = paste0("Length Residual(cm)"),
+       title = "Residuals for Coastwide Von Bertalanffy Model",
+subtitle = "female sablefish")
+ggsave(plot = last_plot(),
+       file = paste0("./figures/BLACK_resids.png"),
+       width = 10, height = 10, units = 'in', dpi = 480)
 
 ## blank black map -- three regions
 usa <- map_data("world") 
@@ -71,7 +199,7 @@ usa <- map_data("world")
 
 
 ## black neatplot from sab with faceted curves
-ypreds <- read.csv(paste0("C:/Users/mkapur/Dropbox/UW/sab-growth/GAM_output/SAB_predicts_2019-04-15_phase2.csv"))
+ypreds <- read.csv(paste0("C:/Users/maia kapur/Dropbox/UW/sab-growth/GAM_output/SAB_predicts_2019-10-04_phase2.csv"))
 
 ypreds$gamREG <- paste0('Region ',ypreds$gamREG)
 levels(ypreds$Sex) <- c('Females','Males')
@@ -100,7 +228,7 @@ ggplot(fd_summary_gamREG, aes(x = Age, col = gamREG, group = gamREG)) +
   facet_wrap(~Sex +Period, ncol = 4)
 # 
 ggsave(plot  = last_plot(),
-       file = "C:/Users/mkapur/Dropbox/UW/sab-growth/figures/VBGF_meanL_periodXregion_black.png",
+       file = "C:/Users/maia kapur/Dropbox/UW/sab-growth/figures/ICES_black_figs/VBGF_meanL_periodXregion_black.png",
        height = 8, width = 16, unit = 'in', dpi = 520)
 
 

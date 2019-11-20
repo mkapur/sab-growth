@@ -210,7 +210,7 @@ for(phase in c("phase1","phase2")[2]){
   # load("./sabdat_Oct2019_formatted.Rda") 
   ## loads as "dat" saved up to this point since getGR is slow.
   # dat <- sample_n(dat, nrow(dat)*0.25)  %>% filter(selType == 2) ## testing denom
-  DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat))
+  # DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat))
   DES <- ifelse(!is.na(dat$cREG), as.numeric(as.factor(dat$cREG)),1)-1 ## this is now numeric index, R3=slot 3 (idx 2)
   # KEY <- paste("sab",DES,sep = "_")
   temp <- data.frame(DES = as.numeric(as.character(DES)), cREG = dat$cREG); temp <- unique(temp)

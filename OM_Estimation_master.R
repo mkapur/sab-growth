@@ -6,14 +6,14 @@ require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
 library(gridExtra); library(grid); library(lattice)
 compname <- c("Maia Kapur","mkapur")[2]
 
-source(paste0(getwd(),"/functions/Deriv.R")); source("./functions/getGR.R")
+# source(paste0(getwd(),"/functions/Deriv.R")); source("./functions/getGR.R")
 
-compile("it10_2.cpp") ## pretty sure THIS is the most recent one due to link; added sigma as param_vector index via DES
-dyn.load(dynlib("it10_2"))
+compile("sptlVB_Sel_Sigma.cpp") ## pretty sure THIS is the most recent one due to link; added sigma as param_vector index via DES
+dyn.load(dynlib("sptlVB_Sel_Sigma"))
 
 
-load(paste0("./input_data/gam_data_sab_0415.rda")) ## full_data -- made using gam_dataprep NOT 15k subsample
-full_data$Longitude_dd[full_data$Longitude_dd > 0] <- full_data$Longitude_dd[full_data$Longitude_dd > 0]*-1
+# load(paste0("./input_data/gam_data_sab_0415.rda")) ## full_data -- made using gam_dataprep NOT 15k subsample
+# full_data$Longitude_dd[full_data$Longitude_dd > 0] <- full_data$Longitude_dd[full_data$Longitude_dd > 0]*-1
 
 
 # breaksdf <- data.frame(yr_breaks = 2010, lat_breaks2 = c(36,50), lon_breaks2 =c(-130,-145)) ## auto
@@ -57,7 +57,7 @@ full_data$Longitude_dd[full_data$Longitude_dd > 0] <- full_data$Longitude_dd[ful
 # }
 
 ## MK START HERE
-load("./sabdat_Oct2019_formatted.Rda")
+load("./sabdat_Apr2020_phase2_formatted.Rda") ## phase 2 pooling
 ## loads as "dat" saved up to this point since getGR is slow.
 # dat <- sample_n(dat, nrow(dat)*0.25)  %>% filter(selType == 2) ## testing denom
 # DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat))
@@ -80,7 +80,7 @@ data <-
     selType = dat[,'selType'],
     Sel = dat[,'Sel'],
     nStrata = nStrata,
-    a2 = 30 ## wtf is this supposed to be
+    a2 = 30 
   )
 
 parameters <-
@@ -116,14 +116,36 @@ rep0 <- bind_rows(rep0,
                     data.frame(names(rep$value)),
                     data.frame(rep$value),
                     data.frame(rep$sd),
-                    data.frame(c(rep(keybase, 5), rep("ALL", 1)))))
+                    data.frame(c(rep(keybase, 6)))))
 
 ## reformat outputs ----
-names(rep0) <- c('variable', 'value','sd', 'REG')
-write.csv(rep0, file = paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'_',phase,'.csv'),row.names = F)
+## also saving in MSE folder
+names() <- c('variable', 'value','sd', 'REG')
+write.csv(rep0, file = paste0("./GAM_output/SAB_parEst_gam_",Sys.Date(),'_',2,'.csv'),row.names = F) 
+write.csv(rep0, file = paste0("C:/Users/mkapur/Dropbox/UW/sab-mse/input/raw/SAB_parEst_gam_",Sys.Date(),'.csv'),row.names = F) ## also saving in MSE folder
 
 ypreds0 <- cbind(dat0,dat) %>% data.frame()  
 names(ypreds0)[1] <- c('Predicted')
-write.csv(ypreds0,  paste0("./GAM_output/SAB_predicts_",Sys.Date(),'_',phase,".csv"),row.names = F)
+write.csv(ypreds0,  paste0("./GAM_output/SAB_predicts_",Sys.Date(),'_',2,".csv"),row.names = F)
+write.csv(rep0, file = paste0("C:/Users/mkapur/Dropbox/UW/sab-mse/input/raw/SAB_predicts_",Sys.Date(),'.csv'),row.names = F) ## also saving in MSE folder
 
-cat(phase," Fit TMB model  & saved outputs \n")
+## reshape and save again
+LR <- function(Linf, k, t0, AREF){
+  lreg <- Linf*(1-exp(-k*(AREF - t0)))
+  return(lreg)
+}
+rep0 %>%
+  mutate(REG = as.character(REG)) %>%
+  select(-sd) %>%
+  # filter(variable != 'Sigma') %>%
+  mutate(
+    Region = substr(REG,1,2),
+    Period =  sapply(strsplit(REG, "_"), function(x) x[2]),
+    Sex = sub('(^[^_]+_[^_]+)_(.*
+    )$', '\\2', REG) ) %>%
+  tidyr::spread(key = variable, value = value) %>%
+  mutate(   L1_0.5 = round(LR(Linf, k, t0, AREF = 0.5),2)) %>%
+  mutate(L1 = ifelse(L1_0.5 <0, L1, L1_0.5)) %>%
+  mutate(Linf =round(Linf,2), k=  round(k,2), Sigma = round(Sigma,2)) %>%
+  select(Region, Sex, Period, Linf,k,Sigma) %>%
+  write.csv(., file = paste0("C:/Users/mkapur/Dropbox/UW/sab-mse/input/raw/Table3_",Sys.Date(),".csv"),row.names = F)

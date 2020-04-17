@@ -3,5 +3,6 @@
 *_figures/*
 *_presentations/*
 *_output/*
+*_input/*
 *deprecated*
 *.Rproj*

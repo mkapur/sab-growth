@@ -127,7 +127,7 @@ write.csv(rep0, file = paste0("C:/Users/mkapur/Dropbox/UW/sab-mse/input/raw/SAB_
 ypreds0 <- cbind(dat0,dat) %>% data.frame()  
 names(ypreds0)[1] <- c('Predicted')
 write.csv(ypreds0,  paste0("./GAM_output/SAB_predicts_",Sys.Date(),'_',2,".csv"),row.names = F)
-write.csv(rep0, file = paste0("C:/Users/mkapur/Dropbox/UW/sab-mse/input/raw/SAB_predicts_",Sys.Date(),'.csv'),row.names = F) ## also saving in MSE folder
+write.csv(ypreds0, file = paste0("C:/Users/mkapur/Dropbox/UW/sab-mse/input/raw/SAB_predicts_",Sys.Date(),'.csv'),row.names = F) ## also saving in MSE folder
 
 ## reshape and save again
 LR <- function(Linf, k, t0, AREF){

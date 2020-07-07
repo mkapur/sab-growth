@@ -37,7 +37,11 @@ shape <- readOGR(dsn = "C:/Users/MKapur/Dropbox/UW/sab-growth/raw_data/Major_Oce
 # dev.off()
 
 ## black ----
-png("./figures/BLACK_Figure5.png",height = 10, width = 8, unit = 'in', res = 520)
+png("./figures/BLACK_Figure5_no130.png",height = 10, width = 8, unit = 'in', res = 520)
+
+png("C:/Users/mkapur/Dropbox/mkapur.github.io/static/slides/kapur_genex/BLACK_Figure5_no130.png",
+    height = 10, width = 8, unit = 'in', res = 520)
+
 lon <- c (-180, -110)
 lat <- c (26, 74)
 # figure ( width =9.75, height =5.28)
@@ -46,7 +50,7 @@ plotmap ( lon=lon ,  lat=lat , main ="Northeast Pacific", grid = F, col.bg = 'bl
 # grid()
 segments(lon[1], 50, x1 = lon[2], y1 = 50, col = 'red', lty = 'dashed', lwd = 3)
 segments(lon[1], 36, x1 = lon[2], y1 = 36, col = 'red', lty = 'dashed', lwd = 3)
-segments(-130, lat[1], x1 = -130, y1 = lat[2], col = 'red', lty = 'dashed', lwd = 3)
+# segments(-130, lat[1], x1 = -130, y1 = lat[2], col = 'red', lty = 'dashed', lwd = 3)
 segments(-145, lat[1], x1 = -145, y1 = lat[2], col = 'blue', lty = 'dashed', lwd = 3)
 
 rect(xleft = lon[1], ybottom = lat[1], xright = -130, ytop = 49.5, col = 'black', border = NA, add = T)

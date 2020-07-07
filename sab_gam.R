@@ -4,7 +4,7 @@
 rm(list = ls())
 require(mgcv);require(dplyr);require(ggplot2); require(TMB); library(reshape2)
 library(gridExtra); library(grid); library(lattice)
-compname <- c("Maia Kapur","mkapur")[1]
+compname <- c("Maia Kapur","mkapur")[2]
 
 source(paste0(getwd(),"/functions/Deriv.R")); source("./functions/getGR.R")
 # compile("sptlvbSel.cpp") ## will throw 'incomplete line' msg, ignore
@@ -207,7 +207,7 @@ for(phase in c("phase1","phase2")[2]){
   }
   
   ## MK START HERE
-  # load("./sabdat_Oct2019_formatted.Rda")  -- i believe this is from Phase 1 Only
+  # load("./sabdat_Oct2019_formatted.Rda") 
   ## loads as "dat" saved up to this point since getGR is slow.
   # dat <- sample_n(dat, nrow(dat)*0.25)  %>% filter(selType == 2) ## testing denom
   # DES <- KEY <-  matrix(NA, ncol = 1, nrow = nrow(dat))
